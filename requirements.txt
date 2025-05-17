@@ -1,0 +1,14 @@
+# Backend
+fastapi
+uvicorn
+pydantic
+
+# Frontend
+chainlit
+
+# Database
+psycopg2-binary
+pgvector
+
+# AI - openAI agents SDK
+openai-agents
