@@ -6,7 +6,7 @@ This guide will help you set up your development environment for contributing to
 
 Before you begin, ensure you have the following installed:
 
-- **Python 3.9+**: VeriFact requires Python 3.9 or newer
+- **Python 3.10+**: VeriFact requires Python 3.10 or newer
 - **Git**: For version control
 - **pip** or **uv**: For package management
 - **Docker & Docker Compose** (optional): For containerized development
@@ -45,7 +45,7 @@ source venv/bin/activate
 
 ```bash
 # Create a conda environment
-conda create -n verifact python=3.9
+conda create -n verifact python=3.10
 conda activate verifact
 ```
 
@@ -55,9 +55,9 @@ Install the package in development mode along with all dependencies:
 
 ```bash
 # Install dependencies
-pip install -r requirements.txt
+pip install -e .
 
-# Or with development dependencies
+# Or with development dependencies (recommended for contributors)
 pip install -e ".[dev]"
 ```
 
@@ -259,10 +259,10 @@ python -m verifact --debug
 
 If you need to add a new dependency:
 
-1. Add it to `pyproject.toml` or `requirements.txt`
+1. Add it to `pyproject.toml` (preferred approach)
 2. Update your virtual environment:
    ```bash
-   pip install -e ".[dev]"
+   pip install -e .  # Or pip install -e ".[dev]" for development dependencies
    ```
 
 ### Updating from Upstream

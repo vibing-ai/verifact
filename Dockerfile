@@ -9,9 +9,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better caching
+# Copy project files required for installation
+COPY pyproject.toml .
+# requirements.txt is kept for backward compatibility
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+
+# Install the package
+RUN pip install --no-cache-dir -e .
 
 # Copy the rest of the application
 COPY . .
