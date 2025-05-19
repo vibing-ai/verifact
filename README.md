@@ -40,13 +40,13 @@ VeriFact is under active development. Here's the current status of key features:
 - **Web Interface**: Chainlit for interactive UI
 - **API Framework**: FastAPI
 - **Containerization**: Docker and Docker Compose
-- **Language**: Python 3.9+
+- **Language**: Python 3.10+
 
 ## Getting Started
 
 ### Prerequisites
 
-- Python 3.9+
+- Python 3.10+
 - Docker and Docker Compose (for containerized deployment)
 - OpenRouter API key
 - Supabase account (optional for advanced features)
@@ -63,7 +63,9 @@ VeriFact is under active development. Here's the current status of key features:
 2. Install dependencies:
 
    ```
-   pip install -r requirements.txt
+   pip install -e .  # Install package with dependencies
+   # or for development:
+   pip install -e ".[dev]"  # Install with development dependencies
    ```
 
 3. Set up environment variables:
@@ -134,7 +136,8 @@ verifact/
 ├── cli.py                      # Command-line interface
 ├── docker-compose.yml          # Docker Compose configuration
 ├── Dockerfile                  # Docker build configuration
-├── requirements.txt            # Dependencies
+├── pyproject.toml              # Project metadata and dependencies
+├── requirements.txt            # Dependencies (deprecated)
 └── configs/                    # Configuration files
 ```
 
