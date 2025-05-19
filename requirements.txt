@@ -1,14 +1,27 @@
-# Backend
-fastapi
-uvicorn
-pydantic
+# This file is generated from pyproject.toml
+# If you need to update dependencies, edit pyproject.toml instead
 
-# Frontend
-chainlit
+# Core dependencies from pyproject.toml
+fastapi>=0.103.0
+uvicorn>=0.23.0
+pydantic>=2.0.0
+openai>=1.0.0
+chainlit>=2.5.5
+python-dotenv>=1.0.0
+openai-agents  # OpenAI Agent SDK
 
 # Database
-psycopg2-binary
-pgvector
+psycopg2-binary>=2.9.9
+pgvector>=0.2.3
+supabase>=2.4.0
 
-# AI - openAI agents SDK
-openai-agents
+# Model providers
+litellm>=1.18.0  # For model provider compatibility
+
+# Development tools - use pip install -e ".[dev]" to install these
+# pytest>=7.0.0
+# pytest-cov>=4.0.0
+# black>=23.0.0
+# isort>=5.12.0
+# flake8>=6.0.0
+# pre-commit>=3.0.0
