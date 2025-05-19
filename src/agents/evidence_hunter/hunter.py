@@ -5,8 +5,8 @@ EvidenceHunter agent for gathering evidence for claims.
 import os
 from typing import List, Optional
 from pydantic import BaseModel
-from agents import Agent, Runner
-from agents.tools import WebSearchTool
+from openai.agents import Agent, Runner
+from openai.agents.tools import WebSearchTool
 from src.utils.model_config import get_model_name, get_model_settings
 from src.agents.claim_detector.detector import Claim
 
@@ -29,7 +29,7 @@ class EvidenceHunter:
         Args:
             model_name: Optional name of the model to use
         """
-        self.model_name = get_model_name(model_name)
+        self.model_name = get_model_name(model_name, agent_type="evidence_hunter")
         self.model_settings = get_model_settings()
         
         # Create the agent with WebSearchTool for finding evidence

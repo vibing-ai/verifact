@@ -5,7 +5,7 @@ VerdictWriter agent for generating verdicts based on evidence.
 import os
 from typing import List, Optional, Literal
 from pydantic import BaseModel, Field
-from agents import Agent, Runner
+from openai.agents import Agent, Runner
 from src.utils.model_config import get_model_name, get_model_settings
 from src.agents.claim_detector.detector import Claim
 from src.agents.evidence_hunter.hunter import Evidence
@@ -41,7 +41,7 @@ class VerdictWriter:
         Args:
             model_name: Optional name of the model to use
         """
-        self.model_name = get_model_name(model_name)
+        self.model_name = get_model_name(model_name, agent_type="verdict_writer")
         self.model_settings = get_model_settings()
         
         # Create the agent for analyzing evidence and generating verdicts

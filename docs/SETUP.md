@@ -9,6 +9,7 @@ Before you begin, ensure you have the following installed:
 - **Python 3.9+**: VeriFact requires Python 3.9 or newer
 - **Git**: For version control
 - **pip** or **uv**: For package management
+- **Docker & Docker Compose** (optional): For containerized development
 
 ## Step 1: Clone the Repository
 
@@ -16,10 +17,10 @@ First, fork the repository on GitHub, then clone your fork:
 
 ```bash
 # Clone your fork
-git clone https://github.com/vibing-ai/verifact.git
+git clone https://github.com/yourusername/verifact.git
 cd verifact
 
-# Add the original repository as upstream (only if you're using your own fork)
+# Add the original repository as upstream
 git remote add upstream https://github.com/vibing-ai/verifact.git
 ```
 
@@ -54,13 +55,11 @@ Install the package in development mode along with all dependencies:
 
 ```bash
 # Install dependencies
+pip install -r requirements.txt
+
+# Or with development dependencies
 pip install -e ".[dev]"
 ```
-
-This will install:
-
-- Core dependencies from `requirements.txt`
-- Development dependencies (testing, linting, documentation tools)
 
 ## Step 4: Set Up Pre-commit Hooks (Optional but Recommended)
 
@@ -76,27 +75,75 @@ pre-commit install
 
 ## Step 5: Configure Environment Variables
 
-Copy the example environment file and configure it with your API keys:
+Copy the template environment file and configure it with your API keys:
 
 ```bash
-cp .env.example .env
+cp configs/env.template .env
 ```
 
-Edit the `.env` file and add the required API keys:
+Edit the `.env` file and add at minimum:
 
 ```
-# OpenAI API Key for agent operations
-OPENAI_API_KEY=your_openai_api_key
+# OpenRouter API Key for model access (Required)
+OPENROUTER_API_KEY=your_openrouter_api_key_here
 
-# Web search API key for evidence gathering
-SEARCH_API_KEY=your_search_api_key
-
-# Other configuration variables
-DEBUG=False
-LOG_LEVEL=INFO
+# Supabase Configuration (Optional)
+SUPABASE_URL=your_supabase_url_here
+SUPABASE_KEY=your_supabase_key_here
 ```
 
-## Step 6: Verify Your Setup
+### Setting Up OpenRouter
+
+1. Create an account at [OpenRouter](https://openrouter.ai/)
+2. Generate an API key from your dashboard
+3. Add the API key to your `.env` file
+
+### Setting Up Supabase (Optional)
+
+If you want to use Supabase for database features:
+
+1. Create a project at [Supabase](https://supabase.com/)
+2. Get your project URL and API key from the project settings
+3. Enable the pgvector extension in your Supabase project
+4. Add the URL and key to your `.env` file
+
+## Step 6: Run VeriFact
+
+### Using Docker
+
+The easiest way to run the complete stack:
+
+```bash
+docker-compose up
+```
+
+This will start:
+
+- The Chainlit web interface at http://localhost:8501
+- The FastAPI backend at http://localhost:8000
+- A PostgreSQL database with the PGVector extension
+
+### Running Components Separately
+
+#### Chainlit Interface
+
+```bash
+chainlit run app.py
+```
+
+#### API Server
+
+```bash
+uvicorn src.main:app --reload
+```
+
+#### CLI
+
+```bash
+python cli.py --input "Text containing claims to verify"
+```
+
+## Step 7: Verify Your Setup
 
 Run the tests to verify that everything is set up correctly:
 
@@ -108,46 +155,6 @@ pytest
 black --check src tests
 flake8 src tests
 ```
-
-## Step 7: Set Up Your IDE
-
-### Visual Studio Code
-
-If you're using VS Code, install the following extensions:
-
-- Python
-- Pylance
-- Black Formatter
-- flake8
-- isort
-
-Create or update `.vscode/settings.json` with:
-
-```json
-{
-  "python.linting.enabled": true,
-  "python.linting.flake8Enabled": true,
-  "python.formatting.provider": "black",
-  "editor.formatOnSave": true,
-  "editor.codeActionsOnSave": {
-    "source.organizeImports": true
-  },
-  "python.testing.pytestEnabled": true,
-  "python.testing.unittestEnabled": false,
-  "python.testing.nosetestsEnabled": false,
-  "python.testing.pytestArgs": ["src/tests"]
-}
-```
-
-### PyCharm
-
-If you're using PyCharm:
-
-1. Open the project
-2. Go to Settings > Project > Python Interpreter
-3. Add a new interpreter using the virtual environment you created
-4. Configure Black as the formatter in Settings > Tools > Black
-5. Install the "Save Actions" plugin for auto-formatting on save
 
 ## Development Workflow
 
@@ -183,6 +190,61 @@ If you're using PyCharm:
    ```
 
 6. Open a pull request on the GitHub repository
+
+## Working with Agents
+
+VeriFact uses the OpenAI Agent SDK with OpenRouter for model access.
+
+### Agent Structure
+
+Each agent follows a similar structure:
+
+1. **Initialization**: Create an Agent instance with instructions and output type
+2. **Run Method**: Process input and generate output using the Runner
+
+Example:
+
+```python
+from openai.agents import Agent, Runner
+from openai.agents.tools import WebSearchTool
+from src.utils.model_config import get_model_name, get_model_settings
+
+class MyAgent:
+    def __init__(self, model_name=None):
+        self.model_name = get_model_name(model_name, agent_type="my_agent")
+        self.model_settings = get_model_settings()
+
+        self.agent = Agent(
+            name="MyAgent",
+            instructions="Your instructions here...",
+            output_type=YourOutputType,
+            tools=[WebSearchTool()],  # If needed
+            model=self.model_name,
+            **self.model_settings
+        )
+
+    async def process(self, input_data):
+        result = await Runner.run(self.agent, input_data)
+        return result.output
+```
+
+### Adding a New Agent
+
+To add a new agent:
+
+1. Create a new directory under `src/agents/your_agent_name/`
+2. Create an `__init__.py` file that exports your agent
+3. Create an implementation file (e.g., `processor.py`) with your agent class
+4. Update the agent pipeline in `app.py` to include your new agent
+
+## Understanding the Stack
+
+- **OpenAI Agent SDK**: Provides the framework for creating and running agents
+- **OpenRouter**: Gives access to multiple model providers through a single API
+- **Chainlit**: Provides the interactive UI with step-by-step visualization
+- **Supabase with PGVector**: Used for vector storage and database operations
+- **FastAPI**: Serves the API endpoints
+- **Docker**: Containerizes the entire stack for easy deployment
 
 ## Common Development Tasks
 

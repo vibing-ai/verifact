@@ -3,6 +3,9 @@ Model configuration utilities for VeriFact.
 
 This module provides functions to manage model settings and configurations,
 including model selection, parameter management, and API key handling.
+
+All models are accessed through OpenRouter, which provides access to models
+from multiple providers including OpenAI, Anthropic, Mistral, and others.
 """
 
 import os
@@ -12,7 +15,8 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# Default models
+# Default models via OpenRouter
+# Format: "provider/model" - e.g., "openai/gpt-4o", "anthropic/claude-3-opus"
 DEFAULT_MODELS = {
     "claim_detector": "openai/gpt-4o",
     "evidence_hunter": "anthropic/claude-3-opus",
@@ -32,12 +36,15 @@ def get_model_name(model_name: Optional[str] = None, agent_type: Optional[str] =
     """
     Get the model name for a given agent, using environment variables or defaults.
     
+    All model names should include the provider prefix for OpenRouter compatibility,
+    e.g., "openai/gpt-4o", "anthropic/claude-3-opus", "mistral/mistral-large"
+    
     Args:
         model_name: Explicitly provided model name (highest priority)
         agent_type: Type of agent (claim_detector, evidence_hunter, verdict_writer)
         
     Returns:
-        The appropriate model name to use
+        The appropriate model name to use with OpenRouter
     """
     # If model_name is explicitly provided, use it
     if model_name:
@@ -67,6 +74,9 @@ def get_model_settings() -> Dict[str, Any]:
     """
     Get model settings from environment variables or defaults.
     
+    These settings are used when creating agents and making model calls
+    through OpenRouter.
+    
     Returns:
         Dictionary of model settings
     """
@@ -88,6 +98,9 @@ def get_model_settings() -> Dict[str, Any]:
 def get_api_key(provider: str = "openrouter") -> str:
     """
     Get the API key for the specified provider.
+    
+    For VeriFact, we primarily use OpenRouter, but this function
+    can be used to retrieve keys for other providers if needed.
     
     Args:
         provider: Name of the provider (openrouter, openai, anthropic, etc.)
