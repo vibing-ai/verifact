@@ -31,7 +31,7 @@ There are many ways to contribute to VeriFact:
 
 ### Prerequisites
 
-- Python 3.9 or higher
+- Python 3.10 or higher
 - pip or uv for package management
 
 ### Setting up the development environment
