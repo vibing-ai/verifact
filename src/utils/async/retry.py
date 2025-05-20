@@ -20,9 +20,9 @@ from src.utils.exceptions import (
 
 logger = logging.getLogger("verifact.retry")
 
-T = TypeVar('T')
-F = TypeVar('F', bound=Callable[..., Any])
-AsyncF = TypeVar('AsyncF', bound=Callable[..., Any])
+T = TypeVar("T")
+F = TypeVar("F", bound=Callable[..., Any])
+AsyncF = TypeVar("AsyncF", bound=Callable[..., Any])
 
 
 # Decorator for synchronous functions
@@ -31,7 +31,7 @@ def with_retry(
     initial_delay: float = 1.0,
     backoff_factor: float = 2.0,
     jitter: bool = True,
-    exceptions: List[Type[Exception]] = None
+    exceptions: List[Type[Exception]] = None,
 ) -> Callable[[F], F]:
     """
     Decorator that retries a function on specified exceptions.
@@ -63,20 +63,18 @@ def with_retry(
 
                     # Special handling for rate limit errors with retry-after
                     # info
-                    if isinstance(
-                            e, RateLimitError) and e.details.get("retry_after"):
+                    if isinstance(e, RateLimitError) and e.details.get("retry_after"):
                         retry_after = e.details["retry_after"]
                         actual_delay = retry_after
                     else:
                         actual_delay = delay
                         if jitter:
-                            actual_delay = actual_delay * \
-                                (1 + random.random() * 0.1)
+                            actual_delay = actual_delay * (1 + random.random() * 0.1)
 
                     # Log retry attempt
                     if attempt < max_attempts:
                         service_info = ""
-                        if hasattr(e, 'details') and e.details.get('service'):
+                        if hasattr(e, "details") and e.details.get("service"):
                             service_info = f" for service '{e.details['service']}'"
 
                         logger.warning(
@@ -98,6 +96,7 @@ def with_retry(
             raise ExternalServiceError(message="Retry attempts exhausted")
 
         return cast(F, wrapper)
+
     return decorator
 
 
@@ -107,7 +106,7 @@ def with_async_retry(
     initial_delay: float = 1.0,
     backoff_factor: float = 2.0,
     jitter: bool = True,
-    exceptions: List[Type[Exception]] = None
+    exceptions: List[Type[Exception]] = None,
 ) -> Callable[[AsyncF], AsyncF]:
     """
     Decorator that retries an async function on specified exceptions.
@@ -139,20 +138,18 @@ def with_async_retry(
 
                     # Special handling for rate limit errors with retry-after
                     # info
-                    if isinstance(
-                            e, RateLimitError) and e.details.get("retry_after"):
+                    if isinstance(e, RateLimitError) and e.details.get("retry_after"):
                         retry_after = e.details["retry_after"]
                         actual_delay = retry_after
                     else:
                         actual_delay = delay
                         if jitter:
-                            actual_delay = actual_delay * \
-                                (1 + random.random() * 0.1)
+                            actual_delay = actual_delay * (1 + random.random() * 0.1)
 
                     # Log retry attempt
                     if attempt < max_attempts:
                         service_info = ""
-                        if hasattr(e, 'details') and e.details.get('service'):
+                        if hasattr(e, "details") and e.details.get("service"):
                             service_info = f" for service '{e.details['service']}'"
 
                         logger.warning(
@@ -174,6 +171,7 @@ def with_async_retry(
             raise ExternalServiceError(message="Retry attempts exhausted")
 
         return cast(AsyncF, wrapper)
+
     return decorator
 
 
@@ -185,7 +183,7 @@ async def async_retry_context(
     jitter: bool = True,
     exceptions: List[Type[Exception]] = None,
     *args: Any,
-    **kwargs: Any
+    **kwargs: Any,
 ) -> Any:
     """
     Context for retrying an async function or coroutine.
@@ -235,7 +233,7 @@ async def async_retry_context(
             # Log retry attempt
             if attempt < max_attempts:
                 service_info = ""
-                if hasattr(e, 'details') and e.details.get('service'):
+                if hasattr(e, "details") and e.details.get("service"):
                     service_info = f" for service '{e.details['service']}'"
 
                 logger.warning(

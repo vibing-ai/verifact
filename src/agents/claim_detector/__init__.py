@@ -17,5 +17,5 @@ __all__ = [
     "EntityType",
     "ClaimDomain",
     "DomainClassifier",
-    "EntityExtractor"
-] 
+    "EntityExtractor",
+]

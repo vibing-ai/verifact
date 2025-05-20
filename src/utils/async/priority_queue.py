@@ -20,6 +20,7 @@ from typing import Any, Callable, Dict, Generic, List, Optional, Tuple, TypeVar
 
 class JobStatus(str, Enum):
     """Status of a job in the priority queue."""
+
     PENDING = "pending"
     PROCESSING = "processing"
     COMPLETED = "completed"
@@ -28,12 +29,13 @@ class JobStatus(str, Enum):
     TIMEOUT = "timeout"
 
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 @dataclass(order=True)
 class PrioritizedItem(Generic[T]):
     """Wrapper class for items in the priority queue."""
+
     priority: float
     timestamp: float = field(default_factory=time.time)
     item_id: str = field(default_factory=lambda: str(uuid.uuid4()))
@@ -59,7 +61,7 @@ class PriorityQueue(Generic[T]):
         priority_function: Optional[Callable[[T], float]] = None,
         min_priority_threshold: float = 0.0,
         max_batch_size: int = 10,
-        allow_duplicate_items: bool = False
+        allow_duplicate_items: bool = False,
     ):
         """
         Initialize the priority queue.
@@ -83,11 +85,9 @@ class PriorityQueue(Generic[T]):
         self._completed_count = 0
         self._failed_count = 0
 
-    def put(self,
-            item: T,
-            priority: Optional[float] = None,
-            metadata: Optional[Dict[str,
-                                    Any]] = None) -> str:
+    def put(
+        self, item: T, priority: Optional[float] = None, metadata: Optional[Dict[str, Any]] = None
+    ) -> str:
         """
         Add an item to the priority queue.
 
@@ -109,14 +109,11 @@ class PriorityQueue(Generic[T]):
         # Check if item meets the priority threshold
         if priority < self._min_priority_threshold:
             raise ValueError(
-                f"Item priority {priority} is below the minimum threshold {self._min_priority_threshold}")
+                f"Item priority {priority} is below the minimum threshold {self._min_priority_threshold}"
+            )
 
         # Create prioritized item
-        prioritized_item = PrioritizedItem(
-            priority=priority,
-            item=item,
-            metadata=metadata or {}
-        )
+        prioritized_item = PrioritizedItem(priority=priority, item=item, metadata=metadata or {})
 
         with self._lock:
             # Check for duplicates if not allowed
@@ -170,8 +167,7 @@ class PriorityQueue(Generic[T]):
 
             return item
 
-    def get_batch(self, max_items: Optional[int]
-                  = None) -> List[PrioritizedItem[T]]:
+    def get_batch(self, max_items: Optional[int] = None) -> List[PrioritizedItem[T]]:
         """
         Get a batch of items from the queue, ordered by priority.
 
@@ -182,9 +178,7 @@ class PriorityQueue(Generic[T]):
             List of highest priority items
         """
         result = []
-        max_to_get = min(
-            max_items or self._max_batch_size,
-            self._max_batch_size)
+        max_to_get = min(max_items or self._max_batch_size, self._max_batch_size)
 
         with self._lock:
             # Get up to max_to_get items
@@ -243,10 +237,7 @@ class PriorityQueue(Generic[T]):
 
             return True
 
-    def requeue(
-            self,
-            item_id: str,
-            new_priority: Optional[float] = None) -> bool:
+    def requeue(self, item_id: str, new_priority: Optional[float] = None) -> bool:
         """
         Requeue a previously processed item.
 
@@ -381,13 +372,16 @@ class PriorityQueue(Generic[T]):
                 (item.completed_at or current_time) - (item.started_at or current_time)
                 for item in self._item_map.values()
                 if item.status in [JobStatus.COMPLETED, JobStatus.FAILED]
-                and item.started_at and item.completed_at
+                and item.started_at
+                and item.completed_at
             ]
 
-            avg_pending_time = sum(
-                pending_wait_times) / len(pending_wait_times) if pending_wait_times else 0
-            avg_processing_time = sum(
-                processing_times) / len(processing_times) if processing_times else 0
+            avg_pending_time = (
+                sum(pending_wait_times) / len(pending_wait_times) if pending_wait_times else 0
+            )
+            avg_processing_time = (
+                sum(processing_times) / len(processing_times) if processing_times else 0
+            )
 
             return {
                 "total_items": len(self._item_map),
@@ -454,7 +448,7 @@ class ClaimPriorityQueue(PriorityQueue[T]):
         self,
         min_check_worthiness: float = 0.5,
         max_batch_size: int = 5,
-        allow_duplicate_claims: bool = False
+        allow_duplicate_claims: bool = False,
     ):
         """
         Initialize the claim priority queue.
@@ -464,22 +458,23 @@ class ClaimPriorityQueue(PriorityQueue[T]):
             max_batch_size: Maximum number of claims to process in a batch
             allow_duplicate_claims: Whether to allow duplicate claims in the queue
         """
+
         # Define claim priority function (inverting check-worthiness since
         # lower values = higher priority)
         def claim_priority_function(claim: Any) -> float:
             # Check if the object has the necessary attributes
-            if not hasattr(claim, 'check_worthiness'):
+            if not hasattr(claim, "check_worthiness"):
                 return 1.0  # Default lowest priority
 
             # Invert check-worthiness so higher check-worthiness = higher
             # priority (lower value)
-            priority = 1.0 - getattr(claim, 'check_worthiness', 0.0)
+            priority = 1.0 - getattr(claim, "check_worthiness", 0.0)
 
             # Apply domain-specific adjustments if available
-            if hasattr(claim, 'domain'):
-                domain = getattr(claim, 'domain', None)
+            if hasattr(claim, "domain"):
+                domain = getattr(claim, "domain", None)
                 # Prioritize health and safety related claims
-                if str(domain).lower() in ['health', 'science']:
+                if str(domain).lower() in ["health", "science"]:
                     priority *= 0.8  # Boost priority by reducing score
 
             return priority
@@ -489,14 +484,13 @@ class ClaimPriorityQueue(PriorityQueue[T]):
             priority_function=claim_priority_function,
             min_priority_threshold=0.0,  # We use min_check_worthiness instead
             max_batch_size=max_batch_size,
-            allow_duplicate_items=allow_duplicate_claims
+            allow_duplicate_items=allow_duplicate_claims,
         )
 
         # Store claim-specific settings
         self.min_check_worthiness = min_check_worthiness
 
-    def put_claim(self, claim: T,
-                  metadata: Optional[Dict[str, Any]] = None) -> str:
+    def put_claim(self, claim: T, metadata: Optional[Dict[str, Any]] = None) -> str:
         """
         Add a claim to the priority queue.
 
@@ -511,11 +505,12 @@ class ClaimPriorityQueue(PriorityQueue[T]):
             ValueError: If claim is below the check-worthiness threshold
         """
         # Check if claim meets the check-worthiness threshold
-        if hasattr(claim, 'check_worthiness'):
-            check_worthiness = getattr(claim, 'check_worthiness', 0.0)
+        if hasattr(claim, "check_worthiness"):
+            check_worthiness = getattr(claim, "check_worthiness", 0.0)
             if check_worthiness < self.min_check_worthiness:
                 raise ValueError(
-                    f"Claim check-worthiness {check_worthiness} is below the minimum threshold {self.min_check_worthiness}")
+                    f"Claim check-worthiness {check_worthiness} is below the minimum threshold {self.min_check_worthiness}"
+                )
 
         # Add to queue using the generic put method
         return self.put(claim, metadata=metadata)
@@ -531,31 +526,23 @@ class ClaimPriorityQueue(PriorityQueue[T]):
             List of (item_id, claim) tuples for potentially related claims
         """
         related_claims = []
-        claim_text = str(
-            getattr(
-                claim,
-                'text',
-                '')) if hasattr(
-            claim,
-            'text') else str(claim)
+        claim_text = str(getattr(claim, "text", "")) if hasattr(claim, "text") else str(claim)
 
         with self._lock:
             for item_id, prioritized_item in self._item_map.items():
                 other_claim = prioritized_item.item
-                other_text = str(
-                    getattr(
-                        other_claim,
-                        'text',
-                        '')) if hasattr(
-                    other_claim,
-                    'text') else str(other_claim)
+                other_text = (
+                    str(getattr(other_claim, "text", ""))
+                    if hasattr(other_claim, "text")
+                    else str(other_claim)
+                )
 
                 # Simple similarity check - this can be enhanced with more
                 # sophisticated algorithms
                 if claim_text != other_text and (
-                    claim_text in other_text or
-                    other_text in claim_text or
-                    self._calculate_similarity(claim_text, other_text) > 0.7
+                    claim_text in other_text
+                    or other_text in claim_text
+                    or self._calculate_similarity(claim_text, other_text) > 0.7
                 ):
                     related_claims.append((item_id, other_claim))
 

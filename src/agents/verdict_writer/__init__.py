@@ -7,4 +7,4 @@ about factual claims with explanations and source citations.
 
 from src.agents.verdict_writer.writer import Verdict, VerdictWriter
 
-__all__ = ["VerdictWriter", "Verdict"] 
+__all__ = ["VerdictWriter", "Verdict"]

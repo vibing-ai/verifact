@@ -35,12 +35,12 @@ class MetricsTracker:
         self._current_batch = defaultdict(list)
         self._batch_size = int(os.environ.get("METRICS_BATCH_SIZE", "100"))
         self._storage_ttl = int(
-            os.environ.get(
-                "METRICS_STORAGE_TTL", str(
-                    60 * 60 * 24 * 90)))  # 90 days
+            os.environ.get("METRICS_STORAGE_TTL", str(60 * 60 * 24 * 90))
+        )  # 90 days
 
-    def track_accuracy(self, prediction: str, ground_truth: str,
-                       metadata: Optional[Dict[str, Any]] = None) -> None:
+    def track_accuracy(
+        self, prediction: str, ground_truth: str, metadata: Optional[Dict[str, Any]] = None
+    ) -> None:
         """
         Track an accuracy measurement.
 
@@ -54,10 +54,12 @@ class MetricsTracker:
 
         self._track_metric("accuracy", accuracy, metadata)
 
-    def track_claim_detection(self,
-                              detected_claims: List[Dict[str, Any]],
-                              expected_claims: List[Dict[str, Any]],
-                              text: Optional[str] = None) -> Dict[str, float]:
+    def track_claim_detection(
+        self,
+        detected_claims: List[Dict[str, Any]],
+        expected_claims: List[Dict[str, Any]],
+        text: Optional[str] = None,
+    ) -> Dict[str, float]:
         """
         Track claim detection performance.
 
@@ -71,15 +73,11 @@ class MetricsTracker:
         """
         # Count correct detections (simple text matching for demo purposes)
         # In a real implementation, this would use semantic similarity
-        detected_texts = [claim.get("text", "").strip()
-                          for claim in detected_claims]
-        expected_texts = [claim.get("text", "").strip()
-                          for claim in expected_claims]
+        detected_texts = [claim.get("text", "").strip() for claim in detected_claims]
+        expected_texts = [claim.get("text", "").strip() for claim in expected_claims]
 
         # Calculate true positives, false positives, false negatives
-        tp = sum(
-            1 for dt in detected_texts if any(
-                dt == et for et in expected_texts))
+        tp = sum(1 for dt in detected_texts if any(dt == et for et in expected_texts))
         fp = len(detected_texts) - tp
         fn = len(expected_texts) - tp
 
@@ -95,14 +93,14 @@ class MetricsTracker:
             "f1": f1,
             "true_positives": tp,
             "false_positives": fp,
-            "false_negatives": fn
+            "false_negatives": fn,
         }
 
         # Track the metrics
         metadata = {
             "text_length": len(text) if text else None,
             "detected_count": len(detected_claims),
-            "expected_count": len(expected_claims)
+            "expected_count": len(expected_claims),
         }
 
         for name, value in metrics.items():
@@ -110,9 +108,9 @@ class MetricsTracker:
 
         return metrics
 
-    def track_check_worthiness(self,
-                               predictions: List[float],
-                               ground_truths: List[float]) -> Dict[str, float]:
+    def track_check_worthiness(
+        self, predictions: List[float], ground_truths: List[float]
+    ) -> Dict[str, float]:
         """
         Track check-worthiness scoring performance.
 
@@ -125,31 +123,26 @@ class MetricsTracker:
         """
         if len(predictions) != len(ground_truths) or not predictions:
             raise ValueError(
-                "Prediction and ground truth lists must be non-empty and of equal length")
+                "Prediction and ground truth lists must be non-empty and of equal length"
+            )
 
         # Calculate error metrics
         errors = [abs(p - gt) for p, gt in zip(predictions, ground_truths, strict=False)]
         mae = statistics.mean(errors)
         mse = statistics.mean([e**2 for e in errors])
-        rmse = mse ** 0.5
+        rmse = mse**0.5
 
         # Calculate correlation if we have more than one data point
         correlation = 0.0
         if len(predictions) > 1:
             try:
-                correlation = statistics.correlation(
-                    predictions, ground_truths)
+                correlation = statistics.correlation(predictions, ground_truths)
             except BaseException:
                 # Handle potential calculation errors
                 correlation = 0.0
 
         # Create metrics dict
-        metrics = {
-            "mae": mae,
-            "mse": mse,
-            "rmse": rmse,
-            "correlation": correlation
-        }
+        metrics = {"mae": mae, "mse": mse, "rmse": rmse, "correlation": correlation}
 
         # Track the metrics
         metadata = {"sample_size": len(predictions)}
@@ -159,9 +152,9 @@ class MetricsTracker:
 
         return metrics
 
-    def track_domain_classification(self,
-                                    predictions: List[str],
-                                    ground_truths: List[str]) -> Dict[str, float]:
+    def track_domain_classification(
+        self, predictions: List[str], ground_truths: List[str]
+    ) -> Dict[str, float]:
         """
         Track domain classification performance.
 
@@ -174,22 +167,15 @@ class MetricsTracker:
         """
         if len(predictions) != len(ground_truths) or not predictions:
             raise ValueError(
-                "Prediction and ground truth lists must be non-empty and of equal length")
+                "Prediction and ground truth lists must be non-empty and of equal length"
+            )
 
         # Calculate accuracy
-        correct = sum(
-            1 for p,
-            gt in zip(
-                predictions,
-                ground_truths, strict=False) if p == gt)
+        correct = sum(1 for p, gt in zip(predictions, ground_truths, strict=False) if p == gt)
         accuracy = correct / len(predictions)
 
         # Create metrics dict
-        metrics = {
-            "accuracy": accuracy,
-            "correct": correct,
-            "total": len(predictions)
-        }
+        metrics = {"accuracy": accuracy, "correct": correct, "total": len(predictions)}
 
         # Track the metrics
         metadata = {"sample_size": len(predictions)}
@@ -197,10 +183,9 @@ class MetricsTracker:
 
         return metrics
 
-    def _track_metric(self,
-                      name: str,
-                      value: float,
-                      metadata: Optional[Dict[str, Any]] = None) -> None:
+    def _track_metric(
+        self, name: str, value: float, metadata: Optional[Dict[str, Any]] = None
+    ) -> None:
         """
         Track a single metric value.
 
@@ -217,7 +202,7 @@ class MetricsTracker:
             "metric": name,
             "value": value,
             "timestamp": timestamp,
-            "metadata": metadata or {}
+            "metadata": metadata or {},
         }
 
         # Add to current batch
@@ -225,8 +210,7 @@ class MetricsTracker:
         self._current_batch[metric_key].append(record)
 
         # If batch is full, store it
-        if sum(len(batch)
-               for batch in self._current_batch.values()) >= self._batch_size:
+        if sum(len(batch) for batch in self._current_batch.values()) >= self._batch_size:
             self._store_metrics()
 
     def _store_metrics(self) -> None:
@@ -251,7 +235,7 @@ class MetricsTracker:
 
                 self.logger.debug(
                     f"Stored {len(records)} metrics for {metric_key}",
-                    extra={"metric": metric_key, "count": len(records)}
+                    extra={"metric": metric_key, "count": len(records)},
                 )
 
             # Clear the batch
@@ -259,16 +243,16 @@ class MetricsTracker:
 
         except Exception as e:
             self.logger.error(
-                f"Error storing metrics: {str(e)}",
-                extra={"error": str(e)},
-                exc_info=True
+                f"Error storing metrics: {str(e)}", extra={"error": str(e)}, exc_info=True
             )
 
-    def get_metrics(self,
-                    metric_name: str,
-                    start_time: Optional[str] = None,
-                    end_time: Optional[str] = None,
-                    aggregate: bool = True) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
+    def get_metrics(
+        self,
+        metric_name: str,
+        start_time: Optional[str] = None,
+        end_time: Optional[str] = None,
+        aggregate: bool = True,
+    ) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
         """
         Get metrics for analysis.
 
@@ -313,14 +297,7 @@ class MetricsTracker:
         values = [m.get("value", 0.0) for m in metrics]
 
         if not values:
-            return {
-                "count": 0,
-                "mean": 0.0,
-                "median": 0.0,
-                "min": 0.0,
-                "max": 0.0,
-                "std_dev": 0.0
-            }
+            return {"count": 0, "mean": 0.0, "median": 0.0, "min": 0.0, "max": 0.0, "std_dev": 0.0}
 
         try:
             return {
@@ -329,14 +306,11 @@ class MetricsTracker:
                 "median": statistics.median(values),
                 "min": min(values),
                 "max": max(values),
-                "std_dev": statistics.stdev(values) if len(values) > 1 else 0.0
+                "std_dev": statistics.stdev(values) if len(values) > 1 else 0.0,
             }
         except Exception as e:
             self.logger.error(f"Error calculating statistics: {str(e)}")
-            return {
-                "count": len(values),
-                "error": str(e)
-            }
+            return {"count": len(values), "error": str(e)}
 
 
 # Create instances for common components

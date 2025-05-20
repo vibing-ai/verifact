@@ -12,19 +12,13 @@ def mock_pipeline_config():
     """Return a mock pipeline configuration for testing."""
     return {
         "model": "test-model",
-        "claim_detector": {
-            "min_check_worthiness": 0.7,
-            "max_claims_per_text": 5
-        },
+        "claim_detector": {"min_check_worthiness": 0.7, "max_claims_per_text": 5},
         "evidence_hunter": {
             "search_strategy": "web_search",
             "max_results": 5,
-            "credibility_threshold": 0.6
+            "credibility_threshold": 0.6,
         },
-        "verdict_writer": {
-            "max_sources": 3,
-            "confidence_threshold": 0.8
-        }
+        "verdict_writer": {"max_sources": 3, "confidence_threshold": 0.8},
     }
 
 
@@ -42,7 +36,7 @@ def vcr_search_results():
                 "title": "How Old is the Earth? - NASA Space Place",
                 "link": "https://example.nasa.gov/earth-age",
                 "snippet": "The Earth is approximately 4.54 billion years old. Scientists know this through radiometric age dating of meteorites and the oldest rocks on Earth.",
-            }
+            },
         ],
         "water_coverage": [
             {
@@ -54,8 +48,9 @@ def vcr_search_results():
                 "title": "Earth's Water - USGS",
                 "link": "https://example.usgs.gov/water",
                 "snippet": "About 71 percent of the Earth's surface is water-covered. The oceans hold about 96.5 percent of all Earth's water.",
-            }
-        ]
+            },
+        ],
     }
 
-# Add integration-specific fixtures here 
+
+# Add integration-specific fixtures here

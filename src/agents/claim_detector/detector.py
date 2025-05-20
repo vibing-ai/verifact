@@ -27,11 +27,16 @@ from src.utils.model_config import ModelManager
 
 class ClaimDetector(IClaimDetector):
     """Agent for detecting factual claims in text."""
-    
-    def __init__(self, model_name: Optional[str] = None, min_check_worthiness: float = 0.7, max_claims: int = 10):
+
+    def __init__(
+        self,
+        model_name: Optional[str] = None,
+        min_check_worthiness: float = 0.7,
+        max_claims: int = 10,
+    ):
         """
         Initialize the ClaimDetector agent.
-        
+
         Args:
             model_name: Optional name of the model to use
             min_check_worthiness: Minimum threshold for considering a claim check-worthy (0-1)
@@ -39,58 +44,69 @@ class ClaimDetector(IClaimDetector):
         """
         # Get component-specific logger
         self.logger = get_structured_logger("verifact.claim_detector")
-        
+
         # Set component context for logging
         from src.utils.logging.structured_logger import set_component_context
+
         set_component_context(component="claim_detector", operation="initialize")
-        
-        self.logger.info("Initializing ClaimDetector agent", extra={
-            "model_name": model_name,
-            "min_check_worthiness": min_check_worthiness,
-            "max_claims": max_claims,
-            "component": "claim_detector"
-        })
-        
+
+        self.logger.info(
+            "Initializing ClaimDetector agent",
+            extra={
+                "model_name": model_name,
+                "min_check_worthiness": min_check_worthiness,
+                "max_claims": max_claims,
+                "component": "claim_detector",
+            },
+        )
+
         # Set minimum check-worthiness threshold and max claims
         self.min_check_worthiness = min_check_worthiness
         self.max_claims = max_claims
-        
+
         # Create a ModelManager instance for this agent
         self.model_manager = ModelManager(agent_type="claim_detector")
-        
+
         # Cache instances
         self.claim_cache = claim_cache
         self.entity_cache = entity_cache
         self.model_cache = model_cache
-        
+
         # Metrics tracker
         self.metrics = claim_detector_metrics
-        
+
         # Initialize helper components
         self.entity_extractor = EntityExtractor(model_name=model_name)
         self.domain_classifier = DomainClassifier()
-        
+
         # Override the model name if explicitly provided
         if model_name:
             self.model_manager.model_name = model_name
             # Rebuild fallback chain with new primary model
-            self.model_manager.fallback_models = [model_name] + self.model_manager.fallback_models[1:]
+            self.model_manager.fallback_models = [model_name] + self.model_manager.fallback_models[
+                1:
+            ]
             self.logger.info("Using custom model", extra={"model_name": model_name})
             # Default model is qwen/qwen3-8b:free, which excels at structured output
             if "qwen" in self.model_manager.model_name.lower():
-                self.logger.info("Using Qwen model with optimized parameters", extra={
-                    "model": "qwen3-8b",
-                    "optimization": "structured output",
-                    "temperature": 0.1
-                })
+                self.logger.info(
+                    "Using Qwen model with optimized parameters",
+                    extra={
+                        "model": "qwen3-8b",
+                        "optimization": "structured output",
+                        "temperature": 0.1,
+                    },
+                )
                 # Use lower temperature for more consistent structured output
                 self.model_manager.set_parameter("temperature", 0.1)
         else:
-            self.logger.info("Using default model", extra={"model_name": self.model_manager.model_name})
-        
+            self.logger.info(
+                "Using default model", extra={"model_name": self.model_manager.model_name}
+            )
+
         # Configure OpenAI for Agent SDK
         self.model_manager.configure_openai_for_agent()
-        
+
         # Create the claim detection agent
         agent_start_time = time.time()
         self.agent = Agent(
@@ -175,17 +191,20 @@ class ClaimDetector(IClaimDetector):
             output_type=List[Claim],
             tools=[WebSearchTool()],
             model=self.model_manager.model_name,
-            **self.model_manager.parameters
+            **self.model_manager.parameters,
         )
-        
+
         # Log agent creation time
         agent_creation_time = time.time() - agent_start_time
-        self.logger.debug("Created claim detection agent", extra={
-            "agent_name": "ClaimDetector",
-            "creation_time_seconds": agent_creation_time,
-            "model": self.model_manager.model_name
-        })
-            
+        self.logger.debug(
+            "Created claim detection agent",
+            extra={
+                "agent_name": "ClaimDetector",
+                "creation_time_seconds": agent_creation_time,
+                "model": self.model_manager.model_name,
+            },
+        )
+
         # Create the entity extraction agent for detailed entity analysis
         entity_agent_start_time = time.time()
         self.entity_agent = Agent(
@@ -221,246 +240,290 @@ class ClaimDetector(IClaimDetector):
             """,
             output_type=List[Entity],
             model=self.model_manager.model_name,
-            **self.model_manager.parameters
+            **self.model_manager.parameters,
         )
-        
+
         # Log entity agent creation time
         entity_agent_creation_time = time.time() - entity_agent_start_time
-        self.logger.debug("Created entity extraction agent", extra={
-            "agent_name": "EntityExtractor",
-            "creation_time_seconds": entity_agent_creation_time,
-            "model": self.model_manager.model_name
-        })
-        
-    async def detect_claims(self, text: str, min_check_worthiness: Optional[float] = None, 
-                           expected_claims: Optional[List[Dict[str, Any]]] = None,
-                           max_claims: Optional[int] = None) -> List[Claim]:
+        self.logger.debug(
+            "Created entity extraction agent",
+            extra={
+                "agent_name": "EntityExtractor",
+                "creation_time_seconds": entity_agent_creation_time,
+                "model": self.model_manager.model_name,
+            },
+        )
+
+    async def detect_claims(
+        self,
+        text: str,
+        min_check_worthiness: Optional[float] = None,
+        expected_claims: Optional[List[Dict[str, Any]]] = None,
+        max_claims: Optional[int] = None,
+    ) -> List[Claim]:
         """
         Detect claims in the given text.
-        
+
         Args:
             text: The text to analyze for claims
             min_check_worthiness: Optional override for min check-worthiness threshold
             expected_claims: Expected claims for testing/evaluation
             max_claims: Optional override for maximum number of claims to return
-            
+
         Returns:
             List[Claim]: Detected claims, sorted by importance
         """
         # Set component context for this operation
         from src.utils.logging.structured_logger import set_component_context
+
         set_component_context(component="claim_detector", operation="detect_claims")
-        
+
         # Generate operation ID for tracing this specific claim detection
         operation_id = hashlib.md5(f"{text[:100]}-{time.time()}".encode()).hexdigest()[:10]
-        
+
         start_time = time.time()
-        self.logger.info("Starting claim detection", extra={
-            "text_length": len(text),
-            "operation_id": operation_id,
-            "text_preview": text[:100] + "..." if len(text) > 100 else text,
-            "text_snippet": text[:100] + "..." if len(text) > 100 else text
-        })
-        
+        self.logger.info(
+            "Starting claim detection",
+            extra={
+                "text_length": len(text),
+                "operation_id": operation_id,
+                "text_preview": text[:100] + "..." if len(text) > 100 else text,
+                "text_snippet": text[:100] + "..." if len(text) > 100 else text,
+            },
+        )
+
         # Use instance defaults if not overridden
-        min_worthiness = min_check_worthiness if min_check_worthiness is not None else self.min_check_worthiness
+        min_worthiness = (
+            min_check_worthiness if min_check_worthiness is not None else self.min_check_worthiness
+        )
         max_claim_count = max_claims if max_claims is not None else self.max_claims
-        
+
         # Check if this exact text has been processed before
         text_hash = hashlib.md5(text.encode()).hexdigest()
         cached_claims = self.claim_cache.get(text_hash)
-        
+
         if cached_claims:
-            self.logger.info("Retrieved claims from cache", extra={
-                "cache_hit": True,
-                "text_hash": text_hash,
-                "claim_count": len(cached_claims)
-            })
+            self.logger.info(
+                "Retrieved claims from cache",
+                extra={
+                    "cache_hit": True,
+                    "text_hash": text_hash,
+                    "claim_count": len(cached_claims),
+                },
+            )
             return cached_claims
-            
+
         try:
             # Create a runner for the agent
             runner = Runner(agent=self.agent)
-            
+
             # Run the agent with the text
             agent_start_time = time.time()
             response = await runner.run(text)
             agent_processing_time = time.time() - agent_start_time
-            
+
             # Extract claims from the response
             if response and isinstance(response, list):
                 claims = response
-                self.logger.info("Claims detected successfully", extra={
-                    "claim_count": len(claims),
-                    "agent_processing_time_ms": int(agent_processing_time * 1000)
-                })
+                self.logger.info(
+                    "Claims detected successfully",
+                    extra={
+                        "claim_count": len(claims),
+                        "agent_processing_time_ms": int(agent_processing_time * 1000),
+                    },
+                )
             else:
-                self.logger.warning("Unexpected response format from agent", extra={
-                    "response_type": type(response).__name__
-                })
+                self.logger.warning(
+                    "Unexpected response format from agent",
+                    extra={"response_type": type(response).__name__},
+                )
                 claims = []
-                
+
             # Filter claims by check-worthiness
             if min_worthiness > 0:
                 original_count = len(claims)
                 claims = [c for c in claims if c.check_worthiness >= min_worthiness]
-                self.logger.debug("Filtered claims by check-worthiness", extra={
-                    "original_count": original_count,
-                    "filtered_count": len(claims),
-                    "min_check_worthiness": min_worthiness
-                })
-                
+                self.logger.debug(
+                    "Filtered claims by check-worthiness",
+                    extra={
+                        "original_count": original_count,
+                        "filtered_count": len(claims),
+                        "min_check_worthiness": min_worthiness,
+                    },
+                )
+
             # Enhance claims with additional entity information
             for claim in claims:
                 claim = await self._enhance_claim_entities(claim)
-                
+
             # Rank and limit claims
             claims = self.rank_claims(claims)
-            
+
             # Limit to max_claims
             if max_claim_count > 0 and len(claims) > max_claim_count:
                 claims = claims[:max_claim_count]
-                self.logger.debug("Limited claims to maximum count", extra={
-                    "max_claims": max_claim_count,
-                    "returned_claims": len(claims)
-                })
-                
+                self.logger.debug(
+                    "Limited claims to maximum count",
+                    extra={"max_claims": max_claim_count, "returned_claims": len(claims)},
+                )
+
             # Cache the results
             self.claim_cache.set(text_hash, claims)
-            
+
             total_processing_time = time.time() - start_time
-            self.logger.info("Claim detection completed", extra={
-                "processing_time_ms": int(total_processing_time * 1000),
-                "claims_found": len(claims),
-                "text_length": len(text)
-            })
-            
+            self.logger.info(
+                "Claim detection completed",
+                extra={
+                    "processing_time_ms": int(total_processing_time * 1000),
+                    "claims_found": len(claims),
+                    "text_length": len(text),
+                },
+            )
+
             return claims
-                
+
         except Exception as e:
-            self.logger.exception("Error in claim detection", extra={
-                "error_type": type(e).__name__,
-                "text_length": len(text)
-            })
+            self.logger.exception(
+                "Error in claim detection",
+                extra={"error_type": type(e).__name__, "text_length": len(text)},
+            )
             raise
-            
+
     async def _enhance_claim_entities(self, claim: Claim) -> Claim:
         """Enhance a claim with detailed entity information."""
         start_time = time.time()
-        
+
         # Skip if claim already has detailed entities
-        if claim.entities and len(claim.entities) > 0 and hasattr(claim.entities[0], 'relevance'):
+        if claim.entities and len(claim.entities) > 0 and hasattr(claim.entities[0], "relevance"):
             return claim
-            
+
         try:
             # Create a runner for the entity agent
             runner = Runner(agent=self.entity_agent)
-            
+
             # Check cache first
             cache_key = hashlib.md5(claim.text.encode()).hexdigest()
             cached_entities = self.entity_cache.get(cache_key)
-            
+
             if cached_entities:
-                self.logger.debug("Retrieved entities from cache", extra={
-                    "claim_text": claim.text[:50] + "..." if len(claim.text) > 50 else claim.text,
-                    "entity_count": len(cached_entities)
-                })
+                self.logger.debug(
+                    "Retrieved entities from cache",
+                    extra={
+                        "claim_text": (
+                            claim.text[:50] + "..." if len(claim.text) > 50 else claim.text
+                        ),
+                        "entity_count": len(cached_entities),
+                    },
+                )
                 claim.entities = cached_entities
                 return claim
-                
+
             # Run entity extraction
             response = await runner.run(claim.text)
-            
+
             if response and isinstance(response, list):
                 claim.entities = response
-                
+
                 # Cache the entities
                 self.entity_cache.set(cache_key, claim.entities)
-                
+
                 processing_time = time.time() - start_time
-                self.logger.debug("Enhanced claim with entities", extra={
-                    "claim_text": claim.text[:50] + "..." if len(claim.text) > 50 else claim.text,
-                    "entity_count": len(claim.entities),
-                    "processing_time_ms": int(processing_time * 1000)
-                })
+                self.logger.debug(
+                    "Enhanced claim with entities",
+                    extra={
+                        "claim_text": (
+                            claim.text[:50] + "..." if len(claim.text) > 50 else claim.text
+                        ),
+                        "entity_count": len(claim.entities),
+                        "processing_time_ms": int(processing_time * 1000),
+                    },
+                )
             else:
-                self.logger.warning("Unexpected entity extraction response", extra={
-                    "response_type": type(response).__name__,
-                    "claim_text": claim.text[:50] + "..." if len(claim.text) > 50 else claim.text
-                })
-                
+                self.logger.warning(
+                    "Unexpected entity extraction response",
+                    extra={
+                        "response_type": type(response).__name__,
+                        "claim_text": (
+                            claim.text[:50] + "..." if len(claim.text) > 50 else claim.text
+                        ),
+                    },
+                )
+
             return claim
-                
+
         except Exception as e:
-            self.logger.exception("Error enhancing claim entities", extra={
-                "error_type": type(e).__name__,
-                "claim_text": claim.text[:50] + "..." if len(claim.text) > 50 else claim.text
-            })
+            self.logger.exception(
+                "Error enhancing claim entities",
+                extra={
+                    "error_type": type(e).__name__,
+                    "claim_text": claim.text[:50] + "..." if len(claim.text) > 50 else claim.text,
+                },
+            )
             # Return original claim if enhancement fails
             return claim
 
     def rank_claims(self, claims: List[Claim]) -> List[Claim]:
         """
         Rank claims by importance for fact-checking.
-        
+
         Args:
             claims: List of claims to rank
-            
+
         Returns:
             List[Claim]: Ranked claims
         """
         if not claims:
             return []
-            
+
         # Define scoring function for ranking
         def claim_importance_score(claim: Claim) -> float:
             # Base score is the check_worthiness
             score = claim.check_worthiness * 0.6
-            
+
             # Add specificity component
-            if hasattr(claim, 'specificity_score') and claim.specificity_score is not None:
+            if hasattr(claim, "specificity_score") and claim.specificity_score is not None:
                 score += claim.specificity_score * 0.2
             elif contains_specificity_indicators(claim.text):
                 score += 0.15
-                
+
             # Add domain importance component
             if claim.domain in [ClaimDomain.HEALTH, ClaimDomain.SCIENCE]:
                 score += 0.1
             elif claim.domain in [ClaimDomain.POLITICS, ClaimDomain.ECONOMICS]:
                 score += 0.08
-                
+
             # Add impact component
-            if hasattr(claim, 'impact_score') and claim.impact_score is not None:
+            if hasattr(claim, "impact_score") and claim.impact_score is not None:
                 score += claim.impact_score * 0.1
-                
+
             return score
-            
+
         # Sort claims by importance score
         ranked_claims = sorted(claims, key=claim_importance_score, reverse=True)
-        
+
         # Set rank property based on sorted position
         for i, claim in enumerate(ranked_claims):
             claim.rank = i + 1
-            
-        self.logger.debug("Claims ranked by importance", extra={
-            "claim_count": len(ranked_claims)
-        })
-            
+
+        self.logger.debug("Claims ranked by importance", extra={"claim_count": len(ranked_claims)})
+
         return ranked_claims
-        
-    def get_performance_metrics(self, 
-                          metric_name: Optional[str] = None, 
-                          start_time: Optional[str] = None,
-                          end_time: Optional[str] = None) -> Dict[str, Any]:
+
+    def get_performance_metrics(
+        self,
+        metric_name: Optional[str] = None,
+        start_time: Optional[str] = None,
+        end_time: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """
         Get performance metrics for the claim detector.
-        
+
         Args:
             metric_name: Optional name of specific metric to retrieve
             start_time: Optional start time for time-bounded metrics
             end_time: Optional end time for time-bounded metrics
-            
+
         Returns:
             Dict[str, Any]: Performance metrics
         """
-        return self.metrics.get_metrics(metric_name, start_time, end_time) 
+        return self.metrics.get_metrics(metric_name, start_time, end_time)

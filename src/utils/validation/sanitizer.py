@@ -28,7 +28,7 @@ def sanitize_text(text: str) -> str:
     sanitized = html.escape(text)
 
     # Normalize unicode to remove potentially dangerous characters
-    sanitized = unicodedata.normalize('NFKC', sanitized)
+    sanitized = unicodedata.normalize("NFKC", sanitized)
 
     return sanitized
 
@@ -61,13 +61,12 @@ def sanitize_url(url: str) -> str:
         return ""
 
     # Only allow http and https schemes
-    if not url.startswith('http://') and not url.startswith('https://'):
+    if not url.startswith("http://") and not url.startswith("https://"):
         # Safer to return empty than an unsafe URL
         return ""
 
     # Remove control characters and spaces
-    sanitized = ''.join(c for c in url if unicodedata.category(c)[
-                        0] != 'C' and c != ' ')
+    sanitized = "".join(c for c in url if unicodedata.category(c)[0] != "C" and c != " ")
 
     # Escape HTML entities
     sanitized = html.escape(sanitized)
@@ -92,18 +91,29 @@ def sanitize_sql(sql_input: str) -> str:
         return ""
 
     # Remove comments
-    sanitized = re.sub(r'--.*?(\r\n|\n|$)', '', sql_input)
-    sanitized = re.sub(r'/\*.*?\*/', '', sanitized, flags=re.DOTALL)
+    sanitized = re.sub(r"--.*?(\r\n|\n|$)", "", sql_input)
+    sanitized = re.sub(r"/\*.*?\*/", "", sanitized, flags=re.DOTALL)
 
     # Remove SQL control keywords
     dangerous_keywords = [
-        'DROP', 'DELETE', 'UPDATE', 'INSERT', 'ALTER', 'TRUNCATE',
-        'EXEC', 'EXECUTE', 'UNION', 'SELECT', 'GRANT', 'REVOKE',
-        'CREATE', 'SHUTDOWN'
+        "DROP",
+        "DELETE",
+        "UPDATE",
+        "INSERT",
+        "ALTER",
+        "TRUNCATE",
+        "EXEC",
+        "EXECUTE",
+        "UNION",
+        "SELECT",
+        "GRANT",
+        "REVOKE",
+        "CREATE",
+        "SHUTDOWN",
     ]
 
-    pattern = r'\b(' + '|'.join(dangerous_keywords) + r')\b'
-    sanitized = re.sub(pattern, '', sanitized, flags=re.IGNORECASE)
+    pattern = r"\b(" + "|".join(dangerous_keywords) + r")\b"
+    sanitized = re.sub(pattern, "", sanitized, flags=re.IGNORECASE)
 
     return sanitized
 
@@ -166,10 +176,7 @@ def sanitize_list(data: List[Any]) -> List[Any]:
     return sanitized
 
 
-def validate_text_length(
-        text: str,
-        min_length: int = 1,
-        max_length: int = 10000) -> bool:
+def validate_text_length(text: str, min_length: int = 1, max_length: int = 10000) -> bool:
     """
     Validate text length within specified bounds.
 
@@ -203,13 +210,15 @@ def validate_url_format(url: str) -> bool:
 
     # Simple URL validation pattern
     url_pattern = re.compile(
-        r'^https?://'  # http:// or https://
+        r"^https?://"  # http:// or https://
         # domain
-        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'
-        r'localhost|'  # localhost
-        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # or ipv4
-        r'(?::\d+)?'  # optional port
-        r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+        r"(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|"
+        r"localhost|"  # localhost
+        r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"  # or ipv4
+        r"(?::\d+)?"  # optional port
+        r"(?:/?|[/?]\S+)$",
+        re.IGNORECASE,
+    )
 
     return bool(url_pattern.match(url))
 
@@ -228,7 +237,6 @@ def validate_email_format(email: str) -> bool:
         return False
 
     # Simple email validation pattern
-    email_pattern = re.compile(
-        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+    email_pattern = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
 
     return bool(email_pattern.match(email))

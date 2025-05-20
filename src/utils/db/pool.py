@@ -27,15 +27,11 @@ def get_pool_config() -> Dict[str, Any]:
         Dictionary with pool configuration
     """
     return {
-        "min_size": int(
-            os.getenv(
-                "DB_POOL_MIN_SIZE", "2")), "max_size": int(
-            os.getenv(
-                "DB_POOL_MAX_SIZE", "10")), "max_inactive_connection_lifetime": float(
-            os.getenv(
-                "DB_POOL_MAX_IDLE_TIME", "300")), "command_timeout": float(
-            os.getenv(
-                "DB_COMMAND_TIMEOUT", "60.0")), }
+        "min_size": int(os.getenv("DB_POOL_MIN_SIZE", "2")),
+        "max_size": int(os.getenv("DB_POOL_MAX_SIZE", "10")),
+        "max_inactive_connection_lifetime": float(os.getenv("DB_POOL_MAX_IDLE_TIME", "300")),
+        "command_timeout": float(os.getenv("DB_COMMAND_TIMEOUT", "60.0")),
+    }
 
 
 async def init_db_pool():
@@ -60,16 +56,13 @@ async def init_db_pool():
         extra={
             "min_size": pool_config["min_size"],
             "max_size": pool_config["max_size"],
-            "max_idle_time": pool_config["max_inactive_connection_lifetime"]
-        }
+            "max_idle_time": pool_config["max_inactive_connection_lifetime"],
+        },
     )
 
     try:
         # Create connection pool
-        _pool = await asyncpg.create_pool(
-            dsn=db_url,
-            **pool_config
-        )
+        _pool = await asyncpg.create_pool(dsn=db_url, **pool_config)
 
         # Test connection
         async with _pool.acquire() as conn:
@@ -108,8 +101,7 @@ def get_db_pool():
     """
     global _pool
     if _pool is None:
-        raise RuntimeError(
-            "Database pool not initialized. Call init_db_pool first.")
+        raise RuntimeError("Database pool not initialized. Call init_db_pool first.")
     return _pool
 
 

@@ -16,7 +16,7 @@ class VerifactError(Exception):
         message: str = "An error occurred in the VeriFact system",
         code: str = "VERIFACT_ERROR",
         status_code: int = 500,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
         self.message = message
         self.code = code
@@ -26,16 +26,11 @@ class VerifactError(Exception):
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert exception to a standardized dictionary format."""
-        return {
-            "error": {
-                "code": self.code,
-                "message": self.message,
-                "details": self.details
-            }
-        }
+        return {"error": {"code": self.code, "message": self.message, "details": self.details}}
 
 
 # Input/Validation Errors
+
 
 class ValidationError(VerifactError):
     """Exception raised for data validation errors."""
@@ -44,7 +39,7 @@ class ValidationError(VerifactError):
         self,
         message: str = "Invalid data format or values",
         details: Optional[Dict[str, Any]] = None,
-        field: Optional[str] = None
+        field: Optional[str] = None,
     ):
         code = "VALIDATION_ERROR"
         if field:
@@ -52,12 +47,7 @@ class ValidationError(VerifactError):
             details["field"] = field
             code = f"VALIDATION_ERROR_{field.upper()}"
 
-        super().__init__(
-            message=message,
-            code=code,
-            status_code=400,
-            details=details
-        )
+        super().__init__(message=message, code=code, status_code=400, details=details)
 
 
 class InputTooLongError(ValidationError):
@@ -66,13 +56,13 @@ class InputTooLongError(ValidationError):
     def __init__(self, max_length: int, actual_length: int):
         super().__init__(
             message=f"Input text exceeds maximum allowed length of {max_length} characters",
-            details={
-                "max_length": max_length,
-                "actual_length": actual_length},
-            field="text")
+            details={"max_length": max_length, "actual_length": actual_length},
+            field="text",
+        )
 
 
 # Pipeline Errors
+
 
 class PipelineError(VerifactError):
     """Base exception for errors in the factchecking pipeline."""
@@ -82,18 +72,13 @@ class PipelineError(VerifactError):
         message: str = "Error in factchecking pipeline",
         code: str = "PIPELINE_ERROR",
         stage: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
         details = details or {}
         if stage:
             details["pipeline_stage"] = stage
 
-        super().__init__(
-            message=message,
-            code=code,
-            status_code=500,
-            details=details
-        )
+        super().__init__(message=message, code=code, status_code=500, details=details)
 
 
 class ModelError(PipelineError):
@@ -104,18 +89,13 @@ class ModelError(PipelineError):
         message: str = "AI model processing failed",
         model_name: Optional[str] = None,
         stage: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
         details = details or {}
         if model_name:
             details["model_name"] = model_name
 
-        super().__init__(
-            message=message,
-            code="MODEL_ERROR",
-            stage=stage,
-            details=details
-        )
+        super().__init__(message=message, code="MODEL_ERROR", stage=stage, details=details)
 
 
 class EvidenceGatheringError(PipelineError):
@@ -125,17 +105,14 @@ class EvidenceGatheringError(PipelineError):
         self,
         message: str = "Failed to gather evidence",
         source: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
         details = details or {}
         if source:
             details["source"] = source
 
         super().__init__(
-            message=message,
-            code="EVIDENCE_ERROR",
-            stage="evidence_gathering",
-            details=details
+            message=message, code="EVIDENCE_ERROR", stage="evidence_gathering", details=details
         )
 
 
@@ -147,7 +124,7 @@ class RateLimitError(PipelineError):
         message: str = "Rate limit exceeded",
         service: Optional[str] = None,
         retry_after: Optional[int] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
         details = details or {}
         if service:
@@ -155,14 +132,11 @@ class RateLimitError(PipelineError):
         if retry_after:
             details["retry_after"] = retry_after
 
-        super().__init__(
-            message=message,
-            code="RATE_LIMIT_ERROR",
-            details=details
-        )
+        super().__init__(message=message, code="RATE_LIMIT_ERROR", details=details)
 
 
 # Resource/Service Errors
+
 
 class ResourceUnavailableError(VerifactError):
     """Exception raised when a required resource is unavailable."""
@@ -171,17 +145,14 @@ class ResourceUnavailableError(VerifactError):
         self,
         message: str = "Required resource is unavailable",
         resource_type: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
         details = details or {}
         if resource_type:
             details["resource_type"] = resource_type
 
         super().__init__(
-            message=message,
-            code="RESOURCE_UNAVAILABLE",
-            status_code=503,
-            details=details
+            message=message, code="RESOURCE_UNAVAILABLE", status_code=503, details=details
         )
 
 
@@ -192,17 +163,13 @@ class DatabaseError(ResourceUnavailableError):
         self,
         message: str = "Database operation failed",
         operation: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
         details = details or {}
         if operation:
             details["operation"] = operation
 
-        super().__init__(
-            message=message,
-            resource_type="database",
-            details=details
-        )
+        super().__init__(message=message, resource_type="database", details=details)
 
 
 class ExternalServiceError(ResourceUnavailableError):
@@ -212,20 +179,17 @@ class ExternalServiceError(ResourceUnavailableError):
         self,
         message: str = "External service error",
         service_name: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
         details = details or {}
         if service_name:
             details["service_name"] = service_name
 
-        super().__init__(
-            message=message,
-            resource_type="external_service",
-            details=details
-        )
+        super().__init__(message=message, resource_type="external_service", details=details)
 
 
 # Authentication/Authorization Errors
+
 
 class AuthError(VerifactError):
     """Base exception for authentication and authorization errors."""
@@ -234,14 +198,9 @@ class AuthError(VerifactError):
         self,
         message: str = "Authentication error",
         code: str = "AUTH_ERROR",
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
-        super().__init__(
-            message=message,
-            code=code,
-            status_code=401,
-            details=details
-        )
+        super().__init__(message=message, code=code, status_code=401, details=details)
 
 
 class UnauthorizedError(AuthError):
@@ -250,16 +209,13 @@ class UnauthorizedError(AuthError):
     def __init__(
         self,
         message: str = "Not authorized to perform this action",
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
-        super().__init__(
-            message=message,
-            code="UNAUTHORIZED",
-            details=details
-        )
+        super().__init__(message=message, code="UNAUTHORIZED", details=details)
 
 
 # API Specific Errors
+
 
 class APIError(VerifactError):
     """Base exception for API related errors."""
@@ -268,18 +224,13 @@ class APIError(VerifactError):
         self,
         message: str = "API operation failed",
         endpoint: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
         details = details or {}
         if endpoint:
             details["endpoint"] = endpoint
 
-        super().__init__(
-            message=message,
-            code="API_ERROR",
-            status_code=500,
-            details=details
-        )
+        super().__init__(message=message, code="API_ERROR", status_code=500, details=details)
 
 
 class RequestTimeoutError(APIError):
@@ -290,17 +241,13 @@ class RequestTimeoutError(APIError):
         message: str = "Request timed out",
         endpoint: Optional[str] = None,
         timeout: Optional[float] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
         details = details or {}
         if timeout:
             details["timeout_seconds"] = timeout
 
-        super().__init__(
-            message=message,
-            endpoint=endpoint,
-            details=details
-        )
+        super().__init__(message=message, endpoint=endpoint, details=details)
         self.status_code = 408
 
 
@@ -312,17 +259,13 @@ class TooManyRequestsError(APIError):
         message: str = "Too many requests",
         endpoint: Optional[str] = None,
         retry_after: Optional[int] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
         details = details or {}
         if retry_after:
             details["retry_after"] = retry_after
 
-        super().__init__(
-            message=message,
-            endpoint=endpoint,
-            details=details
-        )
+        super().__init__(message=message, endpoint=endpoint, details=details)
         self.status_code = 429
 
 
@@ -330,30 +273,17 @@ class APIAuthenticationError(AuthError):
     """Exception raised when API authentication fails."""
 
     def __init__(
-        self,
-        message: str = "API authentication failed",
-        details: Optional[Dict[str, Any]] = None
+        self, message: str = "API authentication failed", details: Optional[Dict[str, Any]] = None
     ):
-        super().__init__(
-            message=message,
-            code="API_AUTH_ERROR",
-            details=details
-        )
+        super().__init__(message=message, code="API_AUTH_ERROR", details=details)
         self.status_code = 401
 
 
 class InvalidAPIKeyError(APIAuthenticationError):
     """Exception raised when an invalid API key is provided."""
 
-    def __init__(
-        self,
-        message: str = "Invalid API key",
-        details: Optional[Dict[str, Any]] = None
-    ):
-        super().__init__(
-            message=message,
-            details=details
-        )
+    def __init__(self, message: str = "Invalid API key", details: Optional[Dict[str, Any]] = None):
+        super().__init__(message=message, details=details)
 
 
 class ExpiredAPIKeyError(APIAuthenticationError):
@@ -363,16 +293,13 @@ class ExpiredAPIKeyError(APIAuthenticationError):
         self,
         message: str = "API key has expired",
         expiry_date: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
         details = details or {}
         if expiry_date:
             details["expiry_date"] = expiry_date
 
-        super().__init__(
-            message=message,
-            details=details
-        )
+        super().__init__(message=message, details=details)
 
 
 class InsufficientQuotaError(APIError):
@@ -383,7 +310,7 @@ class InsufficientQuotaError(APIError):
         message: str = "Insufficient API quota",
         current_usage: Optional[int] = None,
         quota_limit: Optional[int] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
         details = details or {}
         if current_usage is not None:
@@ -391,8 +318,5 @@ class InsufficientQuotaError(APIError):
         if quota_limit is not None:
             details["quota_limit"] = quota_limit
 
-        super().__init__(
-            message=message,
-            details=details
-        )
+        super().__init__(message=message, details=details)
         self.status_code = 403

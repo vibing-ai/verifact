@@ -15,6 +15,7 @@ from typing import Any, Dict, List, Literal, Optional
 @dataclass(frozen=True)
 class Claim:
     """Immutable representation of a factual claim."""
+
     text: str
     original_text: str
     context: str = ""
@@ -31,7 +32,7 @@ class Claim:
     specificity_score: float = 0.0
     public_interest_score: float = 0.0
     impact_score: float = 0.0
-    
+
     def __post_init__(self):
         """Validate claim data after initialization."""
         if not self.text.strip():
@@ -43,11 +44,12 @@ class Claim:
 @dataclass(frozen=True)
 class Evidence:
     """Immutable representation of evidence for a claim."""
+
     content: str
     source: str
     relevance: float = 1.0
     stance: str = "supporting"  # supporting, contradicting, neutral
-    
+
     def __post_init__(self):
         """Validate evidence data after initialization."""
         if not self.content.strip():
@@ -61,6 +63,7 @@ class Evidence:
 @dataclass(frozen=True)
 class Verdict:
     """Immutable representation of a factchecking verdict."""
+
     claim: str
     verdict: Literal["true", "false", "partially true", "unverifiable"]
     confidence: float
@@ -70,7 +73,7 @@ class Verdict:
     alternative_perspectives: Optional[str] = None
     key_evidence: Optional[List[Dict]] = None
     citation_metadata: Optional[Dict] = None
-    
+
     def __post_init__(self):
         """Validate verdict data after initialization."""
         if not self.claim.strip():
@@ -86,7 +89,7 @@ class Verdict:
 # Factory for creating DTOs from legacy models
 class DTOFactory:
     """Factory for creating DTOs from legacy model instances."""
-    
+
     @staticmethod
     def claim_from_legacy(legacy_claim) -> Claim:
         """Create a Claim DTO from a legacy Claim model."""
@@ -106,9 +109,9 @@ class DTOFactory:
             rank=legacy_claim.rank,
             specificity_score=legacy_claim.specificity_score,
             public_interest_score=legacy_claim.public_interest_score,
-            impact_score=legacy_claim.impact_score
+            impact_score=legacy_claim.impact_score,
         )
-    
+
     @staticmethod
     def evidence_from_legacy(legacy_evidence) -> Evidence:
         """Create an Evidence DTO from a legacy Evidence model."""
@@ -116,9 +119,9 @@ class DTOFactory:
             content=legacy_evidence.content,
             source=legacy_evidence.source,
             relevance=legacy_evidence.relevance,
-            stance=legacy_evidence.stance
+            stance=legacy_evidence.stance,
         )
-    
+
     @staticmethod
     def verdict_from_legacy(legacy_verdict) -> Verdict:
         """Create a Verdict DTO from a legacy Verdict model."""
@@ -131,5 +134,5 @@ class DTOFactory:
             evidence_summary=legacy_verdict.evidence_summary,
             alternative_perspectives=legacy_verdict.alternative_perspectives,
             key_evidence=legacy_verdict.key_evidence,
-            citation_metadata=legacy_verdict.citation_metadata
-        ) 
+            citation_metadata=legacy_verdict.citation_metadata,
+        )

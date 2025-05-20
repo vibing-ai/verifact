@@ -30,7 +30,8 @@ async def check_database() -> Dict[str, Any]:
             result["status"] = "error"
             result["details"] = {
                 "error": "Supabase client not initialized - check URL and API key",
-                "error_type": "ConnectionError"}
+                "error_type": "ConnectionError",
+            }
             return result
 
         # Check if we can connect to the database
@@ -39,19 +40,20 @@ async def check_database() -> Dict[str, Any]:
             version = cursor.fetchone()[0]
 
             # Check if pgvector is available
-            cursor.execute(
-                "SELECT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'vector')")
+            cursor.execute("SELECT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'vector')")
             pgvector_available = cursor.fetchone()[0]
 
             # Get some database stats
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT
                     count(*) as total_claims,
                     (SELECT count(*) FROM evidence) as total_evidence,
                     (SELECT count(*) FROM verdicts) as total_verdicts,
                     (SELECT count(*) FROM embeddings) as total_embeddings
                 FROM claims
-            """)
+            """
+            )
             stats_row = cursor.fetchone()
 
             # Build metrics dictionary
@@ -62,18 +64,15 @@ async def check_database() -> Dict[str, Any]:
                     "claims": stats_row[0] if stats_row else 0,
                     "evidence": stats_row[1] if stats_row else 0,
                     "verdicts": stats_row[2] if stats_row else 0,
-                    "embeddings": stats_row[3] if stats_row else 0
-                }
+                    "embeddings": stats_row[3] if stats_row else 0,
+                },
             }
 
         result["status"] = "ok"
         result["details"] = metrics
     except Exception as e:
         result["status"] = "error"
-        result["details"] = {
-            "error": str(e),
-            "error_type": type(e).__name__
-        }
+        result["details"] = {"error": str(e), "error_type": type(e).__name__}
     finally:
         result["latency_ms"] = int((time.time() - start_time) * 1000)
 
@@ -107,10 +106,7 @@ async def check_redis() -> Optional[Dict[str, Any]]:
         }
     except Exception as e:
         result["status"] = "error"
-        result["details"] = {
-            "error": str(e),
-            "error_type": type(e).__name__
-        }
+        result["details"] = {"error": str(e), "error_type": type(e).__name__}
     finally:
         result["latency_ms"] = int((time.time() - start_time) * 1000)
 
@@ -143,10 +139,7 @@ async def check_openrouter_api() -> Dict[str, Any]:
             }
     except Exception as e:
         result["status"] = "error"
-        result["details"] = {
-            "error": str(e),
-            "error_type": type(e).__name__
-        }
+        result["details"] = {"error": str(e), "error_type": type(e).__name__}
     finally:
         result["latency_ms"] = int((time.time() - start_time) * 1000)
 

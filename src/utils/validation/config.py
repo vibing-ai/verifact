@@ -35,7 +35,7 @@ class ValidationConfig:
             return
 
         try:
-            with open(config_path, 'r') as f:
+            with open(config_path, "r") as f:
                 self._config = yaml.safe_load(f) or {}
         except Exception as e:
             # Log error and use default values
@@ -56,7 +56,7 @@ class ValidationConfig:
             # Project root
             Path(__file__).parents[3] / "configs" / "validation.yml",
             # Explicit environment variable
-            os.environ.get("VERIFACT_VALIDATION_CONFIG")
+            os.environ.get("VERIFACT_VALIDATION_CONFIG"),
         ]
 
         # Return the first path that exists
@@ -74,30 +74,16 @@ class ValidationConfig:
             Dict[str, Any]: Default configuration
         """
         return {
-            "text": {
-                "min_length": 10,
-                "max_length": 50000,
-                "min_factcheck_length": 50
-            },
-            "claim": {
-                "min_length": 5,
-                "max_length": 1000,
-                "min_check_worthiness": 0.5
-            },
+            "text": {"min_length": 10, "max_length": 50000, "min_factcheck_length": 50},
+            "claim": {"min_length": 5, "max_length": 1000, "min_check_worthiness": 0.5},
             "api": {
                 "max_claims_per_request": 20,
                 "max_batch_claims": 100,
                 "rate_limit": 100,
-                "authenticated_rate_limit": 1000
+                "authenticated_rate_limit": 1000,
             },
-            "url": {
-                "max_length": 2048,
-                "allowed_schemes": ["http", "https"]
-            },
-            "feedback": {
-                "min_comment_length": 5,
-                "max_comment_length": 1000
-            }
+            "url": {"max_length": 2048, "allowed_schemes": ["http", "https"]},
+            "feedback": {"min_comment_length": 5, "max_comment_length": 1000},
         }
 
     def get(self, key: str, default: Any = None) -> Any:
@@ -111,7 +97,7 @@ class ValidationConfig:
         Returns:
             Any: Configuration value
         """
-        keys = key.split('.')
+        keys = key.split(".")
         value = self._config
 
         for k in keys:

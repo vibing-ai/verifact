@@ -24,10 +24,7 @@ REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD", None)
 REDIS_ENABLED = os.environ.get("REDIS_ENABLED", "true").lower() == "true"
 
 # Default TTL values
-DEFAULT_CACHE_TTL = int(
-    os.environ.get(
-        "DEFAULT_CACHE_TTL",
-        3600))  # 1 hour in seconds
+DEFAULT_CACHE_TTL = int(os.environ.get("DEFAULT_CACHE_TTL", 3600))  # 1 hour in seconds
 
 # Initialize Redis pool
 if REDIS_ENABLED:
@@ -35,7 +32,7 @@ if REDIS_ENABLED:
         redis_pool = redis.ConnectionPool.from_url(
             REDIS_URL,
             password=REDIS_PASSWORD,
-            decode_responses=False  # We'll handle serialization/deserialization ourselves
+            decode_responses=False,  # We'll handle serialization/deserialization ourselves
         )
         logger.info(f"Redis cache initialized with URL: {REDIS_URL}")
     except Exception as e:
@@ -66,8 +63,7 @@ class Cache:
             self.redis = redis.Redis(connection_pool=redis_pool)
         else:
             self.redis = None
-            logger.warning(
-                f"Using in-memory cache for namespace '{namespace}'")
+            logger.warning(f"Using in-memory cache for namespace '{namespace}'")
 
     def _make_key(self, key: str) -> str:
         """Create a namespaced cache key."""
@@ -184,14 +180,13 @@ class Cache:
                     if cursor == 0:
                         break
             except Exception as e:
-                logger.warning(
-                    f"Redis error in clear_namespace operation: {str(e)}")
+                logger.warning(f"Redis error in clear_namespace operation: {str(e)}")
                 return False
 
         # Clear in-memory cache keys in this namespace
         keys_to_delete = [
-            k for k in self._local_cache.keys() if k.startswith(
-                f"verifact:{self.namespace}:")]
+            k for k in self._local_cache.keys() if k.startswith(f"verifact:{self.namespace}:")
+        ]
         for k in keys_to_delete:
             del self._local_cache[k]
 

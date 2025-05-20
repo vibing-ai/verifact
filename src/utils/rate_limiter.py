@@ -20,6 +20,7 @@ logger = logging.getLogger("verifact.rate_limiter")
 @dataclass
 class RateLimitResult:
     """Result of a rate limit check."""
+
     allowed: bool  # Whether the request is allowed
     limit: int  # The rate limit
     remaining: int  # Remaining requests
@@ -31,8 +32,7 @@ class RateLimitStore(ABC):
     """Abstract base class for rate limit storage backends."""
 
     @abstractmethod
-    async def increment(
-            self, key: str, window_seconds: int) -> Tuple[int, List[float]]:
+    async def increment(self, key: str, window_seconds: int) -> Tuple[int, List[float]]:
         """
         Increment request count for a key and return the count and timestamps.
 
@@ -46,8 +46,7 @@ class RateLimitStore(ABC):
         pass
 
     @abstractmethod
-    async def get_count(
-            self, key: str, window_seconds: int) -> Tuple[int, List[float]]:
+    async def get_count(self, key: str, window_seconds: int) -> Tuple[int, List[float]]:
         """
         Get the current request count for a key.
 
@@ -87,8 +86,7 @@ class MemoryRateLimitStore(RateLimitStore):
         """
         self.cache = Cache(max_size=max_size, ttl_seconds=ttl_seconds)
 
-    async def increment(
-            self, key: str, window_seconds: int) -> Tuple[int, List[float]]:
+    async def increment(self, key: str, window_seconds: int) -> Tuple[int, List[float]]:
         """
         Increment request count for a key and return the count and timestamps.
 
@@ -107,27 +105,20 @@ class MemoryRateLimitStore(RateLimitStore):
         data = self.cache.get(key, {"count": 0, "timestamps": []})
 
         # Filter out old timestamps
-        timestamps = [
-            ts for ts in data.get(
-                "timestamps",
-                []) if ts > window_start]
+        timestamps = [ts for ts in data.get("timestamps", []) if ts > window_start]
 
         # Add current timestamp
         timestamps.append(current_time)
 
         # Update data
-        data = {
-            "count": len(timestamps),
-            "timestamps": timestamps
-        }
+        data = {"count": len(timestamps), "timestamps": timestamps}
 
         # Store updated data
         self.cache.set(key, data)
 
         return len(timestamps), timestamps
 
-    async def get_count(
-            self, key: str, window_seconds: int) -> Tuple[int, List[float]]:
+    async def get_count(self, key: str, window_seconds: int) -> Tuple[int, List[float]]:
         """
         Get the current request count for a key.
 
@@ -146,10 +137,7 @@ class MemoryRateLimitStore(RateLimitStore):
         data = self.cache.get(key, {"count": 0, "timestamps": []})
 
         # Filter out old timestamps
-        timestamps = [
-            ts for ts in data.get(
-                "timestamps",
-                []) if ts > window_start]
+        timestamps = [ts for ts in data.get("timestamps", []) if ts > window_start]
 
         return len(timestamps), timestamps
 
@@ -180,12 +168,12 @@ class DatabaseRateLimitStore(RateLimitStore):
         if self._pool is None:
             # Import here to avoid circular imports
             from src.utils.db.db import get_pool
+
             self._pool = await get_pool()
 
         return self._pool
 
-    async def increment(
-            self, key: str, window_seconds: int) -> Tuple[int, List[float]]:
+    async def increment(self, key: str, window_seconds: int) -> Tuple[int, List[float]]:
         """
         Increment request count for a key and return the count and timestamps.
 
@@ -200,23 +188,22 @@ class DatabaseRateLimitStore(RateLimitStore):
 
         async with pool.acquire() as conn:
             # Create table if it doesn't exist
-            await conn.execute("""
+            await conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS rate_limits (
                     key TEXT PRIMARY KEY,
                     timestamps JSONB NOT NULL DEFAULT '[]'::jsonb,
                     last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW()
                 )
-            """)
+            """
+            )
 
             # Get current time
             current_time = time.time()
             window_start = current_time - window_seconds
 
             # Get current timestamps
-            result = await conn.fetchval(
-                "SELECT timestamps FROM rate_limits WHERE key = $1",
-                key
-            )
+            result = await conn.fetchval("SELECT timestamps FROM rate_limits WHERE key = $1", key)
 
             timestamps = result or []
 
@@ -234,13 +221,13 @@ class DatabaseRateLimitStore(RateLimitStore):
                 ON CONFLICT (key) DO UPDATE
                 SET timestamps = $2, last_updated = NOW()
                 """,
-                key, timestamps
+                key,
+                timestamps,
             )
 
             return len(timestamps), timestamps
 
-    async def get_count(
-            self, key: str, window_seconds: int) -> Tuple[int, List[float]]:
+    async def get_count(self, key: str, window_seconds: int) -> Tuple[int, List[float]]:
         """
         Get the current request count for a key.
 
@@ -259,10 +246,7 @@ class DatabaseRateLimitStore(RateLimitStore):
             window_start = current_time - window_seconds
 
             # Get current timestamps
-            result = await conn.fetchval(
-                "SELECT timestamps FROM rate_limits WHERE key = $1",
-                key
-            )
+            result = await conn.fetchval("SELECT timestamps FROM rate_limits WHERE key = $1", key)
 
             timestamps = result or []
 
@@ -292,7 +276,7 @@ class DatabaseRateLimitStore(RateLimitStore):
                 ON CONFLICT (key) DO UPDATE
                 SET timestamps = '[]'::jsonb, last_updated = NOW()
                 """,
-                key
+                key,
             )
 
             return True
@@ -311,12 +295,9 @@ class RateLimiter:
         self.store = store or MemoryRateLimitStore()
 
         # Load configuration
-        self.enabled = os.getenv(
-            "RATE_LIMIT_ENABLED",
-            "true").lower() == "true"
+        self.enabled = os.getenv("RATE_LIMIT_ENABLED", "true").lower() == "true"
         self.default_limit = validation_config.get("api.rate_limit", 100)
-        self.authenticated_limit = validation_config.get(
-            "api.authenticated_rate_limit", 1000)
+        self.authenticated_limit = validation_config.get("api.authenticated_rate_limit", 1000)
         self.default_window = 3600  # 1 hour in seconds
 
         # Tier configuration
@@ -324,11 +305,10 @@ class RateLimiter:
             "free": self.default_limit,
             "basic": self.authenticated_limit,
             "premium": self.authenticated_limit * 2,
-            "enterprise": self.authenticated_limit * 10
+            "enterprise": self.authenticated_limit * 10,
         }
 
-    def _get_limit_for_key(
-            self, key: str, api_key_data: Optional[Dict[str, Any]] = None) -> int:
+    def _get_limit_for_key(self, key: str, api_key_data: Optional[Dict[str, Any]] = None) -> int:
         """
         Get the rate limit for a key.
 
@@ -347,11 +327,12 @@ class RateLimiter:
         # Default limit for unauthenticated requests
         return self.default_limit
 
-    async def check(self,
-                    identifier: str,
-                    api_key_data: Optional[Dict[str,
-                                                Any]] = None,
-                    window_seconds: Optional[int] = None) -> RateLimitResult:
+    async def check(
+        self,
+        identifier: str,
+        api_key_data: Optional[Dict[str, Any]] = None,
+        window_seconds: Optional[int] = None,
+    ) -> RateLimitResult:
         """
         Check if a request is allowed or rate limited.
 
@@ -365,12 +346,7 @@ class RateLimiter:
         """
         if not self.enabled:
             # Rate limiting is disabled
-            return RateLimitResult(
-                allowed=True,
-                limit=0,
-                remaining=0,
-                reset=0
-            )
+            return RateLimitResult(allowed=True, limit=0, remaining=0, reset=0)
 
         # Get configuration
         window = window_seconds or self.default_window
@@ -395,7 +371,7 @@ class RateLimiter:
                 limit=limit,
                 remaining=0,
                 reset=int(window_start + window),
-                retry_after=retry_after
+                retry_after=retry_after,
             )
 
         # Increment count
@@ -405,10 +381,7 @@ class RateLimiter:
         remaining = max(0, limit - count)
 
         return RateLimitResult(
-            allowed=True,
-            limit=limit,
-            remaining=remaining,
-            reset=int(time.time() + window)
+            allowed=True, limit=limit, remaining=remaining, reset=int(time.time() + window)
         )
 
     async def reset(self, identifier: str) -> bool:

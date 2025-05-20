@@ -86,7 +86,7 @@ async def get_user_by_id(user_id: str) -> Optional[User]:
             "access_token": "encrypted_access_token_value",
             "refresh_token": "encrypted_refresh_token_value",
             "created_at": datetime.utcnow(),
-            "metadata": {"last_ip": "127.0.0.1"}
+            "metadata": {"last_ip": "127.0.0.1"},
         }
 
         # Create user from encrypted data

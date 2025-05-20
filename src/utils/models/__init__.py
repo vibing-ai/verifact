@@ -7,6 +7,4 @@ model selection, parameter management, API key handling, and token usage trackin
 
 from src.utils.models.model_config import configure_openai_for_openrouter
 
-__all__ = [
-    "configure_openai_for_openrouter"
-]
+__all__ = ["configure_openai_for_openrouter"]

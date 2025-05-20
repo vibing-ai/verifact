@@ -25,10 +25,7 @@ class Validator:
     """
 
     @staticmethod
-    def validate_text(
-            text: str,
-            field_name: str = "text",
-            strict: bool = False) -> str:
+    def validate_text(text: str, field_name: str = "text", strict: bool = False) -> str:
         """
         Validate and sanitize text input.
 
@@ -61,7 +58,9 @@ class Validator:
                         "field": field_name,
                         "actual_length": len(text),
                         "min_length": min_length,
-                        "max_length": max_length})
+                        "max_length": max_length,
+                    },
+                )
             # Truncate text to maximum length if not strict
             text = text[:max_length]
 
@@ -103,7 +102,9 @@ class Validator:
                         "field": "claim_text",
                         "actual_length": len(text),
                         "min_length": min_length,
-                        "max_length": max_length})
+                        "max_length": max_length,
+                    },
+                )
             # Truncate claim to maximum length if not strict
             text = text[:max_length]
 
@@ -134,18 +135,13 @@ class Validator:
 
         # Get configuration values
         max_length = validation_config.get("url.max_length", 2048)
-        allowed_schemes = validation_config.get(
-            "url.allowed_schemes", ["http", "https"])
+        allowed_schemes = validation_config.get("url.allowed_schemes", ["http", "https"])
 
         # Check URL format
         if not validate_url_format(url):
             if strict:
                 raise ValidationError(
-                    "Invalid URL format",
-                    details={
-                        "field": "url",
-                        "actual_value": url
-                    }
+                    "Invalid URL format", details={"field": "url", "actual_value": url}
                 )
             return ""
 
@@ -160,8 +156,8 @@ class Validator:
                     details={
                         "field": "url",
                         "actual_value": url,
-                        "allowed_schemes": allowed_schemes
-                    }
+                        "allowed_schemes": allowed_schemes,
+                    },
                 )
             return ""
 
@@ -170,11 +166,7 @@ class Validator:
             if strict:
                 raise ValidationError(
                     f"URL must not exceed {max_length} characters",
-                    details={
-                        "field": "url",
-                        "actual_length": len(url),
-                        "max_length": max_length
-                    }
+                    details={"field": "url", "actual_length": len(url), "max_length": max_length},
                 )
             return ""
 
@@ -214,8 +206,8 @@ class Validator:
                     details={
                         "field": "claims_count",
                         "actual_count": count,
-                        "max_count": max_claims
-                    }
+                        "max_count": max_claims,
+                    },
                 )
             return max_claims
 
@@ -238,8 +230,7 @@ class Validator:
         """
         if count <= 0:
             if strict:
-                raise ValidationError(
-                    "Number of batch claims must be positive")
+                raise ValidationError("Number of batch claims must be positive")
             return 0
 
         # Get configuration value
@@ -253,8 +244,8 @@ class Validator:
                     details={
                         "field": "batch_claims_count",
                         "actual_count": count,
-                        "max_count": max_batch_claims
-                    }
+                        "max_count": max_batch_claims,
+                    },
                 )
             return max_batch_claims
 
@@ -279,10 +270,7 @@ class Validator:
             if strict:
                 raise ValidationError(
                     "Check-worthiness score must be between 0 and 1",
-                    details={
-                        "field": "check_worthiness",
-                        "actual_value": score
-                    }
+                    details={"field": "check_worthiness", "actual_value": score},
                 )
             # Clamp score to valid range
             return max(0, min(score, 1))
@@ -320,7 +308,9 @@ class Validator:
                         "field": "comment",
                         "actual_length": len(comment),
                         "min_length": min_length,
-                        "max_length": max_length})
+                        "max_length": max_length,
+                    },
+                )
             # Truncate comment to maximum length if not strict
             comment = comment[:max_length]
 
@@ -330,12 +320,9 @@ class Validator:
         return sanitized
 
     @staticmethod
-    def validate_input(input_data: Dict[str,
-                                        Any],
-                       validation_rules: Dict[str,
-                                              Callable],
-                       strict: bool = False) -> Dict[str,
-                                                     Any]:
+    def validate_input(
+        input_data: Dict[str, Any], validation_rules: Dict[str, Callable], strict: bool = False
+    ) -> Dict[str, Any]:
         """
         Validate and sanitize input data using validation rules.
 

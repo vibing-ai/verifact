@@ -10,6 +10,7 @@ from src.utils.security.credentials import get_credential
 
 class EncryptionError(Exception):
     """Exception raised for encryption/decryption errors."""
+
     pass
 
 
@@ -35,12 +36,8 @@ def get_encryption_key() -> bytes:
             raise EncryptionError(f"Invalid encryption key: {str(e)}")
 
     # For development only - in production, always set ENCRYPTION_KEY
-    salt = get_credential(
-        "ENCRYPTION_SALT",
-        "verifact-encryption-salt").encode()
-    password = get_credential(
-        "ENCRYPTION_PASSWORD",
-        "dev-only-password").encode()
+    salt = get_credential("ENCRYPTION_SALT", "verifact-encryption-salt").encode()
+    password = get_credential("ENCRYPTION_PASSWORD", "dev-only-password").encode()
 
     # Derive a key using PBKDF2
     kdf = PBKDF2HMAC(

@@ -24,17 +24,15 @@ async def initialize_database() -> Dict[str, Any]:
     # Create Supabase client
     client = SupabaseClient()
     if not client.supabase:
-        return {
-            "status": "error",
-            "message": "Failed to create Supabase client"
-        }
+        return {"status": "error", "message": "Failed to create Supabase client"}
 
     try:
         # Verify PGVector extension
         result = await verify_pgvector_extension(client)
         if not result["available"]:
             logger.warning(
-                "PGVector extension not available in Supabase. Vector similarity search will not work.")
+                "PGVector extension not available in Supabase. Vector similarity search will not work."
+            )
 
         # Initialize schema
         await create_tables(client)
@@ -42,14 +40,11 @@ async def initialize_database() -> Dict[str, Any]:
         return {
             "status": "success",
             "message": "Database schema initialized successfully",
-            "pgvector_status": result
+            "pgvector_status": result,
         }
     except Exception as e:
         logger.exception("Failed to initialize database schema")
-        return {
-            "status": "error",
-            "message": f"Failed to initialize database schema: {str(e)}"
-        }
+        return {"status": "error", "message": f"Failed to initialize database schema: {str(e)}"}
 
 
 async def verify_pgvector_extension(client: SupabaseClient) -> Dict[str, Any]:
@@ -65,47 +60,47 @@ async def verify_pgvector_extension(client: SupabaseClient) -> Dict[str, Any]:
     try:
         # Check if pgvector extension is installed
         with client.get_cursor() as cursor:
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT EXISTS (
                     SELECT 1 FROM pg_extension WHERE extname = 'vector'
                 )
-            """)
+            """
+            )
             result = cursor.fetchone()
             is_installed = result[0] if result else False
 
             # Check pgvector version if installed
             if is_installed:
-                cursor.execute(
-                    "SELECT extversion FROM pg_extension WHERE extname = 'vector'")
+                cursor.execute("SELECT extversion FROM pg_extension WHERE extname = 'vector'")
                 version_result = cursor.fetchone()
                 version = version_result[0] if version_result else "unknown"
 
                 # Check if the vector type exists and is usable
-                cursor.execute("""
+                cursor.execute(
+                    """
                     SELECT EXISTS (
                         SELECT 1 FROM pg_type WHERE typname = 'vector'
                     )
-                """)
+                """
+                )
                 type_exists = cursor.fetchone()[0]
 
                 return {
                     "available": True,
                     "installed": True,
                     "version": version,
-                    "type_exists": type_exists
+                    "type_exists": type_exists,
                 }
             else:
                 return {
                     "available": False,
                     "installed": False,
-                    "message": "pgvector extension is not installed"
+                    "message": "pgvector extension is not installed",
                 }
     except Exception as e:
         logger.exception("Error checking pgvector extension")
-        return {
-            "available": False,
-            "error": str(e)
-        }
+        return {"available": False, "error": str(e)}
 
 
 async def create_tables(client: SupabaseClient) -> None:
@@ -117,7 +112,8 @@ async def create_tables(client: SupabaseClient) -> None:
     """
     with client.get_cursor() as cursor:
         # Create claims table
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS claims (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 text TEXT NOT NULL,
@@ -130,10 +126,12 @@ async def create_tables(client: SupabaseClient) -> None:
                 source_url TEXT,
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
             )
-        """)
+        """
+        )
 
         # Create evidence table
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS evidence (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 claim_id UUID NOT NULL REFERENCES claims(id) ON DELETE CASCADE,
@@ -149,10 +147,12 @@ async def create_tables(client: SupabaseClient) -> None:
                 retrieval_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
             )
-        """)
+        """
+        )
 
         # Create verdicts table
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS verdicts (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 claim_id UUID NOT NULL REFERENCES claims(id) ON DELETE CASCADE,
@@ -164,11 +164,13 @@ async def create_tables(client: SupabaseClient) -> None:
                 generated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
             )
-        """)
+        """
+        )
 
         # Create embeddings table for vector storage (if pgvector is available)
         try:
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS embeddings (
                     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                     content TEXT NOT NULL,
@@ -176,12 +178,14 @@ async def create_tables(client: SupabaseClient) -> None:
                     metadata JSONB,
                     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
                 )
-            """)
+            """
+            )
         except Exception as e:
             logger.warning(f"Could not create embeddings table: {str(e)}")
 
         # For backward compatibility (can be removed later)
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS factchecks (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 claim TEXT NOT NULL,
@@ -191,36 +195,39 @@ async def create_tables(client: SupabaseClient) -> None:
                 sources JSONB NOT NULL,
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
             )
-        """)
+        """
+        )
 
         # Create indexes for better query performance
+        cursor.execute("CREATE INDEX IF NOT EXISTS claims_domain_idx ON claims(domain)")
         cursor.execute(
-            "CREATE INDEX IF NOT EXISTS claims_domain_idx ON claims(domain)")
-        cursor.execute(
-            "CREATE INDEX IF NOT EXISTS claims_created_at_idx ON claims(created_at DESC)")
-        cursor.execute(
-            "CREATE INDEX IF NOT EXISTS evidence_claim_id_idx ON evidence(claim_id)")
-        cursor.execute(
-            "CREATE INDEX IF NOT EXISTS verdicts_claim_id_idx ON verdicts(claim_id)")
-        cursor.execute(
-            "CREATE INDEX IF NOT EXISTS verdicts_verdict_idx ON verdicts(verdict)")
+            "CREATE INDEX IF NOT EXISTS claims_created_at_idx ON claims(created_at DESC)"
+        )
+        cursor.execute("CREATE INDEX IF NOT EXISTS evidence_claim_id_idx ON evidence(claim_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS verdicts_claim_id_idx ON verdicts(claim_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS verdicts_verdict_idx ON verdicts(verdict)")
 
         # Try to create vector index if pgvector is available
         try:
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE INDEX IF NOT EXISTS embeddings_vector_idx ON embeddings
                 USING ivfflat (embedding vector_l2_ops) WITH (lists = 100)
-            """)
-            cursor.execute("""
+            """
+            )
+            cursor.execute(
+                """
                 CREATE INDEX IF NOT EXISTS embeddings_metadata_idx ON embeddings USING GIN (metadata)
-            """)
+            """
+            )
         except Exception as e:
             logger.warning(f"Could not create vector indexes: {str(e)}")
 
         # Try to create functions for vector search if pgvector is available
         try:
             # Function for similarity search with filters
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE OR REPLACE FUNCTION match_embeddings(
                     query_embedding VECTOR(1536),
                     match_threshold FLOAT,
@@ -270,10 +277,12 @@ async def create_tables(client: SupabaseClient) -> None:
                     END IF;
                 END;
                 $$
-            """)
+            """
+            )
 
             # Function for finding similar claims
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE OR REPLACE FUNCTION find_similar_claims(
                     query_embedding VECTOR(1536),
                     match_threshold FLOAT DEFAULT 0.8,
@@ -309,12 +318,14 @@ async def create_tables(client: SupabaseClient) -> None:
                         match_count;
                 END;
                 $$
-            """)
+            """
+            )
         except Exception as e:
             logger.warning(f"Could not create vector functions: {str(e)}")
 
         # Create view for factcheck results
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE OR REPLACE VIEW factcheck_results AS
             SELECT
                 c.id AS claim_id,
@@ -346,4 +357,5 @@ async def create_tables(client: SupabaseClient) -> None:
                 claims c
             LEFT JOIN
                 verdicts v ON c.id = v.claim_id
-        """)
+        """
+        )

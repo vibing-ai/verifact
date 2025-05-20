@@ -25,24 +25,28 @@ from pydantic import BaseModel
 try:
     from psycopg2.extras import DictCursor, execute_values
     from psycopg2.pool import ThreadedConnectionPool
+
     PSYCOPG2_AVAILABLE = True
 except ImportError:
     PSYCOPG2_AVAILABLE = False
 
 try:
     from supabase import Client, create_client
+
     SUPABASE_AVAILABLE = True
 except ImportError:
     SUPABASE_AVAILABLE = False
 
 try:
     import numpy as np
+
     NUMPY_AVAILABLE = True
 except ImportError:
     NUMPY_AVAILABLE = False
 
 try:
     import openai
+
     OPENAI_AVAILABLE = True
 except ImportError:
     OPENAI_AVAILABLE = False
@@ -54,7 +58,7 @@ from src.utils.security.encryption import EncryptionError, decrypt_value, encryp
 logger = logging.getLogger(__name__)
 
 # Generic type for query results
-T = TypeVar('T')
+T = TypeVar("T")
 
 # Constants
 DEFAULT_VECTOR_DIMENSION = 1536  # OpenAI embedding dimension
@@ -67,22 +71,26 @@ RETRY_DELAY = 1.0  # seconds
 
 class ConnectionError(Exception):
     """Exception raised for database connection errors."""
+
     pass
 
 
 class QueryError(Exception):
     """Exception raised for database query errors."""
+
     pass
 
 
 class EmbeddingError(Exception):
     """Exception raised for embedding generation errors."""
+
     pass
 
 
 @dataclass
 class QueryOptions:
     """Options for database queries."""
+
     limit: int = 10
     offset: int = 0
     order_by: str = "created_at"
@@ -92,6 +100,7 @@ class QueryOptions:
 
 class PaginatedResult(Generic[T], BaseModel):
     """A paginated result set."""
+
     items: List[T]
     total: int
     page: int
@@ -101,6 +110,7 @@ class PaginatedResult(Generic[T], BaseModel):
 
 def retry_on_error(max_retries=MAX_RETRIES, delay=RETRY_DELAY):
     """Decorator to retry functions on error."""
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -111,13 +121,15 @@ def retry_on_error(max_retries=MAX_RETRIES, delay=RETRY_DELAY):
                 except (ConnectionError, QueryError) as e:
                     attempts += 1
                     if attempts == max_retries:
-                        logger.error(
-                            f"Failed after {max_retries} attempts: {str(e)}")
+                        logger.error(f"Failed after {max_retries} attempts: {str(e)}")
                         raise
                     logger.warning(
-                        f"Attempt {attempts} failed: {str(e)}. Retrying in {delay} seconds...")
+                        f"Attempt {attempts} failed: {str(e)}. Retrying in {delay} seconds..."
+                    )
                     time.sleep(delay)
+
         return wrapper
+
     return decorator
 
 
@@ -137,8 +149,7 @@ class SupabaseClient:
         self.supabase_key = get_credential("SUPABASE_KEY")
         self.pg_connection_string = get_credential("SUPABASE_DB_URL")
         self.openai_api_key = get_credential("OPENAI_API_KEY")
-        self.embedding_model = get_credential(
-            "EMBEDDING_MODEL", DEFAULT_EMBEDDING_MODEL)
+        self.embedding_model = get_credential("EMBEDDING_MODEL", DEFAULT_EMBEDDING_MODEL)
 
         # Initialize connection pools
         self.connection_pool = None
@@ -149,14 +160,12 @@ class SupabaseClient:
         self.supabase: Optional[Client] = None
 
         if not SUPABASE_AVAILABLE:
-            logger.warning(
-                "Supabase package not installed. Install with 'pip install supabase'")
+            logger.warning("Supabase package not installed. Install with 'pip install supabase'")
             return
 
         if self.supabase_url and self.supabase_key:
             try:
-                self.supabase = create_client(
-                    self.supabase_url, self.supabase_key)
+                self.supabase = create_client(self.supabase_url, self.supabase_key)
                 logger.info("Successfully connected to Supabase")
 
                 # Initialize connection pool if connection string is available
@@ -168,13 +177,15 @@ class SupabaseClient:
         # Check for OpenAI API key if we're using embeddings
         if not self.openai_api_key and OPENAI_AVAILABLE:
             logger.warning(
-                "OpenAI API key not found. Set OPENAI_API_KEY environment variable for embedding functionality.")
+                "OpenAI API key not found. Set OPENAI_API_KEY environment variable for embedding functionality."
+            )
 
     def _init_connection_pool(self):
         """Initialize the connection pool for PostgreSQL."""
         if not PSYCOPG2_AVAILABLE:
             logger.warning(
-                "psycopg2 package not installed. Install with 'pip install psycopg2-binary'")
+                "psycopg2 package not installed. Install with 'pip install psycopg2-binary'"
+            )
             return
 
         if not self.pg_connection_string:
@@ -183,12 +194,11 @@ class SupabaseClient:
 
         try:
             self.connection_pool = ThreadedConnectionPool(
-                self.min_conn,
-                self.max_conn,
-                self.pg_connection_string
+                self.min_conn, self.max_conn, self.pg_connection_string
             )
             logger.info(
-                f"Created PostgreSQL connection pool (min={self.min_conn}, max={self.max_conn})")
+                f"Created PostgreSQL connection pool (min={self.min_conn}, max={self.max_conn})"
+            )
         except Exception as e:
             logger.error(f"Failed to create connection pool: {str(e)}")
 
@@ -215,8 +225,7 @@ class SupabaseClient:
             yield conn
         except Exception as e:
             logger.error(f"Connection error: {str(e)}")
-            raise ConnectionError(
-                f"Failed to get database connection: {str(e)}")
+            raise ConnectionError(f"Failed to get database connection: {str(e)}")
         finally:
             if conn and self.connection_pool:
                 self.connection_pool.putconn(conn)
@@ -262,14 +271,14 @@ class SupabaseClient:
         """
         if not PSYCOPG2_AVAILABLE:
             logger.warning(
-                "psycopg2 package not installed. Install with 'pip install psycopg2-binary'")
+                "psycopg2 package not installed. Install with 'pip install psycopg2-binary'"
+            )
             return False
 
         try:
             with self.get_cursor() as cur:
                 # Check if pgvector is already installed
-                cur.execute(
-                    "SELECT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'vector')")
+                cur.execute("SELECT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'vector')")
                 if not cur.fetchone()[0]:
                     # Install pgvector extension
                     cur.execute("CREATE EXTENSION IF NOT EXISTS vector")
@@ -306,7 +315,7 @@ class SupabaseClient:
             response = client.embeddings.create(
                 model=self.embedding_model,
                 # Truncate to max token length and replace newlines
-                input=text.replace("\n", " ")[:8191]
+                input=text.replace("\n", " ")[:8191],
             )
 
             embedding = response.data[0].embedding
@@ -316,12 +325,9 @@ class SupabaseClient:
             raise EmbeddingError(f"Failed to generate embedding: {str(e)}")
 
     @retry_on_error()
-    def store_embedding(self,
-                        content: str,
-                        embedding: List[float],
-                        metadata: Dict[str,
-                                       Any] = None) -> Dict[str,
-                                                            Any]:
+    def store_embedding(
+        self, content: str, embedding: List[float], metadata: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
         """
         Store a vector embedding in the database.
 
@@ -346,17 +352,12 @@ class SupabaseClient:
                 """
 
                 metadata_json = json.dumps(metadata) if metadata else None
-                embedding_array = np.array(
-                    embedding) if NUMPY_AVAILABLE else embedding
+                embedding_array = np.array(embedding) if NUMPY_AVAILABLE else embedding
 
                 cur.execute(query, (content, embedding_array, metadata_json))
                 result = cur.fetchone()
 
-                return {
-                    "success": True,
-                    "id": result["id"],
-                    "created_at": result["created_at"]
-                }
+                return {"success": True, "id": result["id"], "created_at": result["created_at"]}
         except (ConnectionError, QueryError) as e:
             logger.error(f"Failed to store embedding: {str(e)}")
             raise
@@ -367,7 +368,7 @@ class SupabaseClient:
         query_text: str,
         threshold: float = DEFAULT_SIMILARITY_THRESHOLD,
         limit: int = DEFAULT_MAX_RESULTS,
-        filter_metadata: Dict[str, Any] = None
+        filter_metadata: Dict[str, Any] = None,
     ) -> List[Dict[str, Any]]:
         """
         Find similar content using vector similarity search.
@@ -394,7 +395,8 @@ class SupabaseClient:
                 query_parts = [
                     "SELECT id, content, metadata, 1 - (embedding <-> %s) AS similarity",
                     "FROM embeddings",
-                    "WHERE 1 - (embedding <-> %s) > %s"]
+                    "WHERE 1 - (embedding <-> %s) > %s",
+                ]
 
                 params = [query_embedding, query_embedding, threshold]
 
@@ -421,7 +423,7 @@ class SupabaseClient:
         self,
         claim_text: str,
         threshold: float = DEFAULT_SIMILARITY_THRESHOLD,
-        limit: int = DEFAULT_MAX_RESULTS
+        limit: int = DEFAULT_MAX_RESULTS,
     ) -> List[Dict[str, Any]]:
         """
         Find similar previously checked claims.
@@ -443,12 +445,11 @@ class SupabaseClient:
             query_text=claim_text,
             threshold=threshold,
             limit=limit,
-            filter_metadata={"type": "claim"}
+            filter_metadata={"type": "claim"},
         )
 
     @retry_on_error()
-    def store_claim_with_embedding(
-            self, claim: Union[Claim, Dict[str, Any]]) -> Dict[str, Any]:
+    def store_claim_with_embedding(self, claim: Union[Claim, Dict[str, Any]]) -> Dict[str, Any]:
         """
         Store a claim with its vector embedding.
 
@@ -484,22 +485,26 @@ class SupabaseClient:
                 RETURNING id, created_at
                 """
 
-                entities_json = json.dumps(
-                    claim_dict.get(
-                        "entities",
-                        [])) if claim_dict.get("entities") else '[]'
+                entities_json = (
+                    json.dumps(claim_dict.get("entities", []))
+                    if claim_dict.get("entities")
+                    else "[]"
+                )
                 extracted_at = claim_dict.get("extracted_at", datetime.now())
 
-                cur.execute(query, (
-                    claim_text,
-                    claim_dict.get("context", ""),
-                    claim_dict.get("checkworthy", True),
-                    claim_dict.get("domain"),
-                    entities_json,
-                    extracted_at,
-                    claim_dict.get("source_text"),
-                    claim_dict.get("source_url")
-                ))
+                cur.execute(
+                    query,
+                    (
+                        claim_text,
+                        claim_dict.get("context", ""),
+                        claim_dict.get("checkworthy", True),
+                        claim_dict.get("domain"),
+                        entities_json,
+                        extracted_at,
+                        claim_dict.get("source_text"),
+                        claim_dict.get("source_url"),
+                    ),
+                )
 
                 result = cur.fetchone()
                 claim_id = result["id"]
@@ -512,15 +517,15 @@ class SupabaseClient:
                         "type": "claim",
                         "claim_id": str(claim_id),
                         "checkworthy": claim_dict.get("checkworthy", True),
-                        "domain": claim_dict.get("domain")
-                    }
+                        "domain": claim_dict.get("domain"),
+                    },
                 )
 
                 return {
                     "success": True,
                     "claim_id": claim_id,
                     "embedding_id": embedding_result["id"],
-                    "created_at": result["created_at"]
+                    "created_at": result["created_at"],
                 }
         except (ConnectionError, QueryError, EmbeddingError) as e:
             logger.error(f"Failed to store claim with embedding: {str(e)}")
@@ -528,7 +533,8 @@ class SupabaseClient:
 
     @retry_on_error()
     def store_evidence(
-            self, evidence: Union[Evidence, Dict[str, Any]], claim_id: str) -> Dict[str, Any]:
+        self, evidence: Union[Evidence, Dict[str, Any]], claim_id: str
+    ) -> Dict[str, Any]:
         """
         Store evidence for a claim.
 
@@ -559,37 +565,38 @@ class SupabaseClient:
                 RETURNING id, created_at
                 """
 
-                retrieval_date = evidence_dict.get(
-                    "retrieval_date", datetime.now())
+                retrieval_date = evidence_dict.get("retrieval_date", datetime.now())
 
-                cur.execute(query, (
-                    claim_id,
-                    evidence_dict.get("text", ""),
-                    evidence_dict.get("source", ""),
-                    evidence_dict.get("source_name"),
-                    evidence_dict.get("source_type", "unknown"),
-                    evidence_dict.get("relevance", 0.0),
-                    evidence_dict.get("stance", "neutral"),
-                    evidence_dict.get("timestamp"),
-                    evidence_dict.get("credibility"),
-                    evidence_dict.get("excerpt_context"),
-                    retrieval_date
-                ))
+                cur.execute(
+                    query,
+                    (
+                        claim_id,
+                        evidence_dict.get("text", ""),
+                        evidence_dict.get("source", ""),
+                        evidence_dict.get("source_name"),
+                        evidence_dict.get("source_type", "unknown"),
+                        evidence_dict.get("relevance", 0.0),
+                        evidence_dict.get("stance", "neutral"),
+                        evidence_dict.get("timestamp"),
+                        evidence_dict.get("credibility"),
+                        evidence_dict.get("excerpt_context"),
+                        retrieval_date,
+                    ),
+                )
 
                 result = cur.fetchone()
 
                 return {
                     "success": True,
                     "evidence_id": result["id"],
-                    "created_at": result["created_at"]
+                    "created_at": result["created_at"],
                 }
         except (ConnectionError, QueryError) as e:
             logger.error(f"Failed to store evidence: {str(e)}")
             raise
 
     @retry_on_error()
-    def store_verdict(
-            self, verdict: Union[Verdict, Dict[str, Any]]) -> Dict[str, Any]:
+    def store_verdict(self, verdict: Union[Verdict, Dict[str, Any]]) -> Dict[str, Any]:
         """
         Store a verdict for a claim.
 
@@ -619,28 +626,32 @@ class SupabaseClient:
                 RETURNING id, created_at
                 """
 
-                sources_json = json.dumps(
-                    verdict_dict.get(
-                        "sources",
-                        [])) if verdict_dict.get("sources") else '[]'
+                sources_json = (
+                    json.dumps(verdict_dict.get("sources", []))
+                    if verdict_dict.get("sources")
+                    else "[]"
+                )
                 generated_at = verdict_dict.get("generated_at", datetime.now())
 
-                cur.execute(query, (
-                    verdict_dict.get("claim_id"),
-                    verdict_dict.get("verdict", "unverifiable"),
-                    verdict_dict.get("confidence", 0.0),
-                    verdict_dict.get("explanation", ""),
-                    sources_json,
-                    verdict_dict.get("evidence_summary"),
-                    generated_at
-                ))
+                cur.execute(
+                    query,
+                    (
+                        verdict_dict.get("claim_id"),
+                        verdict_dict.get("verdict", "unverifiable"),
+                        verdict_dict.get("confidence", 0.0),
+                        verdict_dict.get("explanation", ""),
+                        sources_json,
+                        verdict_dict.get("evidence_summary"),
+                        generated_at,
+                    ),
+                )
 
                 result = cur.fetchone()
 
                 return {
                     "success": True,
                     "verdict_id": result["id"],
-                    "created_at": result["created_at"]
+                    "created_at": result["created_at"],
                 }
         except (ConnectionError, QueryError) as e:
             logger.error(f"Failed to store verdict: {str(e)}")
@@ -651,7 +662,7 @@ class SupabaseClient:
         self,
         claim: Union[Claim, Dict[str, Any]],
         evidence_list: List[Union[Evidence, Dict[str, Any]]],
-        verdict: Union[Verdict, Dict[str, Any]]
+        verdict: Union[Verdict, Dict[str, Any]],
     ) -> Dict[str, Any]:
         """
         Store a complete factcheck result (claim, evidence, and verdict).
@@ -696,7 +707,7 @@ class SupabaseClient:
                 "claim_id": claim_id,
                 "evidence_ids": evidence_ids,
                 "verdict_id": verdict_result["verdict_id"],
-                "embedding_id": claim_result["embedding_id"]
+                "embedding_id": claim_result["embedding_id"],
             }
         except (ConnectionError, QueryError, EmbeddingError) as e:
             logger.error(f"Failed to store factcheck result: {str(e)}")
@@ -720,31 +731,40 @@ class SupabaseClient:
         try:
             with self.get_cursor() as cur:
                 # Get claim
-                cur.execute("""
+                cur.execute(
+                    """
                 SELECT * FROM claims WHERE id = %s
-                """, (factcheck_id,))
+                """,
+                    (factcheck_id,),
+                )
                 claim = cur.fetchone()
 
                 if not claim:
                     return {"success": False, "error": "Factcheck not found"}
 
                 # Get evidence
-                cur.execute("""
+                cur.execute(
+                    """
                 SELECT * FROM evidence WHERE claim_id = %s
-                """, (factcheck_id,))
+                """,
+                    (factcheck_id,),
+                )
                 evidence = cur.fetchall()
 
                 # Get verdict
-                cur.execute("""
+                cur.execute(
+                    """
                 SELECT * FROM verdicts WHERE claim_id = %s
-                """, (factcheck_id,))
+                """,
+                    (factcheck_id,),
+                )
                 verdict = cur.fetchone()
 
                 return {
                     "success": True,
                     "claim": dict(claim) if claim else None,
                     "evidence": [dict(e) for e in evidence],
-                    "verdict": dict(verdict) if verdict else None
+                    "verdict": dict(verdict) if verdict else None,
                 }
         except (ConnectionError, QueryError) as e:
             logger.error(f"Failed to get factcheck: {str(e)}")
@@ -756,7 +776,7 @@ class SupabaseClient:
         limit: int = 10,
         offset: int = 0,
         domain: Optional[str] = None,
-        verdict_type: Optional[str] = None
+        verdict_type: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Retrieve recent factcheck results with pagination and filtering.
@@ -819,18 +839,15 @@ class SupabaseClient:
                         "total": total,
                         "page": current_page,
                         "page_size": limit,
-                        "total_pages": total_pages
-                    }
+                        "total_pages": total_pages,
+                    },
                 }
         except (ConnectionError, QueryError) as e:
             logger.error(f"Failed to get recent factchecks: {str(e)}")
             raise
 
     @retry_on_error()
-    def batch_store_factchecks(
-        self,
-        factchecks: List[Dict[str, Any]]
-    ) -> Dict[str, Any]:
+    def batch_store_factchecks(self, factchecks: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
         Store multiple factchecks in batch.
 
@@ -844,11 +861,7 @@ class SupabaseClient:
             ConnectionError: If database connection fails
             QueryError: If query execution fails
         """
-        results = {
-            "success": True,
-            "factcheck_ids": [],
-            "errors": []
-        }
+        results = {"success": True, "factcheck_ids": [], "errors": []}
 
         for i, factcheck in enumerate(factchecks):
             try:
@@ -857,20 +870,13 @@ class SupabaseClient:
                 verdict = factcheck.get("verdict")
 
                 if not claim or not verdict:
-                    results["errors"].append({
-                        "index": i,
-                        "error": "Missing claim or verdict"
-                    })
+                    results["errors"].append({"index": i, "error": "Missing claim or verdict"})
                     continue
 
-                result = self.store_factcheck_result(
-                    claim, evidence_list, verdict)
+                result = self.store_factcheck_result(claim, evidence_list, verdict)
                 results["factcheck_ids"].append(result["claim_id"])
             except Exception as e:
-                results["errors"].append({
-                    "index": i,
-                    "error": str(e)
-                })
+                results["errors"].append({"index": i, "error": str(e)})
 
         if results["errors"]:
             results["success"] = False
@@ -889,7 +895,7 @@ class SupabaseClient:
             "pg_connection": False,
             "pgvector_extension": False,
             "tables_exist": False,
-            "overall_health": "unhealthy"
+            "overall_health": "unhealthy",
         }
 
         # Check Supabase connection
@@ -907,28 +913,28 @@ class SupabaseClient:
                 results["pg_connection"] = True
 
                 # Check pgvector extension
-                cur.execute(
-                    "SELECT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'vector')")
+                cur.execute("SELECT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'vector')")
                 if cur.fetchone()[0]:
                     results["pgvector_extension"] = True
 
                 # Check tables
-                cur.execute("""
+                cur.execute(
+                    """
                 SELECT EXISTS (
                     SELECT 1 FROM information_schema.tables
                     WHERE table_name IN ('claims', 'evidence', 'verdicts', 'embeddings')
                     AND table_schema = 'public'
                     HAVING COUNT(*) = 4
                 )
-                """)
+                """
+                )
                 if cur.fetchone()[0]:
                     results["tables_exist"] = True
         except Exception as e:
             logger.error(f"Database health check failed: {str(e)}")
 
         # Determine overall health
-        if (results["supabase_connection"]
-                or results["pg_connection"]) and results["tables_exist"]:
+        if (results["supabase_connection"] or results["pg_connection"]) and results["tables_exist"]:
             results["overall_health"] = "healthy"
 
         return results
@@ -944,9 +950,7 @@ class SupabaseClient:
             Dict with cleanup results
         """
         if days_to_keep < 1:
-            return {
-                "success": False,
-                "error": "Days to keep must be at least 1"}
+            return {"success": False, "error": "Days to keep must be at least 1"}
 
         try:
             with self.get_cursor() as cur:
@@ -956,22 +960,24 @@ class SupabaseClient:
 
                 # Delete old verdicts
                 cur.execute(
-                    "DELETE FROM verdicts WHERE created_at < %s RETURNING id", (cutoff_date,))
+                    "DELETE FROM verdicts WHERE created_at < %s RETURNING id", (cutoff_date,)
+                )
                 deleted_verdicts = cur.rowcount
 
                 # Delete old evidence
                 cur.execute(
-                    "DELETE FROM evidence WHERE created_at < %s RETURNING id", (cutoff_date,))
+                    "DELETE FROM evidence WHERE created_at < %s RETURNING id", (cutoff_date,)
+                )
                 deleted_evidence = cur.rowcount
 
                 # Delete old embeddings
                 cur.execute(
-                    "DELETE FROM embeddings WHERE created_at < %s RETURNING id", (cutoff_date,))
+                    "DELETE FROM embeddings WHERE created_at < %s RETURNING id", (cutoff_date,)
+                )
                 deleted_embeddings = cur.rowcount
 
                 # Delete old claims
-                cur.execute(
-                    "DELETE FROM claims WHERE created_at < %s RETURNING id", (cutoff_date,))
+                cur.execute("DELETE FROM claims WHERE created_at < %s RETURNING id", (cutoff_date,))
                 deleted_claims = cur.rowcount
 
                 return {
@@ -980,9 +986,9 @@ class SupabaseClient:
                         "claims": deleted_claims,
                         "evidence": deleted_evidence,
                         "verdicts": deleted_verdicts,
-                        "embeddings": deleted_embeddings
+                        "embeddings": deleted_embeddings,
                     },
-                    "cutoff_date": cutoff_date
+                    "cutoff_date": cutoff_date,
                 }
         except (ConnectionError, QueryError) as e:
             logger.error(f"Failed to clean up old data: {str(e)}")
@@ -1001,14 +1007,14 @@ class SupabaseClient:
                 cur.execute("DROP INDEX IF EXISTS embeddings_vector_idx")
 
                 # Create new index
-                cur.execute("""
+                cur.execute(
+                    """
                 CREATE INDEX embeddings_vector_idx ON embeddings
                 USING ivfflat (embedding vector_l2_ops)
-                """)
+                """
+                )
 
-                return {
-                    "success": True,
-                    "message": "Successfully reindexed embeddings"}
+                return {"success": True, "message": "Successfully reindexed embeddings"}
         except (ConnectionError, QueryError) as e:
             logger.error(f"Failed to reindex embeddings: {str(e)}")
             return {"success": False, "error": str(e)}
@@ -1028,16 +1034,13 @@ class SupabaseClient:
                 cur.execute("VACUUM ANALYZE verdicts")
                 cur.execute("VACUUM ANALYZE embeddings")
 
-                return {
-                    "success": True,
-                    "message": "Successfully optimized database"}
+                return {"success": True, "message": "Successfully optimized database"}
         except (ConnectionError, QueryError) as e:
             logger.error(f"Failed to optimize database: {str(e)}")
             return {"success": False, "error": str(e)}
 
     @retry_on_error()
-    def store_feedback(
-            self, feedback: Union['Feedback', Dict[str, Any]]) -> Dict[str, Any]:
+    def store_feedback(self, feedback: Union["Feedback", Dict[str, Any]]) -> Dict[str, Any]:
         """
         Store user feedback in the database.
 
@@ -1062,27 +1065,27 @@ class SupabaseClient:
                 feedback_dict = feedback
 
             # Handle metadata
-            metadata = feedback_dict.get('metadata', {})
+            metadata = feedback_dict.get("metadata", {})
 
             # Ensure IDs are UUIDs
-            if 'feedback_id' not in feedback_dict or not feedback_dict['feedback_id']:
+            if "feedback_id" not in feedback_dict or not feedback_dict["feedback_id"]:
                 import uuid
-                feedback_dict['feedback_id'] = str(uuid.uuid4())
+
+                feedback_dict["feedback_id"] = str(uuid.uuid4())
 
             # Set created_at timestamp if not provided
-            if 'created_at' not in feedback_dict:
+            if "created_at" not in feedback_dict:
                 from datetime import datetime
-                feedback_dict['created_at'] = datetime.now().isoformat()
+
+                feedback_dict["created_at"] = datetime.now().isoformat()
 
             # Store in Supabase if client is available
             if self.supabase:
-                result = self.supabase.table(
-                    'feedback').insert(feedback_dict).execute()
+                result = self.supabase.table("feedback").insert(feedback_dict).execute()
 
-                if 'data' in result and result['data']:
-                    logger.info(
-                        f"Stored feedback: {feedback_dict['feedback_id']}")
-                    return result['data'][0]
+                if "data" in result and result["data"]:
+                    logger.info(f"Stored feedback: {feedback_dict['feedback_id']}")
+                    return result["data"][0]
                 else:
                     logger.error(f"Failed to store feedback: {result}")
                     raise QueryError(f"Failed to store feedback: {result}")
@@ -1111,7 +1114,8 @@ class SupabaseClient:
 
     @retry_on_error()
     def get_feedback_for_claim(
-            self, claim_id: str, limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
+        self, claim_id: str, limit: int = 50, offset: int = 0
+    ) -> List[Dict[str, Any]]:
         """
         Get all feedback for a specific claim.
 
@@ -1130,16 +1134,18 @@ class SupabaseClient:
         try:
             # Use Supabase if available
             if self.supabase:
-                result = (self.supabase.table('feedback')
-                          .select('*')
-                          .eq('claim_id', claim_id)
-                          .order('created_at', desc=True)
-                          .limit(limit)
-                          .offset(offset)
-                          .execute())
+                result = (
+                    self.supabase.table("feedback")
+                    .select("*")
+                    .eq("claim_id", claim_id)
+                    .order("created_at", desc=True)
+                    .limit(limit)
+                    .offset(offset)
+                    .execute()
+                )
 
-                if 'data' in result:
-                    return result['data']
+                if "data" in result:
+                    return result["data"]
                 else:
                     logger.error(f"Failed to get feedback for claim: {result}")
                     return []
@@ -1156,13 +1162,11 @@ class SupabaseClient:
                 return cursor.fetchall()
 
         except Exception as e:
-            logger.error(
-                f"Error getting feedback for claim {claim_id}: {str(e)}")
+            logger.error(f"Error getting feedback for claim {claim_id}: {str(e)}")
             raise QueryError(f"Failed to get feedback for claim: {str(e)}")
 
     @retry_on_error()
-    def get_feedback_statistics(
-            self, claim_id: Optional[str] = None) -> Dict[str, Any]:
+    def get_feedback_statistics(self, claim_id: Optional[str] = None) -> Dict[str, Any]:
         """
         Get aggregated feedback statistics.
 
@@ -1191,21 +1195,20 @@ class SupabaseClient:
 
                 if claim_id:
                     query += " WHERE claim_id = :claim_id"
-                    params['claim_id'] = claim_id
+                    params["claim_id"] = claim_id
 
-                result = self.supabase.rpc(
-                    'get_feedback_stats', params).execute()
+                result = self.supabase.rpc("get_feedback_stats", params).execute()
 
-                if 'data' in result and result['data']:
-                    stats = result['data'][0]
+                if "data" in result and result["data"]:
+                    stats = result["data"][0]
 
                     # Get rating distribution
                     rating_counts = self._get_rating_distribution(claim_id)
-                    stats['feedback_count_by_rating'] = rating_counts
+                    stats["feedback_count_by_rating"] = rating_counts
 
                     # Get recent comments
                     comments = self._get_recent_comments(claim_id, limit=5)
-                    stats['recent_comments'] = comments
+                    stats["recent_comments"] = comments
 
                     return stats
 
@@ -1223,11 +1226,11 @@ class SupabaseClient:
 
                 # Get rating distribution
                 rating_counts = self._get_rating_distribution(claim_id)
-                stats['feedback_count_by_rating'] = rating_counts
+                stats["feedback_count_by_rating"] = rating_counts
 
                 # Get recent comments
                 comments = self._get_recent_comments(claim_id, limit=5)
-                stats['recent_comments'] = comments
+                stats["recent_comments"] = comments
 
                 return stats
 
@@ -1236,8 +1239,7 @@ class SupabaseClient:
             raise QueryError(f"Failed to get feedback statistics: {str(e)}")
 
     @retry_on_error()
-    def _get_rating_distribution(
-            self, claim_id: Optional[str] = None) -> Dict[str, Dict[int, int]]:
+    def _get_rating_distribution(self, claim_id: Optional[str] = None) -> Dict[str, Dict[int, int]]:
         """
         Get distribution of ratings.
 
@@ -1248,10 +1250,7 @@ class SupabaseClient:
             Dictionary with rating distributions
         """
         try:
-            result = {
-                'accuracy': {},
-                'helpfulness': {}
-            }
+            result = {"accuracy": {}, "helpfulness": {}}
 
             if self.supabase:
                 # Accuracy ratings
@@ -1260,15 +1259,14 @@ class SupabaseClient:
 
                 if claim_id:
                     query += " WHERE claim_id = :claim_id"
-                    params['claim_id'] = claim_id
+                    params["claim_id"] = claim_id
 
                 query += " GROUP BY accuracy_rating"
 
-                acc_result = self.supabase.rpc(
-                    'get_accuracy_distribution', params).execute()
-                if 'data' in acc_result:
-                    for row in acc_result['data']:
-                        result['accuracy'][row['accuracy_rating']] = row['count']
+                acc_result = self.supabase.rpc("get_accuracy_distribution", params).execute()
+                if "data" in acc_result:
+                    for row in acc_result["data"]:
+                        result["accuracy"][row["accuracy_rating"]] = row["count"]
 
                 # Helpfulness ratings
                 query = "SELECT helpfulness_rating, COUNT(*) FROM feedback"
@@ -1278,12 +1276,10 @@ class SupabaseClient:
 
                 query += " GROUP BY helpfulness_rating"
 
-                help_result = self.supabase.rpc(
-                    'get_helpfulness_distribution', params).execute()
-                if 'data' in help_result:
-                    for row in help_result['data']:
-                        result['helpfulness'][row['helpfulness_rating']
-                                              ] = row['count']
+                help_result = self.supabase.rpc("get_helpfulness_distribution", params).execute()
+                if "data" in help_result:
+                    for row in help_result["data"]:
+                        result["helpfulness"][row["helpfulness_rating"]] = row["count"]
 
                 return result
 
@@ -1301,7 +1297,7 @@ class SupabaseClient:
 
                 cursor.execute(query, params)
                 for row in cursor.fetchall():
-                    result['accuracy'][row['accuracy_rating']] = row['count']
+                    result["accuracy"][row["accuracy_rating"]] = row["count"]
 
                 # Helpfulness ratings
                 query = "SELECT helpfulness_rating, COUNT(*) FROM feedback"
@@ -1316,17 +1312,18 @@ class SupabaseClient:
 
                 cursor.execute(query, params)
                 for row in cursor.fetchall():
-                    result['helpfulness'][row['helpfulness_rating']] = row['count']
+                    result["helpfulness"][row["helpfulness_rating"]] = row["count"]
 
                 return result
 
         except Exception as e:
             logger.error(f"Error getting rating distribution: {str(e)}")
-            return {'accuracy': {}, 'helpfulness': {}}
+            return {"accuracy": {}, "helpfulness": {}}
 
     @retry_on_error()
     def _get_recent_comments(
-            self, claim_id: Optional[str] = None, limit: int = 5) -> List[Dict[str, Any]]:
+        self, claim_id: Optional[str] = None, limit: int = 5
+    ) -> List[Dict[str, Any]]:
         """
         Get recent comments from feedback.
 
@@ -1344,15 +1341,14 @@ class SupabaseClient:
 
                 if claim_id:
                     query += " AND claim_id = :claim_id"
-                    params['claim_id'] = claim_id
+                    params["claim_id"] = claim_id
 
                 query += " ORDER BY created_at DESC LIMIT :limit"
-                params['limit'] = limit
+                params["limit"] = limit
 
-                result = self.supabase.rpc(
-                    'get_recent_comments', params).execute()
-                if 'data' in result:
-                    return result['data']
+                result = self.supabase.rpc("get_recent_comments", params).execute()
+                if "data" in result:
+                    return result["data"]
                 return []
 
             # Direct PostgreSQL query
@@ -1375,8 +1371,7 @@ class SupabaseClient:
             return []
 
     @retry_on_error()
-    def get_all_feedback(self, limit: int = 100,
-                         offset: int = 0) -> List[Dict[str, Any]]:
+    def get_all_feedback(self, limit: int = 100, offset: int = 0) -> List[Dict[str, Any]]:
         """
         Get all feedback with pagination.
 
@@ -1394,15 +1389,17 @@ class SupabaseClient:
         try:
             # Use Supabase if available
             if self.supabase:
-                result = (self.supabase.table('feedback')
-                          .select('*')
-                          .order('created_at', desc=True)
-                          .limit(limit)
-                          .offset(offset)
-                          .execute())
+                result = (
+                    self.supabase.table("feedback")
+                    .select("*")
+                    .order("created_at", desc=True)
+                    .limit(limit)
+                    .offset(offset)
+                    .execute()
+                )
 
-                if 'data' in result:
-                    return result['data']
+                if "data" in result:
+                    return result["data"]
                 else:
                     logger.error(f"Failed to get all feedback: {result}")
                     return []
@@ -1422,7 +1419,8 @@ class SupabaseClient:
             raise QueryError(f"Failed to get all feedback: {str(e)}")
 
     def _encrypt_sensitive_fields(
-            self, data: Dict[str, Any], sensitive_fields: List[str]) -> Dict[str, Any]:
+        self, data: Dict[str, Any], sensitive_fields: List[str]
+    ) -> Dict[str, Any]:
         """
         Encrypt sensitive fields in a dictionary.
 
@@ -1440,13 +1438,13 @@ class SupabaseClient:
                 try:
                     result[field] = encrypt_value(str(result[field]))
                 except EncryptionError as e:
-                    logger.warning(
-                        f"Failed to encrypt field {field}: {str(e)}")
+                    logger.warning(f"Failed to encrypt field {field}: {str(e)}")
 
         return result
 
     def _decrypt_sensitive_fields(
-            self, data: Dict[str, Any], sensitive_fields: List[str]) -> Dict[str, Any]:
+        self, data: Dict[str, Any], sensitive_fields: List[str]
+    ) -> Dict[str, Any]:
         """
         Decrypt sensitive fields in a dictionary.
 
@@ -1464,8 +1462,7 @@ class SupabaseClient:
                 try:
                     result[field] = decrypt_value(str(result[field]))
                 except EncryptionError as e:
-                    logger.warning(
-                        f"Failed to decrypt field {field}: {str(e)}")
+                    logger.warning(f"Failed to decrypt field {field}: {str(e)}")
 
         return result
 

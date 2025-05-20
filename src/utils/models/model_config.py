@@ -47,15 +47,12 @@ load_dotenv()
 DEFAULT_MODELS = {
     # Qwen 3-8b: Optimized for structured JSON output and entity extraction
     "claim_detector": "qwen/qwen3-8b:free",
-
     # Google Gemma 3-27b-it: Optimized for RAG with 128k context window
     "evidence_hunter": "google/gemma-3-27b-it:free",
-
     # DeepSeek Chat: Best reasoning capabilities for evidence synthesis
     "verdict_writer": "deepseek/deepseek-chat:free",
-
     # Meta Llama 3: General purpose model for fallback operations
-    "fallback": "meta-llama/llama-3.3-8b-instruct:free"
+    "fallback": "meta-llama/llama-3.3-8b-instruct:free",
 }
 
 # Default model parameters
@@ -66,7 +63,7 @@ DEFAULT_PARAMETERS = {
     "frequency_penalty": 0.0,
     "presence_penalty": 0.0,
     "request_timeout": 120,
-    "stream": False
+    "stream": False,
 }
 
 # OpenRouter API endpoint
@@ -85,6 +82,7 @@ ENABLE_CACHING = os.getenv("ENABLE_MODEL_CACHING", "True").lower() == "true"
 
 class ModelError(Exception):
     """Base exception class for model-related errors."""
+
     pass
 
 
@@ -99,11 +97,13 @@ class ModelRequestError(ModelError):
 
 class ModelAuthenticationError(ModelError):
     """Exception raised for authentication failures."""
+
     pass
 
 
 class ModelTimeoutError(ModelError):
     """Exception raised when a request times out."""
+
     pass
 
 
@@ -117,6 +117,7 @@ class ModelRateLimitError(ModelError):
 
 class ModelUnavailableError(ModelError):
     """Exception raised when a model is unavailable."""
+
     pass
 
 
@@ -152,13 +153,8 @@ class ModelManager:
         self.parameters = self._load_parameters()
         self.model_name = self._get_model_name()
         self.fallback_models = self._get_fallback_chain()
-        self.token_usage = {
-            "prompt_tokens": 0,
-            "completion_tokens": 0,
-            "total_tokens": 0
-        }
-        self.httpx_client = httpx.Client(
-            timeout=self.parameters["request_timeout"])
+        self.token_usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
+        self.httpx_client = httpx.Client(timeout=self.parameters["request_timeout"])
 
     def _load_parameters(self) -> Dict[str, Any]:
         """
@@ -203,11 +199,7 @@ class ModelManager:
         Returns:
             Converted parameter value
         """
-        if param in [
-            "temperature",
-            "top_p",
-            "frequency_penalty",
-                "presence_penalty"]:
+        if param in ["temperature", "top_p", "frequency_penalty", "presence_penalty"]:
             return float(value)
         elif param in ["max_tokens", "request_timeout"]:
             return int(value)
@@ -324,12 +316,19 @@ class ModelManager:
         if not api_key:
             if provider.lower() == "openrouter":
                 raise ModelAuthenticationError(
-                    "OpenRouter API key not found. Please set " + env_var + " environment variable.\n"
+                    "OpenRouter API key not found. Please set "
+                    + env_var
+                    + " environment variable.\n"
                     "You can get an API key from https://openrouter.ai/keys."
                 )
             else:
                 raise ModelAuthenticationError(
-                    "API key for " + provider + " not found. Please set " + env_var + " environment variable.")
+                    "API key for "
+                    + provider
+                    + " not found. Please set "
+                    + env_var
+                    + " environment variable."
+                )
 
         return api_key
 
@@ -342,7 +341,7 @@ class ModelManager:
         """
         headers = {
             "Content-Type": "application/json",
-            "Authorization": "Bearer " + self.get_api_key('openrouter')
+            "Authorization": "Bearer " + self.get_api_key("openrouter"),
         }
 
         # Add site URL if available
@@ -358,7 +357,8 @@ class ModelManager:
         return headers
 
     def _generate_cache_key(
-            self, messages: List[Dict[str, str]], parameters: Dict[str, Any]) -> str:
+        self, messages: List[Dict[str, str]], parameters: Dict[str, Any]
+    ) -> str:
         """
         Generate a cache key from messages and parameters.
 
@@ -373,8 +373,9 @@ class ModelManager:
         cache_dict = {
             "messages": messages,
             "parameters": {
-                k: v for k,
-                v in parameters.items() if k != "stream" and k != "request_timeout"}}
+                k: v for k, v in parameters.items() if k != "stream" and k != "request_timeout"
+            },
+        }
 
         # Convert to a stable string and hash
         cache_str = json.dumps(cache_dict, sort_keys=True)
@@ -415,15 +416,12 @@ class ModelManager:
 
         try:
             error_data = response.json()
-            error_message = error_data.get(
-                "error", {}).get(
-                "message", "Unknown error")
+            error_message = error_data.get("error", {}).get("message", "Unknown error")
         except Exception:
             error_message = response.text or "HTTP error " + str(status_code)
 
         if status_code == 401:
-            raise ModelAuthenticationError(
-                "Authentication error: " + error_message)
+            raise ModelAuthenticationError("Authentication error: " + error_message)
         elif status_code == 429:
             retry_after = response.headers.get("retry-after")
             if retry_after:
@@ -435,8 +433,7 @@ class ModelManager:
                 retry_after = 5
 
             raise ModelRateLimitError(
-                "Rate limit exceeded: " + error_message,
-                retry_after=retry_after
+                "Rate limit exceeded: " + error_message, retry_after=retry_after
             )
         elif status_code == 404:
             raise ModelUnavailableError("Model not found: " + error_message)
@@ -444,15 +441,11 @@ class ModelManager:
             raise ModelTimeoutError("Request timed out: " + error_message)
         elif 500 <= status_code < 600:
             raise ModelRequestError(
-                "Server error: " + error_message,
-                status_code=status_code,
-                request_id=request_id
+                "Server error: " + error_message, status_code=status_code, request_id=request_id
             )
         else:
             raise ModelRequestError(
-                "API error: " + error_message,
-                status_code=status_code,
-                request_id=request_id
+                "API error: " + error_message, status_code=status_code, request_id=request_id
             )
 
     def _update_token_usage(self, response_data: Dict[str, Any]) -> None:
@@ -465,8 +458,7 @@ class ModelManager:
         usage = response_data.get("usage", {})
 
         self.token_usage["prompt_tokens"] += usage.get("prompt_tokens", 0)
-        self.token_usage["completion_tokens"] += usage.get(
-            "completion_tokens", 0)
+        self.token_usage["completion_tokens"] += usage.get("completion_tokens", 0)
         self.token_usage["total_tokens"] += usage.get("total_tokens", 0)
 
         # Log token usage with structured logging
@@ -477,8 +469,8 @@ class ModelManager:
                 "completion_tokens": usage.get("completion_tokens", 0),
                 "total_tokens": usage.get("total_tokens", 0),
                 "model": response_data.get("model", "unknown"),
-                "component": self.agent_type or "general"
-            }
+                "component": self.agent_type or "general",
+            },
         )
 
     def get_token_usage(self) -> Dict[str, int]:
@@ -492,26 +484,18 @@ class ModelManager:
 
     def reset_token_usage(self) -> None:
         """Reset token usage statistics."""
-        self.token_usage = {
-            "prompt_tokens": 0,
-            "completion_tokens": 0,
-            "total_tokens": 0
-        }
+        self.token_usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
 
-    @retry(retry=retry_if_exception_type((httpx.TimeoutException,
-                                          ModelTimeoutError,
-                                          ModelRateLimitError)),
-           stop=stop_after_attempt(MAX_RETRIES),
-           wait=wait_exponential(multiplier=1,
-                                 min=2,
-                                 max=30),
-           reraise=True)
+    @retry(
+        retry=retry_if_exception_type(
+            (httpx.TimeoutException, ModelTimeoutError, ModelRateLimitError)
+        ),
+        stop=stop_after_attempt(MAX_RETRIES),
+        wait=wait_exponential(multiplier=1, min=2, max=30),
+        reraise=True,
+    )
     @log_performance(operation="model_completion_async", level="info")
-    async def completion_async(
-        self,
-        messages: List[Dict[str, str]],
-        **kwargs
-    ) -> Dict[str, Any]:
+    async def completion_async(self, messages: List[Dict[str, str]], **kwargs) -> Dict[str, Any]:
         """
         Get a completion from the model with fallback and caching (async version).
 
@@ -532,9 +516,9 @@ class ModelManager:
                 "Starting async model completion request",
                 extra={
                     "messages_count": len(messages),
-                    "parameters": {
-                        k: v for k,
-                        v in kwargs.items() if k not in ["messages"]}})
+                    "parameters": {k: v for k, v in kwargs.items() if k not in ["messages"]},
+                },
+            )
 
             # Override parameters for this request only
             request_parameters = self.parameters.copy()
@@ -542,8 +526,7 @@ class ModelManager:
 
             # Check cache if enabled
             if ENABLE_CACHING and not request_parameters.get("stream", False):
-                cache_key = self._generate_cache_key(
-                    messages, request_parameters)
+                cache_key = self._generate_cache_key(messages, request_parameters)
 
                 # Cached values are stored by model, so we need to check each
                 # model in the chain
@@ -551,50 +534,52 @@ class ModelManager:
                     try:
                         # Try to get from cache
                         if hasattr(
-                                self._cached_completion,
-                                "cache_info"):  # Check if cache is available
-                            cache_dict = {
-                                "cache_key": cache_key,
-                                "model": model
-                            }
-                            cache_key_str = json.dumps(
-                                cache_dict, sort_keys=True)
+                            self._cached_completion, "cache_info"
+                        ):  # Check if cache is available
+                            cache_dict = {"cache_key": cache_key, "model": model}
+                            cache_key_str = json.dumps(cache_dict, sort_keys=True)
                             if cache_key_str in self._cached_completion.cache:
                                 logger.info(
-                                    "Cache hit for model " + model, extra={
-                                        "model": model, "cached": True})
+                                    "Cache hit for model " + model,
+                                    extra={"model": model, "cached": True},
+                                )
                                 return self._cached_completion.cache[cache_key_str]
                     except Exception as e:
                         logger.warning(
-                            "Cache lookup failed: " +
-                            str(e), extra={
-                                "error": str(e), "error_type": type(e).__name__})
+                            "Cache lookup failed: " + str(e),
+                            extra={"error": str(e), "error_type": type(e).__name__},
+                        )
 
             # Try each model in the fallback chain
             last_error = None
 
             for model in self.fallback_models:
                 try:
-                    with performance_timer("api_call_" + model, logger=logger, level="debug", model=model):
-                        async with httpx.AsyncClient(timeout=request_parameters["request_timeout"]) as client:
+                    with performance_timer(
+                        "api_call_" + model, logger=logger, level="debug", model=model
+                    ):
+                        async with httpx.AsyncClient(
+                            timeout=request_parameters["request_timeout"]
+                        ) as client:
                             headers = self.get_request_headers()
 
                             # Prepare the request payload
                             payload = {
                                 "model": model,
                                 "messages": messages,
-                                **{k: v for k, v in request_parameters.items()
-                                   if k not in ["request_timeout"]}
+                                **{
+                                    k: v
+                                    for k, v in request_parameters.items()
+                                    if k not in ["request_timeout"]
+                                },
                             }
 
                             # Make the API request
                             logger.debug(
-                                "Sending request to model " + model, extra={
-                                    "model": model})
+                                "Sending request to model " + model, extra={"model": model}
+                            )
                             response = await client.post(
-                                OPENROUTER_API_ENDPOINT,
-                                json=payload,
-                                headers=headers
+                                OPENROUTER_API_ENDPOINT, json=payload, headers=headers
                             )
 
                             # Handle error responses
@@ -608,39 +593,33 @@ class ModelManager:
                             self._update_token_usage(response_data)
 
                             # Cache the result if caching is enabled
-                            if ENABLE_CACHING and not request_parameters.get(
-                                    "stream", False):
-                                cache_key = self._generate_cache_key(
-                                    messages, request_parameters)
+                            if ENABLE_CACHING and not request_parameters.get("stream", False):
+                                cache_key = self._generate_cache_key(messages, request_parameters)
                                 try:
                                     self._cached_completion(cache_key, model)
                                     # Store in the cache manually
-                                    cache_dict = {
-                                        "cache_key": cache_key,
-                                        "model": model
-                                    }
-                                    cache_key_str = json.dumps(
-                                        cache_dict, sort_keys=True)
-                                    if hasattr(
-                                            self._cached_completion, "cache"):
+                                    cache_dict = {"cache_key": cache_key, "model": model}
+                                    cache_key_str = json.dumps(cache_dict, sort_keys=True)
+                                    if hasattr(self._cached_completion, "cache"):
                                         self._cached_completion.cache[cache_key_str] = response_data
                                         logger.debug(
-                                            "Cached response for model " + model, extra={
-                                                "model": model, "cache_key": cache_key})
+                                            "Cached response for model " + model,
+                                            extra={"model": model, "cache_key": cache_key},
+                                        )
                                 except Exception as e:
                                     logger.warning(
-                                        "Cache storage failed: " +
-                                        str(e), extra={
-                                            "error": str(e), "error_type": type(e).__name__})
+                                        "Cache storage failed: " + str(e),
+                                        extra={"error": str(e), "error_type": type(e).__name__},
+                                    )
 
                             logger.info(
                                 "Successfully got completion from model " + model,
                                 extra={
                                     "model": model,
                                     "status_code": response.status_code,
-                                    "usage": response_data.get(
-                                        "usage",
-                                        {})})
+                                    "usage": response_data.get("usage", {}),
+                                },
+                            )
                             return response_data
 
                 except (ModelUnavailableError, ModelRequestError) as e:
@@ -651,8 +630,8 @@ class ModelManager:
                             "error": str(e),
                             "error_type": type(e).__name__,
                             "model": model,
-                            "fallback_available": len(self.fallback_models) > 1
-                        }
+                            "fallback_available": len(self.fallback_models) > 1,
+                        },
                     )
                     last_error = e
                     continue
@@ -665,8 +644,8 @@ class ModelManager:
                             "error": str(e),
                             "error_type": type(e).__name__,
                             "model": model,
-                            "retry_after": getattr(e, "retry_after", None)
-                        }
+                            "retry_after": getattr(e, "retry_after", None),
+                        },
                     )
                     if isinstance(e, ModelRateLimitError) and e.retry_after:
                         time.sleep(e.retry_after)
@@ -676,10 +655,7 @@ class ModelManager:
                     # Authentication errors are fatal
                     logger.error(
                         "Authentication error: " + str(e),
-                        extra={
-                            "error": str(e),
-                            "error_type": type(e).__name__
-                        }
+                        extra={"error": str(e), "error_type": type(e).__name__},
                     )
                     raise e
 
@@ -687,11 +663,7 @@ class ModelManager:
                     # Unexpected errors
                     logger.error(
                         "Unexpected error with model " + model + ": " + str(e),
-                        extra={
-                            "error": str(e),
-                            "error_type": type(e).__name__,
-                            "model": model
-                        }
+                        extra={"error": str(e), "error_type": type(e).__name__, "model": model},
                     )
                     last_error = e
                     continue
@@ -706,15 +678,13 @@ class ModelManager:
                 extra={
                     "error": str(last_error) if last_error else "Unknown error",
                     "error_type": type(last_error).__name__ if last_error else "UnknownError",
-                    "models_tried": self.fallback_models})
+                    "models_tried": self.fallback_models,
+                },
+            )
             raise ModelError(error_msg)
 
     @log_performance(operation="model_completion", level="info")
-    def completion(
-        self,
-        messages: List[Dict[str, str]],
-        **kwargs
-    ) -> Dict[str, Any]:
+    def completion(self, messages: List[Dict[str, str]], **kwargs) -> Dict[str, Any]:
         """
         Get a completion from the model with fallback and caching (sync version).
 
@@ -735,9 +705,9 @@ class ModelManager:
                 "Starting model completion request",
                 extra={
                     "messages_count": len(messages),
-                    "parameters": {
-                        k: v for k,
-                        v in kwargs.items() if k not in ["messages"]}})
+                    "parameters": {k: v for k, v in kwargs.items() if k not in ["messages"]},
+                },
+            )
 
             # Override parameters for this request only
             request_parameters = self.parameters.copy()
@@ -745,39 +715,37 @@ class ModelManager:
 
             # Check cache if enabled
             if ENABLE_CACHING and not request_parameters.get("stream", False):
-                cache_key = self._generate_cache_key(
-                    messages, request_parameters)
+                cache_key = self._generate_cache_key(messages, request_parameters)
 
                 # Try to get from cache for each model in the chain
                 for model in self.fallback_models:
                     try:
                         # Try to get from cache
                         if hasattr(
-                                self._cached_completion,
-                                "cache_info"):  # Check if cache is available
-                            cache_dict = {
-                                "cache_key": cache_key,
-                                "model": model
-                            }
-                            cache_key_str = json.dumps(
-                                cache_dict, sort_keys=True)
+                            self._cached_completion, "cache_info"
+                        ):  # Check if cache is available
+                            cache_dict = {"cache_key": cache_key, "model": model}
+                            cache_key_str = json.dumps(cache_dict, sort_keys=True)
                             if cache_key_str in self._cached_completion.cache:
                                 logger.info(
-                                    "Cache hit for model " + model, extra={
-                                        "model": model, "cached": True})
+                                    "Cache hit for model " + model,
+                                    extra={"model": model, "cached": True},
+                                )
                                 return self._cached_completion.cache[cache_key_str]
                     except Exception as e:
                         logger.warning(
-                            "Cache lookup failed: " +
-                            str(e), extra={
-                                "error": str(e), "error_type": type(e).__name__})
+                            "Cache lookup failed: " + str(e),
+                            extra={"error": str(e), "error_type": type(e).__name__},
+                        )
 
             # Try each model in the fallback chain
             last_error = None
 
             for model in self.fallback_models:
                 try:
-                    with performance_timer("api_call_" + model, logger=logger, level="debug", model=model):
+                    with performance_timer(
+                        "api_call_" + model, logger=logger, level="debug", model=model
+                    ):
                         with httpx.Client(timeout=request_parameters["request_timeout"]) as client:
                             headers = self.get_request_headers()
 
@@ -785,18 +753,19 @@ class ModelManager:
                             payload = {
                                 "model": model,
                                 "messages": messages,
-                                **{k: v for k, v in request_parameters.items()
-                                   if k not in ["request_timeout"]}
+                                **{
+                                    k: v
+                                    for k, v in request_parameters.items()
+                                    if k not in ["request_timeout"]
+                                },
                             }
 
                             # Make the API request
                             logger.debug(
-                                "Sending request to model " + model, extra={
-                                    "model": model})
+                                "Sending request to model " + model, extra={"model": model}
+                            )
                             response = client.post(
-                                OPENROUTER_API_ENDPOINT,
-                                json=payload,
-                                headers=headers
+                                OPENROUTER_API_ENDPOINT, json=payload, headers=headers
                             )
 
                             # Handle error responses
@@ -810,39 +779,33 @@ class ModelManager:
                             self._update_token_usage(response_data)
 
                             # Cache the result if caching is enabled
-                            if ENABLE_CACHING and not request_parameters.get(
-                                    "stream", False):
-                                cache_key = self._generate_cache_key(
-                                    messages, request_parameters)
+                            if ENABLE_CACHING and not request_parameters.get("stream", False):
+                                cache_key = self._generate_cache_key(messages, request_parameters)
                                 try:
                                     # Store in the cache manually since we're
                                     # not actually calling the function
-                                    cache_dict = {
-                                        "cache_key": cache_key,
-                                        "model": model
-                                    }
-                                    cache_key_str = json.dumps(
-                                        cache_dict, sort_keys=True)
-                                    if hasattr(
-                                            self._cached_completion, "cache"):
+                                    cache_dict = {"cache_key": cache_key, "model": model}
+                                    cache_key_str = json.dumps(cache_dict, sort_keys=True)
+                                    if hasattr(self._cached_completion, "cache"):
                                         self._cached_completion.cache[cache_key_str] = response_data
                                         logger.debug(
-                                            "Cached response for model " + model, extra={
-                                                "model": model, "cache_key": cache_key})
+                                            "Cached response for model " + model,
+                                            extra={"model": model, "cache_key": cache_key},
+                                        )
                                 except Exception as e:
                                     logger.warning(
-                                        "Cache storage failed: " +
-                                        str(e), extra={
-                                            "error": str(e), "error_type": type(e).__name__})
+                                        "Cache storage failed: " + str(e),
+                                        extra={"error": str(e), "error_type": type(e).__name__},
+                                    )
 
                             logger.info(
                                 "Successfully got completion from model " + model,
                                 extra={
                                     "model": model,
                                     "status_code": response.status_code,
-                                    "usage": response_data.get(
-                                        "usage",
-                                        {})})
+                                    "usage": response_data.get("usage", {}),
+                                },
+                            )
                             return response_data
 
                 except (ModelUnavailableError, ModelRequestError) as e:
@@ -853,8 +816,8 @@ class ModelManager:
                             "error": str(e),
                             "error_type": type(e).__name__,
                             "model": model,
-                            "fallback_available": len(self.fallback_models) > 1
-                        }
+                            "fallback_available": len(self.fallback_models) > 1,
+                        },
                     )
                     last_error = e
                     continue
@@ -868,36 +831,45 @@ class ModelManager:
                             "error": str(e),
                             "error_type": type(e).__name__,
                             "model": model,
-                            "retry_after": retry_after
-                        }
+                            "retry_after": retry_after,
+                        },
                     )
 
                     for attempt in range(MAX_RETRIES):
-                        wait_time = min(retry_after * (2 ** attempt), 30)
+                        wait_time = min(retry_after * (2**attempt), 30)
                         logger.info(
-                            "Retrying after " + str(wait_time) + "s due to " +
-                            str(e),
+                            "Retrying after " + str(wait_time) + "s due to " + str(e),
                             extra={
                                 "attempt": attempt + 1,
                                 "max_retries": MAX_RETRIES,
-                                "wait_time": wait_time})
+                                "wait_time": wait_time,
+                            },
+                        )
                         time.sleep(wait_time)
 
                         try:
-                            with performance_timer("api_call_" + model + "_retry_" + str(attempt + 1), logger=logger, level="debug", model=model):
-                                with httpx.Client(timeout=request_parameters["request_timeout"]) as client:
+                            with performance_timer(
+                                "api_call_" + model + "_retry_" + str(attempt + 1),
+                                logger=logger,
+                                level="debug",
+                                model=model,
+                            ):
+                                with httpx.Client(
+                                    timeout=request_parameters["request_timeout"]
+                                ) as client:
                                     response = client.post(
-                                        OPENROUTER_API_ENDPOINT,
-                                        json=payload,
-                                        headers=headers
+                                        OPENROUTER_API_ENDPOINT, json=payload, headers=headers
                                     )
 
                                     if response.status_code == 200:
                                         response_data = response.json()
                                         self._update_token_usage(response_data)
                                         logger.info(
-                                            "Successfully got completion from model " + model + " after retry", extra={
-                                                "model": model, "attempt": attempt + 1})
+                                            "Successfully got completion from model "
+                                            + model
+                                            + " after retry",
+                                            extra={"model": model, "attempt": attempt + 1},
+                                        )
                                         return response_data
 
                                     # If still failing, check the error
@@ -906,22 +878,20 @@ class ModelManager:
                             # Continue retrying
                             last_error = retry_error
                             logger.warning(
-                                "Retry " +
-                                str(attempt +
-                                    1) + " failed with " +
-                                str(retry_error),
-                                extra={
-                                    "attempt": attempt +
-                                    1,
-                                    "error": str(retry_error)})
+                                "Retry " + str(attempt + 1) + " failed with " + str(retry_error),
+                                extra={"attempt": attempt + 1, "error": str(retry_error)},
+                            )
                             continue
                         except Exception as retry_error:
                             # Other errors, try next model
                             last_error = retry_error
                             logger.error(
-                                "Unexpected error during retry: " +
-                                str(retry_error), extra={
-                                    "error": str(retry_error), "error_type": type(retry_error).__name__})
+                                "Unexpected error during retry: " + str(retry_error),
+                                extra={
+                                    "error": str(retry_error),
+                                    "error_type": type(retry_error).__name__,
+                                },
+                            )
                             break
 
                     # If we exhaust all retries, try the next model
@@ -931,10 +901,7 @@ class ModelManager:
                     # Authentication errors are fatal
                     logger.error(
                         "Authentication error: " + str(e),
-                        extra={
-                            "error": str(e),
-                            "error_type": type(e).__name__
-                        }
+                        extra={"error": str(e), "error_type": type(e).__name__},
                     )
                     raise e
 
@@ -942,11 +909,7 @@ class ModelManager:
                     # Unexpected errors
                     logger.error(
                         "Unexpected error with model " + model + ": " + str(e),
-                        extra={
-                            "error": str(e),
-                            "error_type": type(e).__name__,
-                            "model": model
-                        }
+                        extra={"error": str(e), "error_type": type(e).__name__, "model": model},
                     )
                     last_error = e
                     continue
@@ -961,7 +924,9 @@ class ModelManager:
                 extra={
                     "error": str(last_error) if last_error else "Unknown error",
                     "error_type": type(last_error).__name__ if last_error else "UnknownError",
-                    "models_tried": self.fallback_models})
+                    "models_tried": self.fallback_models,
+                },
+            )
             raise ModelError(error_msg)
 
     def create_openai_client(self):
@@ -980,8 +945,9 @@ class ModelManager:
             headers = self.get_request_headers()
             # Filter out content-type and authorization as they're handled by
             # the client
-            custom_headers = {k: v for k, v in headers.items()
-                              if k not in ["Content-Type", "Authorization"]}
+            custom_headers = {
+                k: v for k, v in headers.items() if k not in ["Content-Type", "Authorization"]
+            }
 
             # Create a client with OpenRouter configuration
             client = OpenAI(
@@ -1004,7 +970,8 @@ class ModelManager:
 
         except ImportError:
             raise ImportError(
-                "OpenAI package is required. Install with 'pip install openai>=1.0.0'.")
+                "OpenAI package is required. Install with 'pip install openai>=1.0.0'."
+            )
 
     def configure_openai_for_agent(self):
         """
@@ -1025,8 +992,9 @@ class ModelManager:
             headers = self.get_request_headers()
             # Keep content-type and authorization separate as they're handled
             # by OpenAI client directly
-            custom_headers = {k: v for k, v in headers.items()
-                              if k not in ["Content-Type", "Authorization"]}
+            custom_headers = {
+                k: v for k, v in headers.items() if k not in ["Content-Type", "Authorization"]
+            }
 
             openai.default_headers = custom_headers
 
@@ -1035,13 +1003,12 @@ class ModelManager:
                 # Check if there are any additional agent settings to apply
                 pass
 
-            logger.info(
-                "OpenAI configured to use " +
-                self.model_name + " via OpenRouter")
+            logger.info("OpenAI configured to use " + self.model_name + " via OpenRouter")
 
         except ImportError:
             raise ImportError(
-                "OpenAI package is required. Install with 'pip install openai>=1.0.0'.")
+                "OpenAI package is required. Install with 'pip install openai>=1.0.0'."
+            )
 
     def get_agent_client(self):
         """
@@ -1062,11 +1029,10 @@ class ModelManager:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Context manager exit that cleans up resources."""
-        if hasattr(self, 'httpx_client') and self.httpx_client:
+        if hasattr(self, "httpx_client") and self.httpx_client:
             self.httpx_client.close()
 
-    def _adjust_parameters_for_model(
-            self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def _adjust_parameters_for_model(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """
         Adjust parameters based on the specific model's capabilities.
 
@@ -1082,17 +1048,14 @@ class ModelManager:
         if "gemma-3-27b-it" in model_name:
             # Gemma has 128k context window, adjust max_tokens if needed
             if parameters["max_tokens"] < 4000:
-                logger.info(
-                    "Adjusting max_tokens for Gemma 3-27b model with 128k context window")
-                parameters["max_tokens"] = min(
-                    parameters.get("max_tokens", 1000) * 2, 4000)
+                logger.info("Adjusting max_tokens for Gemma 3-27b model with 128k context window")
+                parameters["max_tokens"] = min(parameters.get("max_tokens", 1000) * 2, 4000)
 
         # Handle models optimized for structured output
         if "qwen3-8b" in model_name:
             # Qwen is good for structured output, might want lower temperature
             if parameters["temperature"] > 0.2:
-                logger.info(
-                    "Adjusting temperature for Qwen model for better structured outputs")
+                logger.info("Adjusting temperature for Qwen model for better structured outputs")
                 parameters["temperature"] = min(parameters["temperature"], 0.2)
 
         # Handle reasoning-focused models
@@ -1100,17 +1063,14 @@ class ModelManager:
             # DeepSeek might benefit from slightly higher temperature for
             # reasoning
             if parameters["temperature"] < 0.1:
-                logger.info(
-                    "Adjusting temperature for DeepSeek model for better reasoning")
+                logger.info("Adjusting temperature for DeepSeek model for better reasoning")
                 parameters["temperature"] = max(parameters["temperature"], 0.1)
 
         return parameters
 
 
 # Legacy functions for backward compatibility
-def get_model_name(
-        model_name: Optional[str] = None,
-        agent_type: Optional[str] = None) -> str:
+def get_model_name(model_name: Optional[str] = None, agent_type: Optional[str] = None) -> str:
     """
     Legacy function to get the model name for backwards compatibility.
 
@@ -1180,8 +1140,7 @@ def configure_openai_for_openrouter():
     manager.configure_openai_for_agent()
 
 
-@retry(stop=stop_after_attempt(MAX_RETRIES),
-       wait=wait_exponential(multiplier=1, min=2, max=30))
+@retry(stop=stop_after_attempt(MAX_RETRIES), wait=wait_exponential(multiplier=1, min=2, max=30))
 def make_openrouter_request(url, payload, headers):
     """
     Legacy function to make a request to OpenRouter with retry logic.
@@ -1198,10 +1157,7 @@ def make_openrouter_request(url, payload, headers):
 
     try:
         response = httpx.post(
-            url,
-            json=payload,
-            headers=headers,
-            timeout=manager.parameters["request_timeout"]
+            url, json=payload, headers=headers, timeout=manager.parameters["request_timeout"]
         )
         response.raise_for_status()
         return response.json()

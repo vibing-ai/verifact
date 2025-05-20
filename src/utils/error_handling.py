@@ -22,7 +22,7 @@ class ErrorDetail:
         code: str,
         message: str,
         details: Optional[Union[str, Dict[str, Any]]] = None,
-        log_level: int = logging.ERROR
+        log_level: int = logging.ERROR,
     ):
         self.code = code
         self.message = message
@@ -59,7 +59,7 @@ class ErrorResponseFactory:
         details: Optional[Union[str, Dict[str, Any]]] = None,
         status_code: Optional[int] = None,
         log_exception: bool = True,
-        exc_info: Optional[Exception] = None
+        exc_info: Optional[Exception] = None,
     ) -> Dict[str, Any]:
         """
         Create a standardized error response.
@@ -76,21 +76,15 @@ class ErrorResponseFactory:
             Standardized error response dictionary
         """
         if status_code is None:
-            status_code = cls.STATUS_CODES.get(
-                error_type, status.HTTP_500_INTERNAL_SERVER_ERROR)
+            status_code = cls.STATUS_CODES.get(error_type, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         # Log the error
         if log_exception:
             log_level = logging.ERROR if status_code >= 500 else logging.WARNING
-            logger.log(
-                log_level,
-                f"Error {error_type}: {message}",
-                exc_info=exc_info)
+            logger.log(log_level, f"Error {error_type}: {message}", exc_info=exc_info)
 
         # In production, don't include detailed error information
-        is_production = os.getenv(
-            "ENVIRONMENT",
-            "development").lower() == "production"
+        is_production = os.getenv("ENVIRONMENT", "development").lower() == "production"
         response_details = None if is_production else details
 
         return {
@@ -109,7 +103,7 @@ class ErrorResponseFactory:
         details: Optional[Union[str, Dict[str, Any]]] = None,
         status_code: Optional[int] = None,
         log_exception: bool = True,
-        exc_info: Optional[Exception] = None
+        exc_info: Optional[Exception] = None,
     ) -> None:
         """
         Create and raise an HTTPException with standardized format.
@@ -117,8 +111,7 @@ class ErrorResponseFactory:
         This is a convenience method for API handlers.
         """
         if status_code is None:
-            status_code = cls.STATUS_CODES.get(
-                error_type, status.HTTP_500_INTERNAL_SERVER_ERROR)
+            status_code = cls.STATUS_CODES.get(error_type, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         error_response = cls.create_error_response(
             error_type=error_type,
@@ -126,10 +119,7 @@ class ErrorResponseFactory:
             details=details,
             status_code=status_code,
             log_exception=log_exception,
-            exc_info=exc_info
+            exc_info=exc_info,
         )
 
-        raise HTTPException(
-            status_code=status_code,
-            detail=error_response["error"]
-        )
+        raise HTTPException(status_code=status_code, detail=error_response["error"])

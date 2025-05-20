@@ -3,6 +3,7 @@ Pytest configuration for agent tests.
 
 This module contains fixtures specific to agent component tests.
 """
+
 from unittest.mock import MagicMock
 
 import pytest
@@ -41,14 +42,14 @@ def sample_evidence():
 def mock_claim_detector():
     """Return a mock ClaimDetector for testing."""
     mock_detector = MagicMock()
-    
+
     async def mock_detect_claims(text):
         """Mock claim detection."""
         return [
             {"text": "The Earth is approximately 4.54 billion years old.", "check_worthiness": 0.9},
             {"text": "Water covers about 71% of the Earth's surface.", "check_worthiness": 0.8},
         ]
-    
+
     mock_detector.detect_claims = mock_detect_claims
     return mock_detector
 
@@ -57,7 +58,7 @@ def mock_claim_detector():
 def mock_evidence_hunter():
     """Return a mock EvidenceHunter for testing."""
     mock_hunter = MagicMock()
-    
+
     async def mock_gather_evidence(claim):
         """Mock evidence gathering."""
         return [
@@ -65,16 +66,16 @@ def mock_evidence_hunter():
                 "text": f"Evidence for: {claim['text']}",
                 "source": "https://example.com/evidence",
                 "credibility": 0.9,
-                "stance": "supporting"
+                "stance": "supporting",
             },
             {
                 "text": f"More evidence for: {claim['text']}",
                 "source": "https://example.org/more-evidence",
                 "credibility": 0.85,
-                "stance": "supporting"
-            }
+                "stance": "supporting",
+            },
         ]
-    
+
     mock_hunter.gather_evidence = mock_gather_evidence
     return mock_hunter
 
@@ -83,7 +84,7 @@ def mock_evidence_hunter():
 def mock_verdict_writer():
     """Return a mock VerdictWriter for testing."""
     mock_writer = MagicMock()
-    
+
     async def mock_generate_verdict(claim, evidence):
         """Mock verdict generation."""
         return {
@@ -91,9 +92,9 @@ def mock_verdict_writer():
             "verdict": "TRUE" if len(evidence) >= 2 else "INCONCLUSIVE",
             "confidence": 0.85,
             "explanation": f"Based on the evidence, the claim that '{claim['text']}' appears to be true.",
-            "sources": [e["source"] for e in evidence]
+            "sources": [e["source"] for e in evidence],
         }
-    
+
     mock_writer.generate_verdict = mock_generate_verdict
     return mock_writer
 
@@ -148,7 +149,7 @@ def true_claim_evidence():
             "source": "https://example.edu/astronomy/solar-system",
             "credibility": 0.95,
             "stance": "supporting",
-        }
+        },
     ]
 
 
@@ -167,7 +168,7 @@ def false_claim_evidence():
             "source": "https://example.nasa.gov/solar-system",
             "credibility": 0.99,
             "stance": "refuting",
-        }
+        },
     ]
 
 
@@ -186,7 +187,7 @@ def partially_true_claim_evidence():
             "source": "https://example.who.int/covid-research",
             "credibility": 0.95,
             "stance": "partially_refuting",
-        }
+        },
     ]
 
 
@@ -205,7 +206,8 @@ def unverifiable_claim_evidence():
             "source": "https://example.org/seti-research",
             "credibility": 0.8,
             "stance": "neutral",
-        }
+        },
     ]
 
-# Add agent-specific fixtures here 
+
+# Add agent-specific fixtures here

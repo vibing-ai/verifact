@@ -47,71 +47,76 @@ router = APIRouter(
         403: {"description": "Forbidden"},
         404: {"description": "Not found"},
         429: {"description": "Too many requests"},
-        500: {"description": "Internal server error"}
-    }
+        500: {"description": "Internal server error"},
+    },
 )
+
 
 async def get_api_key(
     api_key_header: str = Security(api_key_header),
 ) -> APIKey:
     """
     Validate API key for protected endpoints.
-    
+
     Args:
         api_key_header: API key from request header
-        
+
     Returns:
         Validated API key
-        
+
     Raises:
         HTTPException: If API key is invalid
     """
     # Get valid API keys from secure credential manager
     valid_api_keys = get_credential("VERIFACT_API_KEYS", "test-api-key").split(",")
-    
+
     if api_key_header in valid_api_keys:
         return api_key_header
-    
+
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Invalid API Key",
         headers={"WWW-Authenticate": "APIKey"},
     )
 
+
 def check_feedback_rate_limit(request: Request, limit: int = 5, window: int = 3600):
     """
     Check if the request exceeds rate limits for feedback submission.
-    
+
     Args:
         request: FastAPI request object
         limit: Maximum number of feedback submissions allowed in time window
         window: Time window in seconds (default: 1 hour)
-        
+
     Raises:
         HTTPException: If rate limit is exceeded
     """
     client_ip = request.client.host
     current_time = int(time.time())
     window_start = current_time - window
-    
+
     # Get request history for this IP address
     key = f"feedback_rate_limit:{client_ip}"
     requests_history = feedback_rate_limit_cache.get(key, [])
-    
+
     # Filter out old requests
     recent_requests = [timestamp for timestamp in requests_history if timestamp > window_start]
-    
+
     # Check if limit exceeded
     if len(recent_requests) >= limit:
-        logger.warning(f"Rate limit exceeded for IP {client_ip}: {len(recent_requests)} feedback submissions in the last hour")
+        logger.warning(
+            f"Rate limit exceeded for IP {client_ip}: {len(recent_requests)} feedback submissions in the last hour"
+        )
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail=f"Rate limit exceeded: {limit} feedback submissions per hour"
+            detail=f"Rate limit exceeded: {limit} feedback submissions per hour",
         )
-    
+
     # Add current request timestamp and update cache
     recent_requests.append(current_time)
     feedback_rate_limit_cache.set(key, recent_requests)
+
 
 @router.post(
     "",
@@ -129,26 +134,24 @@ def check_feedback_rate_limit(request: Request, limit: int = 5, window: int = 36
     - Optional text comment
     
     At least one of these fields must be provided.
-    """
+    """,
 )
 async def submit_feedback(
-    feedback_request: FeedbackRequest,
-    request: Request,
-    api_key: Optional[APIKey] = None
+    feedback_request: FeedbackRequest, request: Request, api_key: Optional[APIKey] = None
 ):
     """Handle submission of user feedback."""
     # Check rate limit (only for non-API submissions)
     if not api_key:
         check_feedback_rate_limit(request)
-    
+
     try:
         # Extract client info for metadata
         metadata = {
             "ip_address": request.client.host,
             "user_agent": request.headers.get("user-agent", "Unknown"),
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
-        
+
         # Create feedback object
         feedback = Feedback(
             feedback_id=str(uuid.uuid4()),
@@ -159,42 +162,41 @@ async def submit_feedback(
             helpfulness_rating=feedback_request.helpfulness_rating,
             comment=feedback_request.comment,
             created_at=datetime.now(),
-            metadata=metadata
+            metadata=metadata,
         )
-        
+
         # If user is authenticated (via Chainlit), add user_id
         user_info = request.session.get("user") if hasattr(request, "session") else None
         if user_info:
             feedback.user_id = user_info.get("identifier")
-            
+
         # Store feedback in database
         result = db_client.store_feedback(feedback)
-        
+
         # Return success response
         return FeedbackResponse(
             success=True,
             feedback_id=result.get("feedback_id"),
-            message="Thank you for your feedback!"
+            message="Thank you for your feedback!",
         )
-        
+
     except ValidationError as e:
         logger.error(f"Validation error in feedback submission: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid feedback data: {str(e)}"
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid feedback data: {str(e)}"
         )
     except QueryError as e:
         logger.error(f"Database error in feedback submission: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to store feedback. Please try again later."
+            detail="Failed to store feedback. Please try again later.",
         )
     except Exception as e:
         logger.error(f"Unexpected error in feedback submission: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An unexpected error occurred"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An unexpected error occurred"
         )
+
 
 @router.get(
     "/stats",
@@ -208,33 +210,32 @@ async def submit_feedback(
     - Average ratings for accuracy and helpfulness
     - Distribution of ratings
     - Recent comments
-    """
+    """,
 )
-async def get_feedback_stats(
-    api_key: APIKey = Security(get_api_key)
-):
+async def get_feedback_stats(api_key: APIKey = Security(get_api_key)):
     """Get aggregated feedback statistics."""
     try:
         # Get statistics from database
         stats = db_client.get_feedback_statistics()
-        
+
         # Convert to FeedbackStats model
         feedback_stats = FeedbackStats(
             total_feedback=stats.get("total_feedback", 0),
             average_accuracy=stats.get("average_accuracy"),
             average_helpfulness=stats.get("average_helpfulness"),
             feedback_count_by_rating=stats.get("feedback_count_by_rating", {}),
-            recent_comments=stats.get("recent_comments", [])
+            recent_comments=stats.get("recent_comments", []),
         )
-        
+
         return feedback_stats
-        
+
     except Exception as e:
         logger.error(f"Error getting feedback statistics: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve feedback statistics"
+            detail="Failed to retrieve feedback statistics",
         )
+
 
 @router.get(
     "/{claim_id}",
@@ -245,26 +246,27 @@ async def get_feedback_stats(
     
     This endpoint retrieves all feedback submissions for a given claim ID,
     with pagination support.
-    """
+    """,
 )
 async def get_claim_feedback(
     claim_id: str,
     limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0),
-    api_key: APIKey = Security(get_api_key)
+    api_key: APIKey = Security(get_api_key),
 ):
     """Get feedback for a specific claim."""
     try:
         # Get feedback from database
         feedback_list = db_client.get_feedback_for_claim(claim_id, limit, offset)
         return feedback_list
-        
+
     except Exception as e:
         logger.error(f"Error getting feedback for claim {claim_id}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve feedback for claim {claim_id}"
+            detail=f"Failed to retrieve feedback for claim {claim_id}",
         )
+
 
 @router.get(
     "/stats/{claim_id}",
@@ -278,31 +280,28 @@ async def get_claim_feedback(
     - Average ratings for accuracy and helpfulness
     - Distribution of ratings
     - Recent comments
-    """
+    """,
 )
-async def get_claim_feedback_stats(
-    claim_id: str,
-    api_key: APIKey = Security(get_api_key)
-):
+async def get_claim_feedback_stats(claim_id: str, api_key: APIKey = Security(get_api_key)):
     """Get aggregated feedback statistics for a specific claim."""
     try:
         # Get statistics from database
         stats = db_client.get_feedback_statistics(claim_id)
-        
+
         # Convert to FeedbackStats model
         feedback_stats = FeedbackStats(
             total_feedback=stats.get("total_feedback", 0),
             average_accuracy=stats.get("average_accuracy"),
             average_helpfulness=stats.get("average_helpfulness"),
             feedback_count_by_rating=stats.get("feedback_count_by_rating", {}),
-            recent_comments=stats.get("recent_comments", [])
+            recent_comments=stats.get("recent_comments", []),
         )
-        
+
         return feedback_stats
-        
+
     except Exception as e:
         logger.error(f"Error getting feedback statistics for claim {claim_id}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve feedback statistics for claim {claim_id}"
-        ) 
+            detail=f"Failed to retrieve feedback statistics for claim {claim_id}",
+        )

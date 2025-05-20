@@ -1,9 +1,10 @@
 """
 Global pytest configuration for VeriFact tests.
 
-This module contains global fixtures and configuration for pytest 
+This module contains global fixtures and configuration for pytest
 that are used across multiple test domains.
 """
+
 import logging
 import os
 from unittest.mock import MagicMock
@@ -15,10 +16,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Configure logging for tests
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+
 
 def pytest_addoption(parser):
     """Add custom command-line options for pytest."""
@@ -26,27 +25,28 @@ def pytest_addoption(parser):
         "--run-integration",
         action="store_true",
         default=False,
-        help="Run integration tests that call external APIs"
+        help="Run integration tests that call external APIs",
     )
-    
+
     parser.addoption(
         "--model",
         action="store",
         default=None,
-        help="Specify which LLM model to use for integration tests"
+        help="Specify which LLM model to use for integration tests",
     )
+
 
 def pytest_configure(config):
     """Configure pytest based on command-line options."""
     # Configure integration tests
     if config.getoption("--run-integration"):
         os.environ["TEST_INTEGRATION"] = "true"
-    
+
     # Configure model for testing
     model = config.getoption("--model")
     if model:
         os.environ["TEST_MODEL"] = model
-    
+
     # Register custom markers
     config.addinivalue_line("markers", "unit: mark a test as a unit test")
     config.addinivalue_line("markers", "integration: mark a test as an integration test")
@@ -59,9 +59,9 @@ def setup_test_environment():
     # Use testing-specific settings
     os.environ["ENVIRONMENT"] = "test"
     os.environ["REDIS_ENABLED"] = "false"  # Use in-memory cache for tests
-    
+
     yield
-    
+
     # Clean up after all tests
     # (Add any cleanup code here if needed)
 
@@ -120,6 +120,7 @@ def sample_evidence():
 @pytest.fixture
 def mock_web_search():
     """Return a mock web search function for testing."""
+
     def mock_search(query, max_results=5):
         """Mock web search function."""
         return [
@@ -130,7 +131,7 @@ def mock_web_search():
             }
             for i in range(max_results)
         ]
-    
+
     return mock_search
 
 
@@ -138,20 +139,21 @@ def mock_web_search():
 def env_setup():
     """Set up environment variables for testing and restore them afterward."""
     original_env = os.environ.copy()
-    
+
     # Set test environment variables
     os.environ["OPENAI_API_KEY"] = "test_api_key"
     os.environ["SEARCH_API_KEY"] = "test_search_key"
     os.environ["DEBUG"] = "True"
-    
+
     yield
-    
+
     # Restore original environment
     os.environ.clear()
     os.environ.update(original_env)
 
 
 # Integration testing fixtures
+
 
 @pytest.fixture
 def true_claim_text():
@@ -292,7 +294,7 @@ def unverifiable_claim_evidence():
 def mock_claim_detector():
     """Return a mock ClaimDetector that returns predetermined claims."""
     mock = MagicMock()
-    
+
     async def mock_detect_claims(text):
         """Mock the detect_claims method."""
         if "Earth" in text:
@@ -300,7 +302,7 @@ def mock_claim_detector():
                 {
                     "text": "The Earth is approximately 4.54 billion years old.",
                     "check_worthiness": 0.95,
-                    "domain": "science"
+                    "domain": "science",
                 }
             ]
         elif "COVID" in text:
@@ -308,12 +310,12 @@ def mock_claim_detector():
                 {
                     "text": "COVID-19 vaccines are effective at preventing severe illness.",
                     "check_worthiness": 0.90,
-                    "domain": "health"
+                    "domain": "health",
                 }
             ]
         else:
             return []
-    
+
     mock.detect_claims = mock_detect_claims
     return mock
 
@@ -322,7 +324,7 @@ def mock_claim_detector():
 def mock_evidence_hunter():
     """Return a mock EvidenceHunter that returns predetermined evidence."""
     mock = MagicMock()
-    
+
     async def mock_gather_evidence(claim):
         """Mock the gather_evidence method."""
         if "Earth" in claim:
@@ -331,14 +333,14 @@ def mock_evidence_hunter():
                     "text": "Scientific evidence suggests Earth formed about 4.54 billion years ago.",
                     "source": "https://example.com/earth-age",
                     "credibility": 0.95,
-                    "stance": "supporting"
+                    "stance": "supporting",
                 },
                 {
                     "text": "Radiometric dating confirms Earth is several billion years old.",
                     "source": "https://example.org/geological-evidence",
                     "credibility": 0.92,
-                    "stance": "supporting"
-                }
+                    "stance": "supporting",
+                },
             ]
         elif "vaccine" in claim.lower() or "covid" in claim.lower():
             return [
@@ -346,18 +348,18 @@ def mock_evidence_hunter():
                     "text": "Studies show COVID-19 vaccines reduce risk of severe illness by 90%+.",
                     "source": "https://example.gov/vaccine-studies",
                     "credibility": 0.96,
-                    "stance": "supporting"
+                    "stance": "supporting",
                 },
                 {
                     "text": "Vaccine effectiveness may vary by variant and age group.",
                     "source": "https://example.org/variant-studies",
                     "credibility": 0.90,
-                    "stance": "partially_supporting"
-                }
+                    "stance": "partially_supporting",
+                },
             ]
         else:
             return []
-    
+
     mock.gather_evidence = mock_gather_evidence
     return mock
 
@@ -366,7 +368,7 @@ def mock_evidence_hunter():
 def mock_verdict_writer():
     """Return a mock VerdictWriter that returns predetermined verdicts."""
     mock = MagicMock()
-    
+
     async def mock_generate_verdict(claim, evidence):
         """Mock the generate_verdict method."""
         if any(e.get("stance") == "supporting" for e in evidence):
@@ -375,7 +377,7 @@ def mock_verdict_writer():
                 "verdict": "true",
                 "confidence": 0.92,
                 "explanation": "The evidence strongly supports this claim.",
-                "sources": [e.get("source") for e in evidence]
+                "sources": [e.get("source") for e in evidence],
             }
         elif any(e.get("stance") == "refuting" for e in evidence):
             return {
@@ -383,7 +385,7 @@ def mock_verdict_writer():
                 "verdict": "false",
                 "confidence": 0.88,
                 "explanation": "The evidence contradicts this claim.",
-                "sources": [e.get("source") for e in evidence]
+                "sources": [e.get("source") for e in evidence],
             }
         elif any(e.get("stance") == "partially_supporting" for e in evidence):
             return {
@@ -391,7 +393,7 @@ def mock_verdict_writer():
                 "verdict": "partially true",
                 "confidence": 0.75,
                 "explanation": "The evidence partially supports this claim with some caveats.",
-                "sources": [e.get("source") for e in evidence]
+                "sources": [e.get("source") for e in evidence],
             }
         else:
             return {
@@ -399,9 +401,9 @@ def mock_verdict_writer():
                 "verdict": "unverifiable",
                 "confidence": 0.60,
                 "explanation": "There is insufficient evidence to verify this claim.",
-                "sources": [e.get("source") for e in evidence] if evidence else []
+                "sources": [e.get("source") for e in evidence] if evidence else [],
             }
-    
+
     mock.generate_verdict = mock_generate_verdict
     return mock
 
@@ -416,7 +418,7 @@ def mock_pipeline_config():
         "timeout_seconds": 30.0,
         "enable_fallbacks": True,
         "retry_attempts": 1,
-        "include_debug_info": True
+        "include_debug_info": True,
     }
 
 
@@ -427,16 +429,16 @@ def vcr_search_results():
         {
             "title": "Earth's age determined to be 4.54 billion years",
             "link": "https://example.com/earth-age",
-            "snippet": "Scientific studies using radiometric dating have determined the Earth is approximately 4.54 billion years old, with an uncertainty of less than 1 percent."
+            "snippet": "Scientific studies using radiometric dating have determined the Earth is approximately 4.54 billion years old, with an uncertainty of less than 1 percent.",
         },
         {
             "title": "How scientists measure the age of Earth",
             "link": "https://example.org/dating-methods",
-            "snippet": "Geologists use multiple methods including uranium-lead dating of zircon crystals to establish that Earth formed about 4.5 billion years ago."
+            "snippet": "Geologists use multiple methods including uranium-lead dating of zircon crystals to establish that Earth formed about 4.5 billion years ago.",
         },
         {
             "title": "History of Earth's formation",
             "link": "https://example.edu/earth-formation",
-            "snippet": "The Earth formed approximately 4.54 billion years ago by accretion from the solar nebula. This age has been confirmed by multiple dating methods."
-        }
-    ] 
+            "snippet": "The Earth formed approximately 4.54 billion years ago by accretion from the solar nebula. This age has been confirmed by multiple dating methods.",
+        },
+    ]

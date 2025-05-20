@@ -15,7 +15,7 @@ from pydantic import ValidationError as PydanticValidationError
 from src.models.factcheck import Claim, Evidence, Verdict
 from src.utils.validation.exceptions import InputTooLongError, ValidationError
 
-T = TypeVar('T', bound=BaseModel)
+T = TypeVar("T", bound=BaseModel)
 
 
 def validate_model(data: Dict[str, Any], model_class: Type[T]) -> T:
@@ -46,10 +46,7 @@ def validate_model(data: Dict[str, Any], model_class: Type[T]) -> T:
             field = next(iter(field_errors.keys()))
             message = f"Validation error for field '{field}': {field_errors[field]}"
 
-        raise ValidationError(
-            message=message,
-            details={"field_errors": field_errors}
-        )
+        raise ValidationError(message=message, details={"field_errors": field_errors})
 
 
 def sanitize_text(text: str) -> str:
@@ -63,10 +60,10 @@ def sanitize_text(text: str) -> str:
         Sanitized text
     """
     # Replace control characters except common whitespace
-    text = re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]', '', text)
+    text = re.sub(r"[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]", "", text)
 
     # Normalize whitespace (replace multiple spaces with single space)
-    text = re.sub(r'\s+', ' ', text)
+    text = re.sub(r"\s+", " ", text)
 
     # Trim
     return text.strip()
@@ -106,9 +103,9 @@ def parse_datetime(timestamp: Optional[str]) -> Optional[datetime]:
 
     formats = [
         "%Y-%m-%dT%H:%M:%S.%fZ",  # ISO format with microseconds
-        "%Y-%m-%dT%H:%M:%SZ",     # ISO format without microseconds
-        "%Y-%m-%d %H:%M:%S",      # Standard datetime format
-        "%Y-%m-%d",               # Just date
+        "%Y-%m-%dT%H:%M:%SZ",  # ISO format without microseconds
+        "%Y-%m-%d %H:%M:%S",  # Standard datetime format
+        "%Y-%m-%d",  # Just date
     ]
 
     for fmt in formats:
@@ -209,17 +206,14 @@ def get_json_serializable_error(exception: Exception) -> Dict[str, Any]:
     Returns:
         Error dictionary
     """
-    if hasattr(
-        exception,
-        'to_dict') and callable(
-            exception.to_dict):
+    if hasattr(exception, "to_dict") and callable(exception.to_dict):
         return cast(Any, exception).to_dict()
 
     return {
         "error": {
             "code": exception.__class__.__name__.upper(),
             "message": str(exception),
-            "details": {}
+            "details": {},
         }
     }
 
@@ -240,7 +234,4 @@ def try_parse_json(json_str: str) -> Dict[str, Any]:
     try:
         return json.loads(json_str)
     except json.JSONDecodeError as e:
-        raise ValidationError(
-            message=f"Invalid JSON: {str(e)}",
-            details={"json_error": str(e)}
-        )
+        raise ValidationError(message=f"Invalid JSON: {str(e)}", details={"json_error": str(e)})

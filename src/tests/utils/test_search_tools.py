@@ -25,31 +25,29 @@ def serper_search_tool():
 def mock_search_response():
     """Mock response data from Serper.dev API."""
     return {
-        "searchParameters": {
-            "q": "test query"
-        },
+        "searchParameters": {"q": "test query"},
         "organic": [
             {
                 "title": "Test Result 1",
                 "link": "https://example.com/1",
                 "snippet": "This is the first test result snippet.",
-                "position": 1
+                "position": 1,
             },
             {
                 "title": "Test Result 2",
                 "link": "https://example.com/2",
                 "snippet": "This is the second test result snippet.",
-                "position": 2
-            }
+                "position": 2,
+            },
         ],
         "news": [
             {
                 "title": "Test News 1",
                 "link": "https://example.com/news/1",
                 "snippet": "This is a news article snippet.",
-                "date": "2023-06-15"
+                "date": "2023-06-15",
             }
-        ]
+        ],
     }
 
 
@@ -85,10 +83,10 @@ async def test_serper_search_tool_call(serper_search_tool, mock_search_response)
     mock_response.json = AsyncMock(return_value=mock_search_response)
     mock_session.__aenter__.return_value = mock_session
     mock_session.post = AsyncMock(return_value=mock_response)
-    
+
     with patch("aiohttp.ClientSession", return_value=mock_session):
         results = await serper_search_tool.call({"query": "test query", "num_results": 2})
-        
+
         # Verify the results
         assert len(results) == 2
         assert results[0]["title"] == "Test Result 1"
@@ -107,10 +105,10 @@ async def test_serper_search_tool_api_error(serper_search_tool):
     mock_response.text = AsyncMock(return_value="Bad Request")
     mock_session.__aenter__.return_value = mock_session
     mock_session.post = AsyncMock(return_value=mock_response)
-    
+
     with patch("aiohttp.ClientSession", return_value=mock_session):
         results = await serper_search_tool.call({"query": "test query"})
-        
+
         # Verify the error response
         assert len(results) == 1
         assert "error" in results[0]
@@ -123,11 +121,11 @@ async def test_serper_search_tool_missing_api_key():
     # Ensure no API key is set
     if "SERPER_API_KEY" in os.environ:
         del os.environ["SERPER_API_KEY"]
-    
+
     tool = SerperSearchTool()
     results = await tool.call({"query": "test query"})
-    
+
     # Verify the error response
     assert len(results) == 1
     assert "error" in results[0]
-    assert "SERPER_API_KEY not set" in results[0]["error"] 
+    assert "SERPER_API_KEY not set" in results[0]["error"]

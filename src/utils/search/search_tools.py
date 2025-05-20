@@ -33,35 +33,36 @@ class SerperSearchTool(Tool):
                 "properties": {
                     "query": {
                         "type": "string",
-                        "description": "The search query to find information about"},
+                        "description": "The search query to find information about",
+                    },
                     "num_results": {
                         "type": "integer",
                         "default": 5,
-                        "description": "Number of results to return (1-10)"},
+                        "description": "Number of results to return (1-10)",
+                    },
                     "search_type": {
                         "type": "string",
-                        "enum": [
-                            "search",
-                            "news",
-                            "images"],
+                        "enum": ["search", "news", "images"],
                         "default": "search",
-                        "description": "Type of search to perform: general search, news, or images"}},
-                "required": ["query"]},
+                        "description": "Type of search to perform: general search, news, or images",
+                    },
+                },
+                "required": ["query"],
+            },
             output_schema={
                 "type": "array",
                 "items": {
                     "type": "object",
                     "properties": {
-                        "title": {
-                            "type": "string"},
-                        "snippet": {
-                            "type": "string"},
-                        "url": {
-                            "type": "string"},
-                        "position": {
-                            "type": "integer"},
-                        "source": {
-                            "type": "string"}}}})
+                        "title": {"type": "string"},
+                        "snippet": {"type": "string"},
+                        "url": {"type": "string"},
+                        "position": {"type": "integer"},
+                        "source": {"type": "string"},
+                    },
+                },
+            },
+        )
 
         # Get API key from environment variable
         self.api_key = os.getenv("SERPER_API_KEY")
@@ -71,8 +72,7 @@ class SerperSearchTool(Tool):
         # Set up API parameters
         self.api_url = "https://google.serper.dev"
 
-    async def call(self, params: Dict[str, Any],
-                   **kwargs) -> List[Dict[str, Any]]:
+    async def call(self, params: Dict[str, Any], **kwargs) -> List[Dict[str, Any]]:
         """
         Call the Serper.dev API to search for information.
 
@@ -94,29 +94,19 @@ class SerperSearchTool(Tool):
             endpoint = "/search" if search_type == "search" else f"/{search_type}"
 
             # Set up the request headers and payload
-            headers = {
-                "X-API-KEY": self.api_key,
-                "Content-Type": "application/json"
-            }
+            headers = {"X-API-KEY": self.api_key, "Content-Type": "application/json"}
 
-            payload = {
-                "q": query,
-                "num": num_results
-            }
+            payload = {"q": query, "num": num_results}
 
             # Make the API request
             async with aiohttp.ClientSession() as session:
                 async with session.post(
-                    f"{self.api_url}{endpoint}",
-                    headers=headers,
-                    json=payload
+                    f"{self.api_url}{endpoint}", headers=headers, json=payload
                 ) as response:
                     if response.status != 200:
                         error_text = await response.text()
-                        logger.error(
-                            f"Serper API error: {response.status} - {error_text}")
-                        return [
-                            {"error": f"API returned status code {response.status}"}]
+                        logger.error(f"Serper API error: {response.status} - {error_text}")
+                        return [{"error": f"API returned status code {response.status}"}]
 
                     data = await response.json()
 
@@ -126,39 +116,44 @@ class SerperSearchTool(Tool):
             if search_type == "search":
                 organic_results = data.get("organic", [])
                 for i, result in enumerate(organic_results[:num_results]):
-                    results.append({
-                        "title": result.get("title", ""),
-                        "snippet": result.get("snippet", ""),
-                        "url": result.get("link", ""),
-                        "position": i + 1,
-                        "source": "serper.dev"
-                    })
+                    results.append(
+                        {
+                            "title": result.get("title", ""),
+                            "snippet": result.get("snippet", ""),
+                            "url": result.get("link", ""),
+                            "position": i + 1,
+                            "source": "serper.dev",
+                        }
+                    )
 
             elif search_type == "news":
                 news_results = data.get("news", [])
                 for i, result in enumerate(news_results[:num_results]):
-                    results.append({
-                        "title": result.get("title", ""),
-                        "snippet": result.get("snippet", ""),
-                        "url": result.get("link", ""),
-                        "position": i + 1,
-                        "date": result.get("date", ""),
-                        "source": "serper.dev"
-                    })
+                    results.append(
+                        {
+                            "title": result.get("title", ""),
+                            "snippet": result.get("snippet", ""),
+                            "url": result.get("link", ""),
+                            "position": i + 1,
+                            "date": result.get("date", ""),
+                            "source": "serper.dev",
+                        }
+                    )
 
             elif search_type == "images":
                 image_results = data.get("images", [])
                 for i, result in enumerate(image_results[:num_results]):
-                    results.append({
-                        "title": result.get("title", ""),
-                        "url": result.get("link", ""),
-                        "image_url": result.get("imageUrl", ""),
-                        "position": i + 1,
-                        "source": "serper.dev"
-                    })
+                    results.append(
+                        {
+                            "title": result.get("title", ""),
+                            "url": result.get("link", ""),
+                            "image_url": result.get("imageUrl", ""),
+                            "position": i + 1,
+                            "source": "serper.dev",
+                        }
+                    )
 
-            logger.info(
-                f"Serper search for '{query}' returned {len(results)} results")
+            logger.info(f"Serper search for '{query}' returned {len(results)} results")
             return results
 
         except Exception as e:
@@ -182,5 +177,6 @@ def get_search_tool():
     else:
         # Fall back to OpenAI's WebSearchTool
         from openai.agents.tools import WebSearchTool
+
         logger.info("Using WebSearchTool for web searches")
         return WebSearchTool()

@@ -27,7 +27,7 @@ def mock_evidence():
             source_name="National Geographic",
             relevance=0.98,
             stance="contradicting",
-            credibility=0.95
+            credibility=0.95,
         ),
         Evidence(
             text="Ships disappearing hull-first over the horizon, observation of other planets, the shape of Earth's shadow on the moon during lunar eclipses, and photos from space all confirm Earth is not flat.",
@@ -35,8 +35,8 @@ def mock_evidence():
             source_name="Science Organization",
             relevance=0.97,
             stance="contradicting",
-            credibility=0.93
-        )
+            credibility=0.93,
+        ),
     ]
 
 
@@ -48,7 +48,7 @@ def mock_verdict():
         verdict="false",
         confidence=0.98,
         explanation="Multiple lines of scientific evidence confirm that the Earth is approximately spherical, not flat. This includes observations from space, the behavior of ships disappearing over the horizon, and the curved shadow Earth casts on the moon during lunar eclipses.",
-        sources=["https://example.com/earth-shape", "https://example.com/evidence-round-earth"]
+        sources=["https://example.com/earth-shape", "https://example.com/evidence-round-earth"],
     )
 
 
@@ -66,17 +66,17 @@ async def test_generate_verdict_success(verdict_writer, mock_evidence, mock_verd
         mock_result = AsyncMock()
         mock_result.output = mock_verdict
         mock_run.return_value = mock_result
-        
+
         # Create a test claim
         claim = Claim(
-            text="The Earth is flat", 
+            text="The Earth is flat",
             context="In a discussion about conspiracy theories",
-            checkworthy=True
+            checkworthy=True,
         )
-        
+
         # Call generate_verdict
         result = await verdict_writer.generate_verdict(claim, mock_evidence)
-        
+
         # Verify the result
         assert result.claim == "The Earth is flat"
         assert result.verdict == "false"
@@ -96,22 +96,22 @@ async def test_generate_verdict_no_evidence(verdict_writer, mock_verdict):
             verdict="unverifiable",
             confidence=0.5,
             explanation="There is insufficient evidence to verify this claim.",
-            sources=[]
+            sources=[],
         )
         mock_result = AsyncMock()
         mock_result.output = mock_unverifiable
         mock_run.return_value = mock_result
-        
+
         # Create a test claim
         claim = Claim(
-            text="The Earth is flat", 
+            text="The Earth is flat",
             context="In a discussion about conspiracy theories",
-            checkworthy=True
+            checkworthy=True,
         )
-        
+
         # Call generate_verdict with empty evidence
         result = await verdict_writer.generate_verdict(claim, [])
-        
+
         # Verify the result
         assert result.verdict == "unverifiable"
         assert result.confidence == 0.5
@@ -125,18 +125,18 @@ async def test_generate_verdict_exception(verdict_writer, mock_evidence):
     # Mock the Agent.run method to raise an exception
     with patch("agents.Runner.run") as mock_run:
         mock_run.side_effect = Exception("Test exception")
-        
+
         # Create a test claim
         claim = Claim(
-            text="The Earth is flat", 
+            text="The Earth is flat",
             context="In a discussion about conspiracy theories",
-            checkworthy=True
+            checkworthy=True,
         )
-        
+
         # Call generate_verdict and expect an exception
         with pytest.raises(Exception) as exc_info:
             await verdict_writer.generate_verdict(claim, mock_evidence)
-        
+
         # Verify the exception
         assert "Test exception" in str(exc_info.value)
         assert mock_run.called
@@ -147,9 +147,9 @@ async def test_generate_verdict_exception(verdict_writer, mock_evidence):
 async def test_verdict_writer_standalone():
     """Test the VerdictWriter component (standalone version)."""
     print("\n=== Testing VerdictWriter ===\n")
-    
+
     writer = StandaloneVerdictWriter()
-    
+
     # Test cases with different claim/evidence combinations
     test_cases = [
         {
@@ -157,96 +157,100 @@ async def test_verdict_writer_standalone():
             "claim": Claim(
                 text="The Earth is approximately 4.54 billion years old",
                 context="Discussion about planetary science",
-                checkworthy=True
+                checkworthy=True,
             ),
             "evidence": [
                 StandaloneEvidence(
                     content="Scientists have determined that the Earth is 4.54 billion years old with an error range of less than 1 percent.",
                     source="https://example.edu/earth-age",
                     relevance=0.95,
-                    stance="supporting"
+                    stance="supporting",
                 ),
                 StandaloneEvidence(
                     content="Radiometric dating of meteorites has shown that they, and therefore the Solar System, formed between 4.53 and 4.58 billion years ago.",
                     source="https://example.gov/geological-survey",
                     relevance=0.92,
-                    stance="supporting"
-                )
-            ]
+                    stance="supporting",
+                ),
+            ],
         },
         {
             "name": "False claim with contradicting evidence",
             "claim": Claim(
                 text="The Earth is flat",
                 context="Discussion about conspiracy theories",
-                checkworthy=True
+                checkworthy=True,
             ),
             "evidence": [
                 StandaloneEvidence(
                     content="Multiple lines of evidence confirm Earth is approximately spherical, including direct observation from space, the curved shadow during lunar eclipses, and the way ships disappear hull-first over the horizon.",
                     source="https://example.edu/earth-shape",
                     relevance=0.98,
-                    stance="contradicting"
+                    stance="contradicting",
                 ),
                 StandaloneEvidence(
                     content="All space agencies worldwide have captured images showing Earth's spherical shape, and no credible scientific evidence supports a flat Earth.",
                     source="https://example.gov/space-imagery",
                     relevance=0.97,
-                    stance="contradicting"
-                )
-            ]
+                    stance="contradicting",
+                ),
+            ],
         },
         {
             "name": "Partially true claim with mixed evidence",
             "claim": Claim(
                 text="COVID-19 vaccines are 100% effective at preventing infection",
                 context="Discussion about vaccine efficacy",
-                checkworthy=True
+                checkworthy=True,
             ),
             "evidence": [
                 StandaloneEvidence(
                     content="COVID-19 vaccines have demonstrated high efficacy rates, typically between 70-95% in preventing symptomatic disease in clinical trials.",
                     source="https://example.gov/vaccine-efficacy",
                     relevance=0.96,
-                    stance="partially_supporting"
+                    stance="partially_supporting",
                 ),
                 StandaloneEvidence(
                     content="Breakthrough infections can still occur in fully vaccinated individuals, though they are generally less severe than infections in unvaccinated people.",
                     source="https://example.org/breakthrough-infections",
                     relevance=0.95,
-                    stance="partially_contradicting"
-                )
-            ]
-        }
+                    stance="partially_contradicting",
+                ),
+            ],
+        },
     ]
-    
+
     # Test each case
     for case in test_cases:
         print(f"\nTesting: {case['name']}")
         print(f"Claim: \"{case['claim'].text}\"")
         print(f"Evidence: {len(case['evidence'])} pieces")
-        
+
         try:
             # Time the verdict generation process
             start = time.time()
-            
+
             # Generate verdict
             verdict = await writer.generate_verdict(case["claim"], case["evidence"])
-            
+
             duration = time.time() - start
             print(f"Verdict generation took {duration:.2f} seconds")
-            
+
             # Display results
             print(f"Verdict: {verdict.verdict}")
             print(f"Confidence: {verdict.confidence}")
-            print(f"Explanation: {verdict.explanation[:300]}..." if len(verdict.explanation) > 300 else f"Explanation: {verdict.explanation}")
+            print(
+                f"Explanation: {verdict.explanation[:300]}..."
+                if len(verdict.explanation) > 300
+                else f"Explanation: {verdict.explanation}"
+            )
             print("Sources:")
             for source in verdict.sources:
                 print(f"  - {source}")
-                
+
         except Exception as e:
             print(f"Error during verdict generation: {e}")
-    
+
     print("\n=== VerdictWriter Test Complete ===")
 
 

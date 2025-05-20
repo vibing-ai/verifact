@@ -12,6 +12,7 @@ class EncryptedStr(str):
             username: str
             password: EncryptedStr
     """
+
     @classmethod
     def __get_validators__(cls):
         yield cls.validate
@@ -21,7 +22,7 @@ class EncryptedStr(str):
         if v is None:
             return v
         if not isinstance(v, str):
-            raise TypeError('string required')
+            raise TypeError("string required")
         return v
 
     def __repr__(self):
@@ -30,13 +31,14 @@ class EncryptedStr(str):
 
 class EncryptedModel:
     """Mixin for models with encrypted fields."""
+
     # This will be populated by each model with fields that need encryption
     encrypted_fields: ClassVar[List[str]] = []
 
     def dict(self, *args, **kwargs):
         """Override dict to encrypt sensitive fields."""
-        exclude = kwargs.pop('exclude', set())
-        exclude_encrypted = kwargs.pop('exclude_encrypted', False)
+        exclude = kwargs.pop("exclude", set())
+        exclude_encrypted = kwargs.pop("exclude_encrypted", False)
 
         if exclude_encrypted:
             exclude = exclude.union(set(self.encrypted_fields))

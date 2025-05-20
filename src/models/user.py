@@ -15,6 +15,7 @@ from src.utils.security.encrypted_fields import EncryptedModel, EncryptedStr
 
 class User(BaseModel, EncryptedModel):
     """User model with encrypted sensitive fields."""
+
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     email: EmailStr
     name: str
@@ -26,6 +27,6 @@ class User(BaseModel, EncryptedModel):
     updated_at: Optional[datetime] = None
     last_login_at: Optional[datetime] = None
     metadata: Optional[Dict[str, Any]] = None
-    
+
     # Specify which fields should be encrypted when stored
-    encrypted_fields = ["api_key", "access_token", "refresh_token"] 
+    encrypted_fields = ["api_key", "access_token", "refresh_token"]

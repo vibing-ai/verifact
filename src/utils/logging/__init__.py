@@ -23,5 +23,5 @@ __all__ = [
     "log_performance",
     "LogManager",
     "MetricsTracker",
-    "claim_detector_metrics"
+    "claim_detector_metrics",
 ]

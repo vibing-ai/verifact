@@ -61,9 +61,9 @@ class TestModelConfig:
         monkeypatch.setenv("OPENROUTER_API_KEY", "test-api-key")
         monkeypatch.setenv("OPENROUTER_SITE_URL", "https://test.com")
         monkeypatch.setenv("OPENROUTER_SITE_NAME", "Test App")
-        
+
         headers = get_openrouter_headers()
-        
+
         assert headers["Authorization"] == "Bearer test-api-key"
         assert headers["HTTP-Referer"] == "https://test.com"
         assert headers["X-Title"] == "Test App"
@@ -75,13 +75,13 @@ class TestModelConfig:
     def test_configure_openai_for_openrouter(self, monkeypatch):
         """Test configure_openai_for_openrouter."""
         import openai
-        
+
         monkeypatch.setenv("OPENROUTER_API_KEY", "test-api-key")
         monkeypatch.setenv("OPENROUTER_SITE_URL", "https://test.com")
         monkeypatch.setenv("OPENROUTER_SITE_NAME", "Test App")
-        
+
         configure_openai_for_openrouter()
-        
+
         assert openai.api_key == "test-api-key"
         assert openai.base_url == OPENROUTER_API_ENDPOINT
         assert "HTTP-Referer" in openai.default_headers
@@ -96,12 +96,12 @@ class TestModelConfig:
         mock_response.raise_for_status.return_value = None
         mock_response.json.return_value = {"result": "success"}
         mock_post.return_value = mock_response
-        
+
         result = make_openrouter_request(
             url="https://test.com/api",
             payload={"test": "data"},
-            headers={"Authorization": "Bearer test"}
+            headers={"Authorization": "Bearer test"},
         )
-        
+
         mock_post.assert_called_once()
-        assert result == {"result": "success"} 
+        assert result == {"result": "success"}

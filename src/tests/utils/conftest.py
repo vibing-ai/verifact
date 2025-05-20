@@ -3,6 +3,7 @@ Pytest configuration for utility tests.
 
 This module contains fixtures specific to utility tests.
 """
+
 import os
 from unittest.mock import AsyncMock, MagicMock
 
@@ -13,7 +14,7 @@ import pytest
 def mock_db_session():
     """Return a mock database session for testing."""
     mock_session = MagicMock()
-    
+
     # Set up the mock session to handle common operations
     mock_session.add.return_value = None
     mock_session.commit.return_value = None
@@ -21,7 +22,7 @@ def mock_db_session():
     mock_session.filter.return_value = mock_session
     mock_session.all.return_value = []
     mock_session.first.return_value = None
-    
+
     return mock_session
 
 
@@ -29,7 +30,7 @@ def mock_db_session():
 def mock_async_db_session():
     """Return a mock async database session for testing."""
     mock_session = AsyncMock()
-    
+
     # Set up the mock session to handle common operations
     mock_session.add.return_value = None
     mock_session.commit.return_value = None
@@ -38,13 +39,14 @@ def mock_async_db_session():
     mock_session.execute.return_value.scalars.return_value = AsyncMock()
     mock_session.execute.return_value.scalars.return_value.all.return_value = []
     mock_session.execute.return_value.scalars.return_value.first.return_value = None
-    
+
     return mock_session
 
 
 @pytest.fixture
 def mock_web_search():
     """Return a mock web search function for testing."""
+
     def mock_search(query, max_results=5):
         """Mock web search function."""
         return [
@@ -55,7 +57,7 @@ def mock_web_search():
             }
             for i in range(max_results)
         ]
-    
+
     return mock_search
 
 
@@ -77,7 +79,7 @@ def sample_search_results():
             "title": "Planet Earth Facts - NASA",
             "link": "https://example.nasa.gov/earth-facts",
             "snippet": "Earth is the third planet from the Sun and the only astronomical object known to harbor life. About 71% of Earth's surface is covered with water.",
-        }
+        },
     ]
 
 
@@ -85,14 +87,14 @@ def sample_search_results():
 def env_setup():
     """Set up environment variables for testing and restore them afterward."""
     original_env = os.environ.copy()
-    
+
     # Set test environment variables
     os.environ["OPENAI_API_KEY"] = "test_api_key"
     os.environ["SEARCH_API_KEY"] = "test_search_key"
     os.environ["DEBUG"] = "True"
-    
+
     yield
-    
+
     # Restore original environment
     os.environ.clear()
-    os.environ.update(original_env) 
+    os.environ.update(original_env)

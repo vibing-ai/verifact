@@ -26,7 +26,8 @@ class ConnectionPoolMetrics:
             # Add usage percentage
             if metrics["max_size"] > 0:
                 metrics["usage_percent"] = round(
-                    (metrics["used_connections"] / metrics["max_size"]) * 100, 2)
+                    (metrics["used_connections"] / metrics["max_size"]) * 100, 2
+                )
             else:
                 metrics["usage_percent"] = 0
 
@@ -40,8 +41,4 @@ class ConnectionPoolMetrics:
 
             return metrics
         except Exception as e:
-            return {
-                "status": "error",
-                "error": str(e),
-                "error_type": type(e).__name__
-            }
+            return {"status": "error", "error": str(e), "error_type": type(e).__name__}

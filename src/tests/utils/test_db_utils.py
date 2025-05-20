@@ -34,20 +34,20 @@ def mock_db_session():
     mock_session.execute = AsyncMock()
     mock_session.commit = AsyncMock()
     mock_session.refresh = AsyncMock()
-    
+
     # Configure execute to return different results based on the query
     def mock_execute_side_effect(query, *args, **kwargs):
         result = MagicMock()
-        
+
         # For select queries returning individual models
-        if hasattr(query, 'whereclause') and query.whereclause is not None:
+        if hasattr(query, "whereclause") and query.whereclause is not None:
             # Get the entity being queried (e.g., Claim, Evidence, etc.)
             entity = None
-            if hasattr(query, '_raw_columns') and query._raw_columns:
-                entity_class = getattr(query._raw_columns[0], 'entity', None)
+            if hasattr(query, "_raw_columns") and query._raw_columns:
+                entity_class = getattr(query._raw_columns[0], "entity", None)
                 if entity_class:
                     entity = entity_class
-            
+
             # Create appropriate mock result based on entity type
             if entity == Claim:
                 mock_claim = MagicMock(spec=Claim)
@@ -76,15 +76,15 @@ def mock_db_session():
                 # Default empty result
                 result.scalars().first.return_value = None
                 result.scalars().all.return_value = []
-        
+
         # For aggregate queries
-        elif hasattr(query, '_group_by_clause') and query._group_by_clause is not None:
+        elif hasattr(query, "_group_by_clause") and query._group_by_clause is not None:
             result.all.return_value = [(10, "science"), (5, "politics")]
-        
+
         return AsyncMock(return_value=result)
-    
+
     mock_session.execute.side_effect = mock_execute_side_effect
-    
+
     return mock_session
 
 
@@ -96,17 +96,17 @@ async def test_store_claim(mock_db_session):
         "text": "The Earth is approximately 4.54 billion years old.",
         "checkworthiness": 0.92,
         "domain": "science",
-        "source_text": "Sample source text"
+        "source_text": "Sample source text",
     }
-    
+
     # Store the claim
     claim = await store_claim(mock_db_session, **claim_data)
-    
+
     # Verify the session was used correctly
     mock_db_session.add.assert_called_once()
     mock_db_session.commit.assert_called_once()
     mock_db_session.refresh.assert_called_once()
-    
+
     # Verify the claim object
     assert claim is not None
     assert claim.text == claim_data["text"]
@@ -124,17 +124,17 @@ async def test_store_evidence(mock_db_session):
         "source": "https://example.com/earth-age",
         "credibility": 0.95,
         "stance": "supporting",
-        "claim_id": 1
+        "claim_id": 1,
     }
-    
+
     # Store the evidence
     evidence = await store_evidence(mock_db_session, **evidence_data)
-    
+
     # Verify the session was used correctly
     mock_db_session.add.assert_called_once()
     mock_db_session.commit.assert_called_once()
     mock_db_session.refresh.assert_called_once()
-    
+
     # Verify the evidence object
     assert evidence is not None
     assert evidence.text == evidence_data["text"]
@@ -153,17 +153,17 @@ async def test_store_verdict(mock_db_session):
         "verdict": "true",
         "confidence": 0.95,
         "explanation": "The evidence strongly supports this claim.",
-        "sources": ["https://example.com/earth-age"]
+        "sources": ["https://example.com/earth-age"],
     }
-    
+
     # Store the verdict
     verdict = await store_verdict(mock_db_session, **verdict_data)
-    
+
     # Verify the session was used correctly
     mock_db_session.add.assert_called_once()
     mock_db_session.commit.assert_called_once()
     mock_db_session.refresh.assert_called_once()
-    
+
     # Verify the verdict object
     assert verdict is not None
     assert verdict.claim_id == verdict_data["claim_id"]
@@ -182,46 +182,46 @@ async def test_store_factcheck_result(mock_db_session):
             "text": "The Earth is approximately 4.54 billion years old.",
             "checkworthiness": 0.92,
             "domain": "science",
-            "source_text": "Sample source text"
+            "source_text": "Sample source text",
         },
         "evidence": [
             {
                 "text": "Scientific studies have determined that the Earth is 4.54 billion years old.",
                 "source": "https://example.com/earth-age",
                 "credibility": 0.95,
-                "stance": "supporting"
+                "stance": "supporting",
             },
             {
                 "text": "Radiometric dating confirms the Earth's age as approximately 4.5 billion years.",
                 "source": "https://example.org/radiometric-dating",
                 "credibility": 0.92,
-                "stance": "supporting"
-            }
+                "stance": "supporting",
+            },
         ],
         "verdict": {
             "verdict": "true",
             "confidence": 0.95,
             "explanation": "The evidence strongly supports this claim.",
-            "sources": ["https://example.com/earth-age", "https://example.org/radiometric-dating"]
-        }
+            "sources": ["https://example.com/earth-age", "https://example.org/radiometric-dating"],
+        },
     }
-    
+
     # Store the factcheck result
     result = await store_factcheck_result(mock_db_session, **factcheck_data)
-    
+
     # Verify the result
     assert result is not None
     assert "claim" in result
     assert "evidence" in result
     assert "verdict" in result
-    
+
     # Verify claim
     assert result["claim"].text == factcheck_data["claim"]["text"]
     assert result["claim"].domain == factcheck_data["claim"]["domain"]
-    
+
     # Verify evidence (should be a list of Evidence objects)
     assert len(result["evidence"]) == len(factcheck_data["evidence"])
-    
+
     # Verify verdict
     assert result["verdict"].verdict == factcheck_data["verdict"]["verdict"]
     assert result["verdict"].confidence == factcheck_data["verdict"]["confidence"]
@@ -232,10 +232,10 @@ async def test_get_claim_by_id(mock_db_session):
     """Test retrieving a claim by ID."""
     # Retrieve a claim
     claim = await get_claim_by_id(mock_db_session, claim_id=1)
-    
+
     # Verify the execute method was called with the correct query
     mock_db_session.execute.assert_called_once()
-    
+
     # Check that a claim was returned
     assert claim is not None
     assert claim.id == 1
@@ -246,10 +246,10 @@ async def test_get_claims_by_text(mock_db_session):
     """Test retrieving claims by text content."""
     # Retrieve claims containing "Earth"
     claims = await get_claims_by_text(mock_db_session, text="Earth")
-    
+
     # Verify the execute method was called
     mock_db_session.execute.assert_called_once()
-    
+
     # Check that claims were returned
     assert claims is not None
     assert len(claims) > 0
@@ -265,12 +265,12 @@ async def test_search_claims(mock_db_session):
         text_search="Earth",
         domain="science",
         min_checkworthiness=0.7,
-        verdict="true"
+        verdict="true",
     )
-    
+
     # Verify the execute method was called
     mock_db_session.execute.assert_called_once()
-    
+
     # Check that claims were returned
     assert claims is not None
 
@@ -280,10 +280,10 @@ async def test_get_evidence_for_claim(mock_db_session):
     """Test retrieving evidence for a specific claim."""
     # Get evidence for claim ID 1
     evidence = await get_evidence_for_claim(mock_db_session, claim_id=1)
-    
+
     # Verify the execute method was called
     mock_db_session.execute.assert_called_once()
-    
+
     # Check that evidence was returned
     assert evidence is not None
     assert len(evidence) > 0
@@ -295,10 +295,10 @@ async def test_get_verdict_for_claim(mock_db_session):
     """Test retrieving the verdict for a specific claim."""
     # Get verdict for claim ID 1
     verdict = await get_verdict_for_claim(mock_db_session, claim_id=1)
-    
+
     # Verify the execute method was called
     mock_db_session.execute.assert_called_once()
-    
+
     # Check that a verdict was returned
     assert verdict is not None
     assert verdict.claim_id == 1
@@ -310,17 +310,14 @@ async def test_log_search_query(mock_db_session):
     """Test logging a search query."""
     # Log a search query
     query = await log_search_query(
-        mock_db_session,
-        query="age of Earth",
-        results_count=3,
-        source="web"
+        mock_db_session, query="age of Earth", results_count=3, source="web"
     )
-    
+
     # Verify the session was used correctly
     mock_db_session.add.assert_called_once()
     mock_db_session.commit.assert_called_once()
     mock_db_session.refresh.assert_called_once()
-    
+
     # Verify the query object
     assert query is not None
     assert query.query == "age of Earth"
@@ -336,12 +333,12 @@ async def test_get_similar_claims(mock_db_session):
         mock_db_session,
         text="The Earth is 4.5 billion years old",
         similarity_threshold=0.8,
-        limit=5
+        limit=5,
     )
-    
+
     # Verify the execute method was called
     mock_db_session.execute.assert_called_once()
-    
+
     # Check that claims were returned
     assert claims is not None
     assert len(claims) > 0
@@ -352,10 +349,10 @@ async def test_get_recent_claims(mock_db_session):
     """Test retrieving recent claims."""
     # Get the 10 most recent claims
     claims = await get_recent_claims(mock_db_session, limit=10)
-    
+
     # Verify the execute method was called
     mock_db_session.execute.assert_called_once()
-    
+
     # Check that claims were returned
     assert claims is not None
     assert len(claims) > 0
@@ -366,12 +363,12 @@ async def test_get_claim_stats(mock_db_session):
     """Test retrieving claim statistics."""
     # Get claim statistics
     stats = await get_claim_stats(mock_db_session)
-    
+
     # Verify the execute method was called
     assert mock_db_session.execute.call_count > 0
-    
+
     # Check that stats were returned
     assert stats is not None
     assert "total_claims" in stats
     assert "claims_by_domain" in stats
-    assert "claims_by_verdict" in stats 
+    assert "claims_by_verdict" in stats

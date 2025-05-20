@@ -9,13 +9,12 @@ from contextvars import ContextVar, Token
 from typing import List, Optional, Tuple
 
 # Context variables for tracking request and execution context
-request_id_var: ContextVar[str] = ContextVar('request_id', default='')
-user_id_var: ContextVar[Optional[str]] = ContextVar('user_id', default=None)
-correlation_id_var: ContextVar[str] = ContextVar('correlation_id', default='')
-session_id_var: ContextVar[Optional[str]] = ContextVar(
-    'session_id', default=None)
-component_var: ContextVar[str] = ContextVar('component', default='')
-operation_var: ContextVar[str] = ContextVar('operation', default='')
+request_id_var: ContextVar[str] = ContextVar("request_id", default="")
+user_id_var: ContextVar[Optional[str]] = ContextVar("user_id", default=None)
+correlation_id_var: ContextVar[str] = ContextVar("correlation_id", default="")
+session_id_var: ContextVar[Optional[str]] = ContextVar("session_id", default=None)
+component_var: ContextVar[str] = ContextVar("component", default="")
+operation_var: ContextVar[str] = ContextVar("operation", default="")
 
 # Global application metadata
 HOSTNAME = socket.gethostname()
@@ -51,29 +50,22 @@ class StructuredLogger(logging.Logger):
     def makeRecord(self, *args, **kwargs):
         return StructuredLogRecord(*args, **kwargs)
 
-    def process_success(
-            self,
-            message: str,
-            duration_ms: Optional[float] = None,
-            **kwargs):
+    def process_success(self, message: str, duration_ms: Optional[float] = None, **kwargs):
         """Log a successful operation with timing information."""
         extra = kwargs.pop("extra", {})
-        extra.update({
-            "event_type": "process_success",
-            "duration_ms": duration_ms,
-            **kwargs
-        })
+        extra.update({"event_type": "process_success", "duration_ms": duration_ms, **kwargs})
         self.info(message, extra=extra)
 
-    def process_failure(self, message: str, error: Optional[Exception] = None,
-                        duration_ms: Optional[float] = None, **kwargs):
+    def process_failure(
+        self,
+        message: str,
+        error: Optional[Exception] = None,
+        duration_ms: Optional[float] = None,
+        **kwargs,
+    ):
         """Log a failed operation with error details and timing information."""
         extra = kwargs.pop("extra", {})
-        extra.update({
-            "event_type": "process_failure",
-            "duration_ms": duration_ms,
-            **kwargs
-        })
+        extra.update({"event_type": "process_failure", "duration_ms": duration_ms, **kwargs})
 
         if error:
             extra["error_type"] = error.__class__.__name__
@@ -83,22 +75,25 @@ class StructuredLogger(logging.Logger):
         self.error(message, extra=extra)
 
     def api_request(
-            self,
-            method: str,
-            url: str,
-            status_code: Optional[int] = None,
-            duration_ms: Optional[float] = None,
-            **kwargs):
+        self,
+        method: str,
+        url: str,
+        status_code: Optional[int] = None,
+        duration_ms: Optional[float] = None,
+        **kwargs,
+    ):
         """Log API request information."""
         extra = kwargs.pop("extra", {})
-        extra.update({
-            "event_type": "api_request",
-            "http_method": method,
-            "url": url,
-            "status_code": status_code,
-            "duration_ms": duration_ms,
-            **kwargs
-        })
+        extra.update(
+            {
+                "event_type": "api_request",
+                "http_method": method,
+                "url": url,
+                "status_code": status_code,
+                "duration_ms": duration_ms,
+                **kwargs,
+            }
+        )
 
         if status_code and status_code >= 400:
             self.warning("API request failed", extra=extra)
@@ -121,18 +116,17 @@ class LoggingContext:
     def __enter__(self):
         # Set context variables and store tokens for later reset
         for key, value in self.context.items():
-            if key == 'request_id' and value:
+            if key == "request_id" and value:
                 self.tokens.append((request_id_var, request_id_var.set(value)))
-            elif key == 'user_id' and value:
+            elif key == "user_id" and value:
                 self.tokens.append((user_id_var, user_id_var.set(value)))
-            elif key == 'correlation_id' and value:
-                self.tokens.append(
-                    (correlation_id_var, correlation_id_var.set(value)))
-            elif key == 'session_id' and value:
+            elif key == "correlation_id" and value:
+                self.tokens.append((correlation_id_var, correlation_id_var.set(value)))
+            elif key == "session_id" and value:
                 self.tokens.append((session_id_var, session_id_var.set(value)))
-            elif key == 'component' and value:
+            elif key == "component" and value:
                 self.tokens.append((component_var, component_var.set(value)))
-            elif key == 'operation' and value:
+            elif key == "operation" and value:
                 self.tokens.append((operation_var, operation_var.set(value)))
         return self.logger
 
@@ -153,56 +147,82 @@ class JSONFormatter(logging.Formatter):
         """Format the log record as JSON."""
         # Build basic log data
         log_data = {
-            'timestamp': record.timestamp_ms,
-            'level': record.levelname,
-            'logger': record.name,
-            'message': record.getMessage(),
-            'file': record.pathname,
-            'line': record.lineno,
-            'function': record.funcName,
-            'environment': record.environment,
-            'hostname': record.hostname,
-            'app_version': record.app_version,
+            "timestamp": record.timestamp_ms,
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+            "file": record.pathname,
+            "line": record.lineno,
+            "function": record.funcName,
+            "environment": record.environment,
+            "hostname": record.hostname,
+            "app_version": record.app_version,
         }
 
         # Add context data if available
-        if hasattr(record, 'request_id') and record.request_id:
-            log_data['request_id'] = record.request_id
+        if hasattr(record, "request_id") and record.request_id:
+            log_data["request_id"] = record.request_id
 
-        if hasattr(record, 'user_id') and record.user_id:
-            log_data['user_id'] = record.user_id
+        if hasattr(record, "user_id") and record.user_id:
+            log_data["user_id"] = record.user_id
 
-        if hasattr(record, 'correlation_id') and record.correlation_id:
-            log_data['correlation_id'] = record.correlation_id
+        if hasattr(record, "correlation_id") and record.correlation_id:
+            log_data["correlation_id"] = record.correlation_id
 
-        if hasattr(record, 'session_id') and record.session_id:
-            log_data['session_id'] = record.session_id
+        if hasattr(record, "session_id") and record.session_id:
+            log_data["session_id"] = record.session_id
 
-        if hasattr(record, 'component') and record.component:
-            log_data['component'] = record.component
+        if hasattr(record, "component") and record.component:
+            log_data["component"] = record.component
 
-        if hasattr(record, 'operation') and record.operation:
-            log_data['operation'] = record.operation
+        if hasattr(record, "operation") and record.operation:
+            log_data["operation"] = record.operation
 
         # Add exception info if available
         if record.exc_info and self.include_traceback:
-            log_data['exception'] = {
-                'type': record.exc_info[0].__name__,
-                'message': str(record.exc_info[1]),
-                'traceback': self.formatException(record.exc_info)
+            log_data["exception"] = {
+                "type": record.exc_info[0].__name__,
+                "message": str(record.exc_info[1]),
+                "traceback": self.formatException(record.exc_info),
             }
 
         # Add custom fields from extra
         for key, value in record.__dict__.items():
             if key not in (
-                'args', 'asctime', 'created', 'exc_info', 'exc_text', 'filename',
-                'funcName', 'id', 'levelname', 'levelno', 'lineno', 'module',
-                'msecs', 'message', 'msg', 'name', 'pathname', 'process',
-                'processName', 'relativeCreated', 'stack_info', 'thread',
-                'threadName', 'timestamp_ms', 'request_id', 'user_id',
-                'correlation_id', 'session_id', 'component', 'operation',
-                'hostname', 'environment', 'app_version'
-            ) and not key.startswith('_'):
+                "args",
+                "asctime",
+                "created",
+                "exc_info",
+                "exc_text",
+                "filename",
+                "funcName",
+                "id",
+                "levelname",
+                "levelno",
+                "lineno",
+                "module",
+                "msecs",
+                "message",
+                "msg",
+                "name",
+                "pathname",
+                "process",
+                "processName",
+                "relativeCreated",
+                "stack_info",
+                "thread",
+                "threadName",
+                "timestamp_ms",
+                "request_id",
+                "user_id",
+                "correlation_id",
+                "session_id",
+                "component",
+                "operation",
+                "hostname",
+                "environment",
+                "app_version",
+            ) and not key.startswith("_"):
                 log_data[key] = value
 
         # Convert to JSON
@@ -220,7 +240,7 @@ def set_request_context(
     request_id: Optional[str] = None,
     user_id: Optional[str] = None,
     correlation_id: Optional[str] = None,
-    session_id: Optional[str] = None
+    session_id: Optional[str] = None,
 ):
     """Set request context for the current async context."""
     if request_id:
@@ -248,16 +268,16 @@ def set_component_context(component: str, operation: Optional[str] = None):
 
 def clear_request_context():
     """Clear request context for the current async context."""
-    request_id_var.set('')
+    request_id_var.set("")
     user_id_var.set(None)
-    correlation_id_var.set('')
+    correlation_id_var.set("")
     session_id_var.set(None)
 
 
 def clear_component_context():
     """Clear component context for the current async context."""
-    component_var.set('')
-    operation_var.set('')
+    component_var.set("")
+    operation_var.set("")
 
 
 def configure_logging(
@@ -265,7 +285,7 @@ def configure_logging(
     json_output: bool = True,
     log_file: Optional[str] = None,
     include_traceback: bool = True,
-    log_handlers: Optional[List[logging.Handler]] = None
+    log_handlers: Optional[List[logging.Handler]] = None,
 ):
     """Configure structured logging for the application."""
     root_logger = logging.getLogger()
@@ -285,11 +305,13 @@ def configure_logging(
         console_handler.setLevel(level)
 
         if json_output:
-            console_handler.setFormatter(JSONFormatter(
-                include_traceback=include_traceback))
+            console_handler.setFormatter(JSONFormatter(include_traceback=include_traceback))
         else:
-            console_handler.setFormatter(logging.Formatter(
-                '%(asctime)s - %(levelname)s - [%(request_id)s] - %(name)s - %(message)s'))
+            console_handler.setFormatter(
+                logging.Formatter(
+                    "%(asctime)s - %(levelname)s - [%(request_id)s] - %(name)s - %(message)s"
+                )
+            )
 
         root_logger.addHandler(console_handler)
 
@@ -299,11 +321,13 @@ def configure_logging(
             file_handler.setLevel(level)
 
             if json_output:
-                file_handler.setFormatter(JSONFormatter(
-                    include_traceback=include_traceback))
+                file_handler.setFormatter(JSONFormatter(include_traceback=include_traceback))
             else:
-                file_handler.setFormatter(logging.Formatter(
-                    '%(asctime)s - %(levelname)s - [%(request_id)s] - %(name)s - %(message)s'))
+                file_handler.setFormatter(
+                    logging.Formatter(
+                        "%(asctime)s - %(levelname)s - [%(request_id)s] - %(name)s - %(message)s"
+                    )
+                )
 
             root_logger.addHandler(file_handler)
 

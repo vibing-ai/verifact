@@ -53,8 +53,7 @@ async def get_pool() -> Pool:
         db_url = os.getenv("SUPABASE_DB_URL")
         if not db_url:
             raise DatabaseError(
-                "Database connection URL not configured",
-                details={"env_var": "SUPABASE_DB_URL"}
+                "Database connection URL not configured", details={"env_var": "SUPABASE_DB_URL"}
             )
 
         try:
@@ -65,10 +64,7 @@ async def get_pool() -> Pool:
             await _ensure_api_keys_table()
         except Exception as e:
             logger.exception("Failed to create database connection pool")
-            raise DatabaseError(
-                "Failed to connect to database",
-                details={"error": str(e)}
-            )
+            raise DatabaseError("Failed to connect to database", details={"error": str(e)})
 
     return _pool
 
@@ -81,7 +77,8 @@ async def _ensure_api_keys_table() -> None:
     pool = await get_pool()
     async with pool.acquire() as conn:
         # Create the api_keys table if it doesn't exist
-        await conn.execute("""
+        await conn.execute(
+            """
             CREATE TABLE IF NOT EXISTS api_keys (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 key_hash TEXT NOT NULL,
@@ -100,7 +97,8 @@ async def _ensure_api_keys_table() -> None:
 
             -- Add comment to the table
             COMMENT ON TABLE api_keys IS 'API keys for accessing the VeriFact API';
-        """)
+        """
+        )
 
         logger.info("API keys table created or verified")
 
@@ -115,11 +113,7 @@ def _hash_api_key(api_key: str) -> str:
     Returns:
         str: A hex-encoded hash of the API key
     """
-    return hmac.new(
-        API_KEY_SALT.encode(),
-        api_key.encode(),
-        hashlib.sha256
-    ).hexdigest()
+    return hmac.new(API_KEY_SALT.encode(), api_key.encode(), hashlib.sha256).hexdigest()
 
 
 def _generate_api_key() -> str:
@@ -134,8 +128,8 @@ def _generate_api_key() -> str:
     random_bytes = secrets.token_bytes(24)
 
     # Convert to base64 and remove non-alphanumeric characters
-    key_part = base64.b64encode(random_bytes).decode('utf-8')
-    key_part = ''.join(c for c in key_part if c.isalnum())
+    key_part = base64.b64encode(random_bytes).decode("utf-8")
+    key_part = "".join(c for c in key_part if c.isalnum())
 
     # Truncate to the desired length
     key_part = key_part[:API_KEY_LENGTH]
@@ -145,10 +139,7 @@ def _generate_api_key() -> str:
 
 
 async def create_api_key(
-    name: str,
-    owner_id: str,
-    scopes: List[ApiKeyScope],
-    expires_at: Optional[datetime] = None
+    name: str, owner_id: str, scopes: List[ApiKeyScope], expires_at: Optional[datetime] = None
 ) -> tuple[ApiKey, str]:
     """
     Create a new API key and store it in the database.
@@ -243,11 +234,11 @@ async def validate_api_key(api_key: str) -> Optional[Dict[str, Any]]:
         return {
             "id": db_key.id,
             "owner_id": db_key.owner_id,
-            "scopes": [
-                scope.value for scope in db_key.scopes],
+            "scopes": [scope.value for scope in db_key.scopes],
             "name": db_key.name,
             "created_at": db_key.created_at.isoformat(),
-            "expires_at": db_key.expires_at.isoformat() if db_key.expires_at else None}
+            "expires_at": db_key.expires_at.isoformat() if db_key.expires_at else None,
+        }
     except Exception:
         return None
 
@@ -265,7 +256,8 @@ async def list_api_keys(owner_id: str) -> List[ApiKey]:
     # In a real implementation, fetch from database
     # For now, just filter the in-memory cache
     return [
-        key for key in _api_key_cache.values()
+        key
+        for key in _api_key_cache.values()
         if isinstance(key, ApiKey) and key.owner_id == owner_id
     ]
 
@@ -284,8 +276,7 @@ async def revoke_api_key(key_id: str, owner_id: str) -> bool:
     # In a real implementation, update database
     api_key = _api_key_cache.get(key_id)
 
-    if not api_key or not isinstance(api_key,
-                                     ApiKey) or api_key.owner_id != owner_id:
+    if not api_key or not isinstance(api_key, ApiKey) or api_key.owner_id != owner_id:
         return False
 
     # Remove from cache
@@ -357,7 +348,8 @@ async def list_user_api_keys(user_id: str) -> List[Dict[str, Any]]:
         pool = await get_pool()
         async with pool.acquire() as conn:
             # Get all active keys for the user
-            rows = await conn.fetch("""
+            rows = await conn.fetch(
+                """
                 SELECT
                     id, key_prefix, user_id, created_at, expires_at,
                     permissions
@@ -366,7 +358,9 @@ async def list_user_api_keys(user_id: str) -> List[Dict[str, Any]]:
                   AND NOT revoked
                   AND expires_at > NOW()
                 ORDER BY created_at DESC
-            """, user_id)
+            """,
+                user_id,
+            )
 
             # Convert rows to dictionaries
             keys = [
@@ -375,7 +369,7 @@ async def list_user_api_keys(user_id: str) -> List[Dict[str, Any]]:
                     "prefix": row["key_prefix"],
                     "created_at": row["created_at"].isoformat(),
                     "expires_at": row["expires_at"].isoformat(),
-                    "permissions": row["permissions"]
+                    "permissions": row["permissions"],
                 }
                 for row in rows
             ]
@@ -383,7 +377,4 @@ async def list_user_api_keys(user_id: str) -> List[Dict[str, Any]]:
             return keys
     except Exception as e:
         logger.exception("Failed to list user API keys")
-        raise DatabaseError(
-            "Failed to list user API keys",
-            details={"error": str(e)}
-        )
+        raise DatabaseError("Failed to list user API keys", details={"error": str(e)})

@@ -91,8 +91,7 @@ class CacheMetrics:
             float: The average hit latency in seconds
         """
         with self._lock:
-            return sum(self.hit_latencies) / \
-                len(self.hit_latencies) if self.hit_latencies else 0
+            return sum(self.hit_latencies) / len(self.hit_latencies) if self.hit_latencies else 0
 
     def avg_miss_latency(self) -> float:
         """
@@ -102,8 +101,7 @@ class CacheMetrics:
             float: The average miss latency in seconds
         """
         with self._lock:
-            return sum(self.miss_latencies) / \
-                len(self.miss_latencies) if self.miss_latencies else 0
+            return sum(self.miss_latencies) / len(self.miss_latencies) if self.miss_latencies else 0
 
     def reset(self) -> None:
         """Reset all metrics."""
@@ -137,8 +135,8 @@ class CacheMetrics:
                 "avg_hit_latency": self.avg_hit_latency(),
                 "avg_miss_latency": self.avg_miss_latency(),
                 "uptime_seconds": uptime,
-                "last_reset": datetime.fromtimestamp(
-                    self.last_reset_time).isoformat()}
+                "last_reset": datetime.fromtimestamp(self.last_reset_time).isoformat(),
+            }
 
 
 # Global metrics instances for common components

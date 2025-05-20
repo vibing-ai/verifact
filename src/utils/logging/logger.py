@@ -37,47 +37,48 @@ except ImportError:
 
         def format(self, record):
             log_data = {
-                'timestamp': self.formatTime(record, self.datefmt),
-                'name': record.name,
-                'level': record.levelname,
-                'message': record.getMessage(),
+                "timestamp": self.formatTime(record, self.datefmt),
+                "name": record.name,
+                "level": record.levelname,
+                "message": record.getMessage(),
             }
 
             # Add exception info if available
             if record.exc_info:
-                log_data['exception'] = self.formatException(record.exc_info)
+                log_data["exception"] = self.formatException(record.exc_info)
 
             # Add custom fields from record
             for key, value in record.__dict__.items():
                 if key not in [
-                    'args',
-                    'asctime',
-                    'created',
-                    'exc_info',
-                    'exc_text',
-                    'filename',
-                    'funcName',
-                    'id',
-                    'levelname',
-                    'levelno',
-                    'lineno',
-                    'module',
-                    'msecs',
-                    'message',
-                    'msg',
-                    'name',
-                    'pathname',
-                    'process',
-                    'processName',
-                    'relativeCreated',
-                    'stack_info',
-                    'thread',
-                        'threadName']:
+                    "args",
+                    "asctime",
+                    "created",
+                    "exc_info",
+                    "exc_text",
+                    "filename",
+                    "funcName",
+                    "id",
+                    "levelname",
+                    "levelno",
+                    "lineno",
+                    "module",
+                    "msecs",
+                    "message",
+                    "msg",
+                    "name",
+                    "pathname",
+                    "process",
+                    "processName",
+                    "relativeCreated",
+                    "stack_info",
+                    "thread",
+                    "threadName",
+                ]:
                     log_data[key] = value
 
             return json.dumps(log_data)
 
-    jsonlogger = type('jsonlogger', (), {'JsonFormatter': JsonFormatter})
+    jsonlogger = type("jsonlogger", (), {"JsonFormatter": JsonFormatter})
 
 # Default log formats
 DEFAULT_TEXT_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -93,7 +94,7 @@ LOG_LEVELS = {
     "info": logging.INFO,
     "warning": logging.WARNING,
     "error": logging.ERROR,
-    "critical": logging.CRITICAL
+    "critical": logging.CRITICAL,
 }
 
 # Default log level based on environment
@@ -103,19 +104,15 @@ DEFAULT_LOG_LEVEL = "info" if IS_PRODUCTION else "debug"
 SENSITIVE_PATTERNS = [
     re.compile(
         r'(["\'](sk-|api[_-]?key|token|secret|password|auth|key)["\']:\s*["\']).+?(["\'])',
-        re.IGNORECASE),
+        re.IGNORECASE,
+    ),
+    re.compile(r"(bearer\s+)(\S+)", re.IGNORECASE),
+    re.compile(r"(authorization:\s*bearer\s+)(\S+)", re.IGNORECASE),
+    re.compile(r"(api[_-]?key[=:]\s*)(\S+)", re.IGNORECASE),
     re.compile(
-        r'(bearer\s+)(\S+)',
-        re.IGNORECASE),
-    re.compile(
-        r'(authorization:\s*bearer\s+)(\S+)',
-        re.IGNORECASE),
-    re.compile(
-        r'(api[_-]?key[=:]\s*)(\S+)',
-        re.IGNORECASE),
-    re.compile(
-        r'((openrouter|openai|anthropic|mistral|google|azure|cohere)[_-]?api[_-]?key[=:]\s*)(\S+)',
-        re.IGNORECASE),
+        r"((openrouter|openai|anthropic|mistral|google|azure|cohere)[_-]?api[_-]?key[=:]\s*)(\S+)",
+        re.IGNORECASE,
+    ),
 ]
 
 # Cache of created loggers
@@ -126,19 +123,19 @@ try:
     from contextvars import ContextVar
 
     # Context variables for tracking request context across async boundaries
-    request_id_var: ContextVar[str] = ContextVar('request_id', default='')
-    component_var: ContextVar[str] = ContextVar('component', default='')
-    context_data_var: ContextVar[Dict[str, Any]
-                                 ] = ContextVar('context_data', default={})
+    request_id_var: ContextVar[str] = ContextVar("request_id", default="")
+    component_var: ContextVar[str] = ContextVar("component", default="")
+    context_data_var: ContextVar[Dict[str, Any]] = ContextVar("context_data", default={})
 except ImportError:
     # Fallback for older Python versions
     request_id_var = None
     component_var = None
     context_data_var = None
     import threading
+
     _thread_local = threading.local()
-    _thread_local.request_id = ''
-    _thread_local.component = ''
+    _thread_local.request_id = ""
+    _thread_local.component = ""
     _thread_local.context_data = {}
 
 
@@ -147,7 +144,7 @@ class SensitiveFilter(logging.Filter):
 
     def filter(self, record):
         # Don't modify the original record if it doesn't have a message
-        if not hasattr(record, 'msg') or not record.msg:
+        if not hasattr(record, "msg") or not record.msg:
             return True
 
         # Convert message to string if it's not already
@@ -168,28 +165,22 @@ class SensitiveFilter(logging.Filter):
             if isinstance(record.msg, dict):
                 record.msg = self._redact_dict(record.msg)
             else:
-                record.msg = pattern.sub(r'\1*****\3', record.msg)
+                record.msg = pattern.sub(r"\1*****\3", record.msg)
 
         return True
 
     def _redact_dict(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Recursively redact sensitive values in a dictionary."""
-        sensitive_keys = {
-            'api_key',
-            'key',
-            'secret',
-            'password',
-            'token',
-            'authorization'}
+        sensitive_keys = {"api_key", "key", "secret", "password", "token", "authorization"}
 
         for k, v in data.items():
             if isinstance(v, dict):
                 data[k] = self._redact_dict(v)
             elif isinstance(v, str) and (
-                any(sensitive in k.lower() for sensitive in sensitive_keys) or
-                any(pattern.search(v) for pattern in SENSITIVE_PATTERNS)
+                any(sensitive in k.lower() for sensitive in sensitive_keys)
+                or any(pattern.search(v) for pattern in SENSITIVE_PATTERNS)
             ):
-                data[k] = '*****'
+                data[k] = "*****"
 
         return data
 
@@ -200,21 +191,21 @@ class ContextFilter(logging.Filter):
     def filter(self, record):
         # Add request ID if available
         if request_id_var is not None:
-            record.request_id = request_id_var.get('')
+            record.request_id = request_id_var.get("")
         else:
-            record.request_id = getattr(_thread_local, 'request_id', '')
+            record.request_id = getattr(_thread_local, "request_id", "")
 
         # Add component name if available
         if component_var is not None:
-            record.component = component_var.get('')
+            record.component = component_var.get("")
         else:
-            record.component = getattr(_thread_local, 'component', '')
+            record.component = getattr(_thread_local, "component", "")
 
         # Add additional context data
         if context_data_var is not None:
             context = context_data_var.get({})
         else:
-            context = getattr(_thread_local, 'context_data', {})
+            context = getattr(_thread_local, "context_data", {})
 
         for key, value in context.items():
             setattr(record, key, value)
@@ -234,22 +225,24 @@ class LogManager:
         """Initialize the LogManager."""
         self.configured = False
         self.default_config = {
-            'level': os.getenv('LOG_LEVEL', DEFAULT_LOG_LEVEL),
-            'json_logging': os.getenv('LOG_JSON', 'false').lower() == 'true',
-            'log_file': os.getenv('LOG_FILE', None),
+            "level": os.getenv("LOG_LEVEL", DEFAULT_LOG_LEVEL),
+            "json_logging": os.getenv("LOG_JSON", "false").lower() == "true",
+            "log_file": os.getenv("LOG_FILE", None),
             # 10 MB
-            'rotation_size': int(os.getenv('LOG_ROTATION_SIZE', '10485760')),
-            'rotation_count': int(os.getenv('LOG_ROTATION_COUNT', '5')),
-            'daily_rotation': os.getenv('LOG_DAILY_ROTATION', 'false').lower() == 'true',
+            "rotation_size": int(os.getenv("LOG_ROTATION_SIZE", "10485760")),
+            "rotation_count": int(os.getenv("LOG_ROTATION_COUNT", "5")),
+            "daily_rotation": os.getenv("LOG_DAILY_ROTATION", "false").lower() == "true",
         }
 
-    def configure(self,
-                  level: Optional[Union[str, int]] = None,
-                  json_logging: Optional[bool] = None,
-                  log_file: Optional[str] = None,
-                  rotation_size: Optional[int] = None,
-                  rotation_count: Optional[int] = None,
-                  daily_rotation: Optional[bool] = None) -> None:
+    def configure(
+        self,
+        level: Optional[Union[str, int]] = None,
+        json_logging: Optional[bool] = None,
+        log_file: Optional[str] = None,
+        rotation_size: Optional[int] = None,
+        rotation_count: Optional[int] = None,
+        daily_rotation: Optional[bool] = None,
+    ) -> None:
         """
         Configure the logging system.
 
@@ -263,29 +256,26 @@ class LogManager:
         """
         # Update config with provided values
         if level is not None:
-            self.default_config['level'] = level
+            self.default_config["level"] = level
         if json_logging is not None:
-            self.default_config['json_logging'] = json_logging
+            self.default_config["json_logging"] = json_logging
         if log_file is not None:
-            self.default_config['log_file'] = log_file
+            self.default_config["log_file"] = log_file
         if rotation_size is not None:
-            self.default_config['rotation_size'] = rotation_size
+            self.default_config["rotation_size"] = rotation_size
         if rotation_count is not None:
-            self.default_config['rotation_count'] = rotation_count
+            self.default_config["rotation_count"] = rotation_count
         if daily_rotation is not None:
-            self.default_config['daily_rotation'] = daily_rotation
+            self.default_config["daily_rotation"] = daily_rotation
 
         # Configure root logger
         root_logger = logging.getLogger()
 
         # Convert string level to logging level constant
-        if isinstance(self.default_config['level'], str):
-            level_value = LOG_LEVELS.get(
-                self.default_config['level'].lower(),
-                logging.INFO
-            )
+        if isinstance(self.default_config["level"], str):
+            level_value = LOG_LEVELS.get(self.default_config["level"].lower(), logging.INFO)
         else:
-            level_value = self.default_config['level']
+            level_value = self.default_config["level"]
 
         root_logger.setLevel(level_value)
 
@@ -294,7 +284,7 @@ class LogManager:
             root_logger.removeHandler(handler)
 
         # Create formatter
-        if self.default_config['json_logging']:
+        if self.default_config["json_logging"]:
             formatter = jsonlogger.JsonFormatter(DEFAULT_JSON_FORMAT)
         else:
             formatter = logging.Formatter(DEFAULT_TEXT_FORMAT)
@@ -312,24 +302,24 @@ class LogManager:
         root_logger.addHandler(console_handler)
 
         # Create file handler if specified
-        if self.default_config['log_file']:
+        if self.default_config["log_file"]:
             # Create directory if it doesn't exist
-            log_dir = os.path.dirname(self.default_config['log_file'])
+            log_dir = os.path.dirname(self.default_config["log_file"])
             if log_dir and not os.path.exists(log_dir):
                 os.makedirs(log_dir)
 
             # Create the appropriate handler based on configuration
-            if self.default_config['daily_rotation']:
+            if self.default_config["daily_rotation"]:
                 file_handler = TimedRotatingFileHandler(
-                    self.default_config['log_file'],
-                    when='midnight',
-                    backupCount=self.default_config['rotation_count']
+                    self.default_config["log_file"],
+                    when="midnight",
+                    backupCount=self.default_config["rotation_count"],
                 )
             else:
                 file_handler = RotatingFileHandler(
-                    self.default_config['log_file'],
-                    maxBytes=self.default_config['rotation_size'],
-                    backupCount=self.default_config['rotation_count']
+                    self.default_config["log_file"],
+                    maxBytes=self.default_config["rotation_size"],
+                    backupCount=self.default_config["rotation_count"],
                 )
 
             file_handler.setFormatter(formatter)
@@ -405,9 +395,9 @@ class LogManager:
     def get_request_id(self) -> str:
         """Get the current request ID."""
         if request_id_var is not None:
-            return request_id_var.get('')
+            return request_id_var.get("")
         else:
-            return getattr(_thread_local, 'request_id', '')
+            return getattr(_thread_local, "request_id", "")
 
     def set_component(self, component: str) -> None:
         """
@@ -424,9 +414,9 @@ class LogManager:
     def get_component(self) -> str:
         """Get the current component name."""
         if component_var is not None:
-            return component_var.get('')
+            return component_var.get("")
         else:
-            return getattr(_thread_local, 'component', '')
+            return getattr(_thread_local, "component", "")
 
     def add_context(self, **kwargs) -> None:
         """
@@ -440,7 +430,7 @@ class LogManager:
             context.update(kwargs)
             context_data_var.set(context)
         else:
-            if not hasattr(_thread_local, 'context_data'):
+            if not hasattr(_thread_local, "context_data"):
                 _thread_local.context_data = {}
             _thread_local.context_data.update(kwargs)
 
@@ -470,7 +460,7 @@ class LogManager:
         if context_data_var is not None:
             prev_context = context_data_var.get({}).copy()
         else:
-            prev_context = getattr(_thread_local, 'context_data', {}).copy()
+            prev_context = getattr(_thread_local, "context_data", {}).copy()
 
         try:
             # Set new request ID and context data
@@ -492,11 +482,13 @@ class LogManager:
                 _thread_local.context_data = prev_context
 
     @contextmanager
-    def performance_timer(self,
-                          operation: str,
-                          logger: Optional[logging.Logger] = None,
-                          log_level: str = "debug",
-                          **kwargs):
+    def performance_timer(
+        self,
+        operation: str,
+        logger: Optional[logging.Logger] = None,
+        log_level: str = "debug",
+        **kwargs,
+    ):
         """
         Context manager for timing and logging operation performance.
 
@@ -531,23 +523,19 @@ class LogManager:
             logger.log(
                 level,
                 f"Performance: {operation} completed in {duration:.4f}s",
-                extra={
-                    "duration": duration,
-                    "operation": operation,
-                    **kwargs
-                }
+                extra={"duration": duration, "operation": operation, **kwargs},
             )
 
             # Remove operation from context if it matches
             if context_data_var is not None:
                 context = context_data_var.get({}).copy()
-                if context.get('operation') == operation:
-                    context.pop('operation', None)
+                if context.get("operation") == operation:
+                    context.pop("operation", None)
                 context_data_var.set(context)
             else:
-                context = getattr(_thread_local, 'context_data', {})
-                if context.get('operation') == operation:
-                    context.pop('operation', None)
+                context = getattr(_thread_local, "context_data", {})
+                if context.get("operation") == operation:
+                    context.pop("operation", None)
 
 
 # Create global LogManager instance
@@ -561,7 +549,7 @@ def setup_logger(
     log_format: str = DEFAULT_TEXT_FORMAT,
     max_file_size: int = 10 * 1024 * 1024,  # 10 MB
     backup_count: int = 5,
-    json_logging: bool = False
+    json_logging: bool = False,
 ) -> logging.Logger:
     """
     Set up a logger with the specified configuration.
@@ -584,7 +572,7 @@ def setup_logger(
         json_logging=json_logging,
         log_file=log_file,
         rotation_size=max_file_size,
-        rotation_count=backup_count
+        rotation_count=backup_count,
     )
 
     # Get logger through the manager
@@ -618,12 +606,14 @@ def get_component_logger(component: str) -> logging.Logger:
 
 
 # Function decorators for performance tracking
-F = TypeVar('F', bound=Callable[..., Any])
+F = TypeVar("F", bound=Callable[..., Any])
 
 
-def log_performance(operation: Optional[str] = None,
-                    logger: Optional[Union[str, logging.Logger]] = None,
-                    level: str = "debug") -> Callable[[F], F]:
+def log_performance(
+    operation: Optional[str] = None,
+    logger: Optional[Union[str, logging.Logger]] = None,
+    level: str = "debug",
+) -> Callable[[F], F]:
     """
     Decorator for timing and logging function execution.
 
@@ -635,6 +625,7 @@ def log_performance(operation: Optional[str] = None,
     Returns:
         Decorated function
     """
+
     def decorator(func: F) -> F:
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -653,6 +644,7 @@ def log_performance(operation: Optional[str] = None,
                 return func(*args, **kwargs)
 
         return cast(F, wrapper)
+
     return decorator
 
 
@@ -662,8 +654,9 @@ def request_context(request_id: Optional[str] = None, **kwargs):
     return log_manager.request_context(request_id, **kwargs)
 
 
-def performance_timer(operation: str, logger: Optional[logging.Logger] = None,
-                      level: str = "debug", **kwargs):
+def performance_timer(
+    operation: str, logger: Optional[logging.Logger] = None, level: str = "debug", **kwargs
+):
     """Context manager for timing and logging operation performance."""
     return log_manager.performance_timer(operation, logger, level, **kwargs)
 

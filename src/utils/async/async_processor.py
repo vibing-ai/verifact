@@ -22,12 +22,13 @@ from ..priority_queue import (
 )
 
 # Type definitions
-T = TypeVar('T')  # Input type
-R = TypeVar('R')  # Result type
+T = TypeVar("T")  # Input type
+R = TypeVar("R")  # Result type
 
 
 class ProcessingStatus(str, Enum):
     """Status of the overall processing job."""
+
     IDLE = "idle"
     STARTING = "starting"
     PROCESSING = "processing"
@@ -40,6 +41,7 @@ class ProcessingStatus(str, Enum):
 @dataclass
 class ProcessingProgress:
     """Progress information for processing job."""
+
     total_items: int
     processed_items: int
     pending_items: int
@@ -54,6 +56,7 @@ class ProcessingProgress:
 @dataclass
 class ProcessingResult(Generic[T, R]):
     """Result of a processing operation."""
+
     item: T
     result: Optional[R] = None
     success: bool = True
@@ -83,7 +86,7 @@ class AsyncProcessor(Generic[T, R]):
         timeout_seconds: float = 60.0,
         retry_attempts: int = 1,
         logger: Optional[logging.Logger] = None,
-        priority_queue: Optional[PriorityQueue[T]] = None
+        priority_queue: Optional[PriorityQueue[T]] = None,
     ):
         """
         Initialize the asynchronous processor.
@@ -111,11 +114,7 @@ class AsyncProcessor(Generic[T, R]):
         # Status and progress tracking
         self._status = ProcessingStatus.IDLE
         self._progress = ProcessingProgress(
-            total_items=0,
-            processed_items=0,
-            pending_items=0,
-            failed_items=0,
-            success_rate=1.0
+            total_items=0, processed_items=0, pending_items=0, failed_items=0, success_rate=1.0
         )
 
         # Processing statistics
@@ -129,14 +128,13 @@ class AsyncProcessor(Generic[T, R]):
         self._cancel_requested = False
 
         # Progress callback
-        self._progress_callback: Optional[Callable[[
-            ProcessingProgress], None]] = None
+        self._progress_callback: Optional[Callable[[ProcessingProgress], None]] = None
 
     async def process_items(
         self,
         items: List[T],
         progress_callback: Optional[Callable[[ProcessingProgress], None]] = None,
-        wait_for_completion: bool = True
+        wait_for_completion: bool = True,
     ) -> List[ProcessingResult[T, R]]:
         """
         Process multiple items concurrently.
@@ -167,7 +165,7 @@ class AsyncProcessor(Generic[T, R]):
             processed_items=0,
             pending_items=len(items),
             failed_items=0,
-            success_rate=1.0
+            success_rate=1.0,
         )
         self._start_time = time.time()
         self._progress.start_time = self._start_time
@@ -189,12 +187,14 @@ class AsyncProcessor(Generic[T, R]):
                     # Create failed result for items that weren't processed
                     item = self._queue.get_item(item_id)
                     if item:
-                        results.append(ProcessingResult(
-                            item=item.item,
-                            success=False,
-                            error="Processing not completed",
-                            item_id=item_id
-                        ))
+                        results.append(
+                            ProcessingResult(
+                                item=item.item,
+                                success=False,
+                                error="Processing not completed",
+                                item_id=item_id,
+                            )
+                        )
 
             return results
 
@@ -205,7 +205,8 @@ class AsyncProcessor(Generic[T, R]):
         """Process all items in the queue until empty."""
         self._status = ProcessingStatus.PROCESSING
         self.logger.info(
-            f"Starting processing of {self._progress.total_items} items with concurrency {self.max_concurrency}")
+            f"Starting processing of {self._progress.total_items} items with concurrency {self.max_concurrency}"
+        )
 
         try:
             while not self._queue.is_empty() and not self._cancel_requested:
@@ -221,10 +222,7 @@ class AsyncProcessor(Generic[T, R]):
                     break
 
                 # Process batch concurrently
-                tasks = [
-                    self._process_item_with_semaphore(item)
-                    for item in batch
-                ]
+                tasks = [self._process_item_with_semaphore(item) for item in batch]
 
                 # Wait for all tasks to complete
                 await asyncio.gather(*tasks)
@@ -238,7 +236,8 @@ class AsyncProcessor(Generic[T, R]):
             else:
                 self._status = ProcessingStatus.COMPLETED
                 self.logger.info(
-                    f"Processing completed: {self._progress.processed_items} items processed, {self._progress.failed_items} failed")
+                    f"Processing completed: {self._progress.processed_items} items processed, {self._progress.failed_items} failed"
+                )
 
         except Exception as e:
             self._status = ProcessingStatus.FAILED
@@ -248,15 +247,12 @@ class AsyncProcessor(Generic[T, R]):
             # Final progress update
             self._update_progress()
 
-    async def _process_item_with_semaphore(
-            self, prioritized_item: PrioritizedItem[T]) -> None:
+    async def _process_item_with_semaphore(self, prioritized_item: PrioritizedItem[T]) -> None:
         """Process an item with semaphore control for concurrency."""
         async with self._semaphore:
             await self._process_item(prioritized_item)
 
-    async def _process_item(
-            self,
-            prioritized_item: PrioritizedItem[T]) -> None:
+    async def _process_item(self, prioritized_item: PrioritizedItem[T]) -> None:
         """
         Process a single item with timeout and retry handling.
 
@@ -268,10 +264,7 @@ class AsyncProcessor(Generic[T, R]):
 
         # Initialize result
         result = ProcessingResult(
-            item=item,
-            item_id=item_id,
-            success=False,
-            metadata=prioritized_item.metadata.copy()
+            item=item, item_id=item_id, success=False, metadata=prioritized_item.metadata.copy()
         )
 
         start_time = time.time()
@@ -286,15 +279,13 @@ class AsyncProcessor(Generic[T, R]):
                     # Async function
                     process_task = asyncio.create_task(self.process_func(item))
                     process_result = await asyncio.wait_for(
-                        process_task,
-                        timeout=self.timeout_seconds
+                        process_task, timeout=self.timeout_seconds
                     )
                 else:
                     # Sync function
                     loop = asyncio.get_event_loop()
                     process_result = await loop.run_in_executor(
-                        None,
-                        lambda: self.process_func(item)
+                        None, lambda: self.process_func(item)
                     )
 
                 # Processing succeeded
@@ -312,7 +303,8 @@ class AsyncProcessor(Generic[T, R]):
 
                 # Log success
                 self.logger.debug(
-                    f"Item {item_id} processed successfully in {processing_time:.2f}s")
+                    f"Item {item_id} processed successfully in {processing_time:.2f}s"
+                )
 
                 break
 
@@ -321,25 +313,25 @@ class AsyncProcessor(Generic[T, R]):
                 result.error = error_msg
 
                 if attempts > self.retry_attempts:
-                    self.logger.warning(
-                        f"Item {item_id} {error_msg}, no more retries")
+                    self.logger.warning(f"Item {item_id} {error_msg}, no more retries")
                     self._queue.fail(item_id, error_msg)
                 else:
                     self.logger.info(
-                        f"Item {item_id} {error_msg}, retrying (attempt {attempts}/{self.retry_attempts + 1})")
+                        f"Item {item_id} {error_msg}, retrying (attempt {attempts}/{self.retry_attempts + 1})"
+                    )
 
             except Exception as e:
                 error_msg = f"Processing failed: {str(e)}"
                 result.error = error_msg
 
                 if attempts > self.retry_attempts:
-                    self.logger.warning(
-                        f"Item {item_id} {error_msg}, no more retries")
+                    self.logger.warning(f"Item {item_id} {error_msg}, no more retries")
                     self.logger.debug(traceback.format_exc())
                     self._queue.fail(item_id, error_msg)
                 else:
                     self.logger.info(
-                        f"Item {item_id} {error_msg}, retrying (attempt {attempts}/{self.retry_attempts + 1})")
+                        f"Item {item_id} {error_msg}, retrying (attempt {attempts}/{self.retry_attempts + 1})"
+                    )
 
         # Record final result
         self._results[item_id] = result
@@ -350,19 +342,16 @@ class AsyncProcessor(Generic[T, R]):
         queue_stats = self._queue.get_queue_statistics()
 
         # Calculate success rate
-        total_processed = queue_stats["completed_items"] + \
-            queue_stats["failed_items"]
+        total_processed = queue_stats["completed_items"] + queue_stats["failed_items"]
         success_rate = queue_stats["completed_items"] / max(total_processed, 1)
 
         # Calculate average processing time
-        avg_processing_time = sum(
-            self._processing_times) / max(len(self._processing_times), 1)
+        avg_processing_time = sum(self._processing_times) / max(len(self._processing_times), 1)
 
         # Estimate remaining time
         estimated_time_remaining = None
         if self._start_time and avg_processing_time > 0 and queue_stats["pending_items"] > 0:
-            estimated_time_remaining = avg_processing_time * \
-                queue_stats["pending_items"]
+            estimated_time_remaining = avg_processing_time * queue_stats["pending_items"]
 
         # Update progress object
         self._progress = ProcessingProgress(
@@ -374,7 +363,7 @@ class AsyncProcessor(Generic[T, R]):
             estimated_time_remaining=estimated_time_remaining,
             avg_processing_time=avg_processing_time,
             start_time=self._start_time,
-            last_update_time=time.time()
+            last_update_time=time.time(),
         )
 
         # Call progress callback
@@ -439,7 +428,7 @@ class AsyncClaimProcessor(AsyncProcessor[T, R]):
         retry_attempts: int = 1,
         min_check_worthiness: float = 0.5,
         max_batch_size: int = 5,
-        allow_duplicate_claims: bool = False
+        allow_duplicate_claims: bool = False,
     ):
         """
         Initialize the claim processor.
@@ -457,7 +446,7 @@ class AsyncClaimProcessor(AsyncProcessor[T, R]):
         claim_queue = ClaimPriorityQueue[T](
             min_check_worthiness=min_check_worthiness,
             max_batch_size=max_batch_size,
-            allow_duplicate_claims=allow_duplicate_claims
+            allow_duplicate_claims=allow_duplicate_claims,
         )
 
         # Create specialized logger
@@ -470,7 +459,7 @@ class AsyncClaimProcessor(AsyncProcessor[T, R]):
             timeout_seconds=timeout_seconds,
             retry_attempts=retry_attempts,
             logger=logger,
-            priority_queue=claim_queue
+            priority_queue=claim_queue,
         )
 
         # Claim-specific tracking
@@ -549,23 +538,14 @@ class AsyncClaimProcessor(AsyncProcessor[T, R]):
                 claim_queue = self._queue
                 if isinstance(claim_queue, ClaimPriorityQueue):
                     # Use simple text comparison for now
-                    item1_text = str(
-                        getattr(
-                            item1,
-                            'text',
-                            '')) if hasattr(
-                        item1,
-                        'text') else str(item1)
-                    item2_text = str(
-                        getattr(
-                            item2,
-                            'text',
-                            '')) if hasattr(
-                        item2,
-                        'text') else str(item2)
+                    item1_text = (
+                        str(getattr(item1, "text", "")) if hasattr(item1, "text") else str(item1)
+                    )
+                    item2_text = (
+                        str(getattr(item2, "text", "")) if hasattr(item2, "text") else str(item2)
+                    )
 
-                    if claim_queue._calculate_similarity(
-                            item1_text, item2_text) > 0.7:
+                    if claim_queue._calculate_similarity(item1_text, item2_text) > 0.7:
                         relationship_pairs.append((item_id1, item_id2))
 
         # Build relationship map
@@ -581,10 +561,10 @@ class AsyncClaimProcessor(AsyncProcessor[T, R]):
 
         # Log relationship info
         self.logger.info(
-            f"Found {len(relationship_pairs)} relationships between {len(self._claim_relationships)} claims")
+            f"Found {len(relationship_pairs)} relationships between {len(self._claim_relationships)} claims"
+        )
 
-    def get_claim_relationships(
-            self, item_id: str) -> List[Tuple[str, T, Optional[R]]]:
+    def get_claim_relationships(self, item_id: str) -> List[Tuple[str, T, Optional[R]]]:
         """
         Get all claims related to the specified claim.
 

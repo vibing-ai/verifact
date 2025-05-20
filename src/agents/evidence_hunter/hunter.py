@@ -28,6 +28,7 @@ DEFAULT_CACHE_TTL = int(os.environ.get("EVIDENCE_CACHE_TTL", 86400))  # 24 hours
 
 class Evidence(BaseModel):
     """Evidence related to a claim."""
+
     content: str
     source: str
     relevance: float = 1.0
@@ -36,33 +37,37 @@ class Evidence(BaseModel):
 
 class EvidenceHunter(IEvidenceHunter):
     """Agent for gathering evidence for claims."""
-    
+
     def __init__(self, model_name: Optional[str] = None):
         """
         Initialize the EvidenceHunter agent.
-        
+
         Args:
             model_name: Optional name of the model to use
         """
         # Create a ModelManager instance for this agent
         self.model_manager = ModelManager(agent_type="evidence_hunter")
-        
+
         # Override the model name if explicitly provided
         if model_name:
             self.model_manager.model_name = model_name
             # Rebuild fallback chain with new primary model
-            self.model_manager.fallback_models = [model_name] + self.model_manager.fallback_models[1:]
-        
+            self.model_manager.fallback_models = [model_name] + self.model_manager.fallback_models[
+                1:
+            ]
+
         # Configure OpenAI for Agent SDK
         self.model_manager.configure_openai_for_agent()
-        
+
         # Log model being used - default is google/gemma-3-27b-it:free which has 128k context
         logger.info(f"Using model: {self.model_manager.model_name} for evidence gathering")
-        logger.info("Gemma 3-27b-it provides 128k context window for processing large amounts of evidence")
-        
+        logger.info(
+            "Gemma 3-27b-it provides 128k context window for processing large amounts of evidence"
+        )
+
         # Get the search tool (WebSearchTool or SerperSearchTool based on configuration)
         search_tool = get_search_tool()
-        
+
         # Create the agent with enhanced instructions for better evidence gathering
         self.agent = Agent(
             name="EvidenceHunter",
@@ -102,30 +107,30 @@ class EvidenceHunter(IEvidenceHunter):
             output_type=List[Evidence],
             tools=[search_tool],
             model=self.model_manager.model_name,
-            **self.model_manager.parameters
+            **self.model_manager.parameters,
         )
-    
+
     async def gather_evidence(self, claim: Claim) -> List[Evidence]:
         """
         Gather evidence for the provided claim.
-        
+
         Args:
             claim: The claim to gather evidence for
-            
+
         Returns:
             List[Evidence]: A list of evidence pieces
         """
         # Check cache first
         cache_key = self._generate_cache_key(claim)
         cached_evidence = self._get_from_cache(cache_key)
-        
+
         # If we have cached evidence, return it
         if cached_evidence:
             logger.info(f"Cache hit for claim: {claim.text[:50]}...")
             return cached_evidence
-        
+
         logger.info(f"Cache miss for claim: {claim.text[:50]}...")
-        
+
         # Create a rich query with context and guidance for better search results
         query = f"""
         Claim to investigate: {claim.text}
@@ -140,40 +145,40 @@ class EvidenceHunter(IEvidenceHunter):
         
         Return a comprehensive set of evidence pieces in the required format.
         """
-        
+
         logger.info(f"Gathering evidence for claim: {claim.text[:50]}...")
-        
+
         start_time = time.time()
-        
+
         # Run the agent with the enhanced query
         result = await Runner.run(self.agent, query)
-        
+
         # Update token usage tracking
         if hasattr(result, "usage") and result.usage:
             self.model_manager._update_token_usage({"usage": result.usage})
-        
+
         # Log evidence gathering results
         evidence_count = len(result.output) if result.output else 0
         logger.info(f"Found {evidence_count} evidence pieces for claim")
-        
+
         # Calculate and log execution time
         execution_time = time.time() - start_time
         logger.info(f"Evidence gathering completed in {execution_time:.2f} seconds")
-        
+
         # Cache the results
         if result.output:
             self._store_in_cache(cache_key, result.output)
-        
+
         return result.output
 
     def _generate_cache_key(self, claim: Claim) -> str:
         """
         Generate a deterministic cache key from a claim.
         Normalize text by lowercasing, removing punctuation, and stemming.
-        
+
         Args:
             claim: The claim to generate a cache key for
-            
+
         Returns:
             str: A normalized cache key
         """
@@ -182,9 +187,9 @@ class EvidenceHunter(IEvidenceHunter):
         # - Remove punctuation
         # - Remove extra whitespace
         normalized_text = claim.text.lower()
-        normalized_text = re.sub(r'[^\w\s]', '', normalized_text)
-        normalized_text = re.sub(r'\s+', ' ', normalized_text).strip()
-        
+        normalized_text = re.sub(r"[^\w\s]", "", normalized_text)
+        normalized_text = re.sub(r"\s+", " ", normalized_text).strip()
+
         # Create a hash of the normalized text
         return f"evidence:{hashlib.md5(normalized_text.encode('utf-8')).hexdigest()}"
 
@@ -192,38 +197,40 @@ class EvidenceHunter(IEvidenceHunter):
         """
         Retrieve evidence from Redis cache if available.
         Returns None if cache miss.
-        
+
         Args:
             key: The cache key to retrieve
-            
+
         Returns:
             Optional[List[Evidence]]: List of evidence or None if not found
         """
         start_time = time.time()
-        
+
         try:
             cached_data = evidence_cache.get(key)
-            
+
             if cached_data:
                 evidence_list = json.loads(cached_data)
                 result = [Evidence(**item) for item in evidence_list]
                 logger.debug(f"Cache hit for {key}")
-                
+
                 # Update cache metrics
                 execution_time = time.time() - start_time
                 logger.debug(f"Cache retrieval completed in {execution_time:.4f} seconds")
-                
+
                 return result
-                
+
         except Exception as e:
             logger.warning(f"Error retrieving from cache: {str(e)}")
-            
+
         return None
-        
-    def _store_in_cache(self, key: str, evidence: List[Evidence], ttl: int = DEFAULT_CACHE_TTL) -> None:
+
+    def _store_in_cache(
+        self, key: str, evidence: List[Evidence], ttl: int = DEFAULT_CACHE_TTL
+    ) -> None:
         """
         Store evidence in Redis cache with the given TTL.
-        
+
         Args:
             key: The cache key
             evidence: The evidence to store
@@ -232,10 +239,10 @@ class EvidenceHunter(IEvidenceHunter):
         try:
             # Convert to serializable format
             serializable_evidence = [e.dict() for e in evidence]
-            
+
             # Store in cache
             evidence_cache.set(key, json.dumps(serializable_evidence), ex=ttl)
             logger.debug(f"Stored evidence in cache with key {key}, TTL={ttl}s")
-            
+
         except Exception as e:
-            logger.warning(f"Error storing in cache: {str(e)}") 
+            logger.warning(f"Error storing in cache: {str(e)}")
