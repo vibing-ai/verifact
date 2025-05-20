@@ -4,16 +4,16 @@ Integration tests for database operations.
 These tests verify that database operations work correctly.
 """
 
-import os
-import pytest
-import asyncio
-from sqlalchemy import select, inspect, text
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
 import logging
+import os
 
-from src.db.models import Base, Claim, Evidence, Verdict, SearchQuery, ApiKey
-from src.db.database import get_async_session, get_db_engine, init_db
+import pytest
+from sqlalchemy import inspect, select, text
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
+
+from src.db.database import init_db
+from src.db.models import ApiKey, Base, Claim, Evidence, SearchQuery, Verdict
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

@@ -6,14 +6,15 @@ This script executes a comprehensive testing plan for the VeriFact factchecking 
 verifying all components are correctly implemented and functioning together.
 """
 
+import asyncio
+import json
 import os
 import sys
 import time
-import json
-import asyncio
-import pytest
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+
+import pytest
 
 
 class VerifactTester:
@@ -243,8 +244,8 @@ class VerifactTester:
         # Test EvidenceHunter
         print("  Testing EvidenceHunter...")
         try:
-            from src.agents.evidence_hunter.hunter import EvidenceHunter
             from src.agents.claim_detector.detector import Claim
+            from src.agents.evidence_hunter.hunter import EvidenceHunter
             
             hunter = EvidenceHunter()
             test_claim = Claim(text="The Earth is approximately 4.54 billion years old", checkworthy=True)
@@ -276,8 +277,8 @@ class VerifactTester:
         # Test VerdictWriter
         print("  Testing VerdictWriter...")
         try:
-            from src.agents.verdict_writer.writer import VerdictWriter
             from src.agents.evidence_hunter.hunter import Evidence
+            from src.agents.verdict_writer.writer import VerdictWriter
             
             writer = VerdictWriter()
             test_claim = Claim(text="The Earth is approximately 4.54 billion years old", checkworthy=True)
@@ -324,7 +325,10 @@ class VerifactTester:
         print("\n3. Testing pipeline integration...")
         
         try:
-            from src.pipeline.factcheck_pipeline import FactcheckPipeline, PipelineConfig
+            from src.pipeline.factcheck_pipeline import (
+                FactcheckPipeline,
+                PipelineConfig,
+            )
             
             config = PipelineConfig()
             pipeline = FactcheckPipeline(config)
@@ -494,7 +498,10 @@ class VerifactTester:
         ]
         
         try:
-            from src.pipeline.factcheck_pipeline import FactcheckPipeline, PipelineConfig
+            from src.pipeline.factcheck_pipeline import (
+                FactcheckPipeline,
+                PipelineConfig,
+            )
             
             config = PipelineConfig()
             pipeline = FactcheckPipeline(config)
@@ -529,7 +536,7 @@ class VerifactTester:
                         "error": "No results returned",
                         "status": "FAIL"
                     }
-                    print(f"    ❌ No results returned")
+                    print("    ❌ No results returned")
                     self.results["issues"].append(f"System test for {claim['name']} failed: no results returned")
         
         except Exception as e:

@@ -8,10 +8,10 @@ showing how the new architecture supports proper unit testing.
 import asyncio
 import unittest
 from typing import List, Optional
-from unittest.mock import MagicMock, AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
-from src.agents.interfaces import ClaimDetector, EvidenceHunter, VerdictWriter
 from src.agents.dto import Claim, Evidence, Verdict
+from src.agents.interfaces import ClaimDetector, EvidenceHunter, VerdictWriter
 from src.agents.orchestrator import FactcheckPipeline
 
 

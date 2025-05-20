@@ -5,15 +5,11 @@ This module defines immutable data classes for inter-agent communication,
 ensuring clean boundaries between agents.
 """
 
-from datetime import datetime
-from enum import Enum
-from typing import Dict, List, Optional, Any
-from pydantic import BaseModel, Field, validator
 from dataclasses import dataclass, field
-from typing import List, Literal
+from datetime import datetime
+from typing import Any, Dict, List, Literal, Optional
 
 # Re-export original models for backward compatibility
-from src.agents.claim_detector.models import ClaimDomain, EntityType, Entity
 
 
 @dataclass(frozen=True)

@@ -2,16 +2,16 @@
 Unit tests for the ClaimDetector agent.
 """
 
-import os
-import json
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock, AsyncMock
+
 from src.agents.claim_detector.detector import (
-    ClaimDetector, 
-    Claim, 
-    Entity, 
-    EntityType, 
-    ClaimDomain
+    Claim,
+    ClaimDetector,
+    ClaimDomain,
+    Entity,
+    EntityType,
 )
 
 # Sample test data

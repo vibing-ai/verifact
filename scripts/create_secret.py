@@ -10,9 +10,9 @@ Output:
     A randomly generated 32-byte key that can be used for CHAINLIT_AUTH_SECRET
 """
 
-import os
-import secrets
 import base64
+import secrets
+
 
 def generate_secret_key():
     """Generate a random 32-byte key encoded as base64."""

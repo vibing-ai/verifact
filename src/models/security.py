@@ -7,14 +7,16 @@ This module defines models for:
 - Authentication tokens
 """
 
-from datetime import datetime
-from typing import List, Optional
-from enum import Enum
-from pydantic import BaseModel, Field
 import secrets
 import uuid
+from datetime import datetime
+from enum import Enum
+from typing import List, Optional
+
+from pydantic import BaseModel, Field
 
 from src.utils.security.hashing import hash_value
+
 
 class ApiKeyScope(str, Enum):
     """API key permission scopes."""

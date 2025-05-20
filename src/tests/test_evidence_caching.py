@@ -3,12 +3,12 @@ Tests for the EvidenceHunter's Redis caching functionality.
 """
 
 import os
+from unittest.mock import MagicMock, patch
+
 import pytest
-import asyncio
-from unittest.mock import patch, MagicMock
 
 from src.agents.claim_detector.detector import Claim
-from src.agents.evidence_hunter.hunter import EvidenceHunter, Evidence
+from src.agents.evidence_hunter.hunter import Evidence, EvidenceHunter
 from src.utils.cache.cache import evidence_cache
 
 # Set up test environment

@@ -7,10 +7,18 @@ This module contains the data models used throughout the application for:
 - Verdicts: Final assessment of claim truthfulness
 """
 
-from typing import List, Optional, Literal, Any, Dict, Union
 from datetime import datetime
 from enum import Enum
-from pydantic import BaseModel, Field, HttpUrl, validator, root_validator, AnyUrl, constr, EmailStr
+from typing import Any, Dict, List, Literal, Optional, Union
+
+from pydantic import (
+    AnyUrl,
+    BaseModel,
+    Field,
+    constr,
+    root_validator,
+    validator,
+)
 
 
 class SourceType(str, Enum):

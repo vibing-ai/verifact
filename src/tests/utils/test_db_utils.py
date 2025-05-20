@@ -4,29 +4,26 @@ Unit tests for database utility functions.
 These tests verify that database utility functions work correctly.
 """
 
-import os
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
-import json
-import asyncio
-from unittest.mock import patch, MagicMock, AsyncMock
-from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.db.models import Claim, Evidence, Verdict, SearchQuery
+from src.db.models import Claim, Evidence, Verdict
 from src.db.utils import (
-    store_claim,
-    store_evidence,
-    store_verdict,
-    store_factcheck_result,
     get_claim_by_id,
+    get_claim_stats,
     get_claims_by_text,
     get_evidence_for_claim,
-    get_verdict_for_claim,
-    search_claims,
-    log_search_query,
-    get_similar_claims,
     get_recent_claims,
-    get_claim_stats
+    get_similar_claims,
+    get_verdict_for_claim,
+    log_search_query,
+    search_claims,
+    store_claim,
+    store_evidence,
+    store_factcheck_result,
+    store_verdict,
 )
 
 

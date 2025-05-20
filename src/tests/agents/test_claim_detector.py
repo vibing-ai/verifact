@@ -5,18 +5,13 @@ This test suite provides comprehensive coverage of the ClaimDetector functionali
 including claim detection, check-worthiness scoring, domain classification, entity extraction,
 and handling of edge cases.
 """
-import pytest
 import asyncio
-import hashlib
-import time
-import json
-from unittest.mock import MagicMock, patch, AsyncMock, call
-from typing import List, Dict, Any, Optional
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from src.agents.claim_detector.detector import ClaimDetector
-from src.agents.claim_detector.models import Claim, Entity, ClaimDomain
-from src.utils.logging.structured_logger import get_structured_logger
-
+from src.agents.claim_detector.models import Claim, ClaimDomain, Entity
 
 # -- Test Data Fixtures -- #
 

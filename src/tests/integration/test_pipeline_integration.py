@@ -6,19 +6,19 @@ through evidence gathering to verdict generation, and that all components work t
 
 Combines both unit tests and standalone testing script functionality.
 """
-import time
 import asyncio
 import json
+import time
 from datetime import datetime
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.pipeline.factcheck_pipeline import FactcheckPipeline, PipelineConfig
 from src.agents.claim_detector import ClaimDetector
 from src.agents.evidence_hunter import EvidenceHunter
 from src.agents.verdict_writer import VerdictWriter
+from src.pipeline.factcheck_pipeline import FactcheckPipeline, PipelineConfig
 
 
 class TestPipelineIntegration:

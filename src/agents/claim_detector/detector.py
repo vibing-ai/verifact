@@ -5,28 +5,24 @@ This module contains the main ClaimDetector class that coordinates
 the claim detection process.
 """
 
-import os
 import hashlib
 import time
-from typing import List, Optional, Dict, Any, Tuple, Set
+from typing import Any, Dict, List, Optional
+
 from openai.agents import Agent, Runner
 from openai.agents.tools import WebSearchTool
 
-from src.utils.model_config import ModelManager
-from src.utils.logging.structured_logger import get_structured_logger
-from src.utils.cache import claim_cache, entity_cache, model_cache
-from src.utils.metrics import claim_detector_metrics
-
-from src.agents.claim_detector.models import Claim, Entity, ClaimDomain
-from src.agents.claim_detector.entity_extractor import EntityExtractor
 from src.agents.claim_detector.domain_classifier import DomainClassifier
+from src.agents.claim_detector.entity_extractor import EntityExtractor
+from src.agents.claim_detector.models import Claim, ClaimDomain, Entity
 from src.agents.claim_detector.utils import (
-    normalize_claim_text,
-    split_compound_claim,
-    calculate_similarity,
-    contains_specificity_indicators
+    contains_specificity_indicators,
 )
 from src.agents.interfaces import IClaimDetector
+from src.utils.cache import claim_cache, entity_cache, model_cache
+from src.utils.logging.structured_logger import get_structured_logger
+from src.utils.metrics import claim_detector_metrics
+from src.utils.model_config import ModelManager
 
 
 class ClaimDetector(IClaimDetector):
@@ -79,7 +75,7 @@ class ClaimDetector(IClaimDetector):
             self.model_manager.model_name = model_name
             # Rebuild fallback chain with new primary model
             self.model_manager.fallback_models = [model_name] + self.model_manager.fallback_models[1:]
-            self.logger.info(f"Using custom model", extra={"model_name": model_name})
+            self.logger.info("Using custom model", extra={"model_name": model_name})
             # Default model is qwen/qwen3-8b:free, which excels at structured output
             if "qwen" in self.model_manager.model_name.lower():
                 self.logger.info("Using Qwen model with optimized parameters", extra={

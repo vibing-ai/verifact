@@ -7,19 +7,19 @@ validation of environment variables.
 
 import os
 from enum import Enum
-from typing import List, Optional, Dict, Any, Union
+from typing import Any, Dict, List, Optional, Union
+
+from dotenv import load_dotenv
 from pydantic import (
-    BaseModel, 
-    BaseSettings, 
-    Field, 
-    validator, 
-    root_validator,
+    BaseModel,
+    BaseSettings,
+    Field,
     HttpUrl,
     PostgresDsn,
-    RedisDsn
+    RedisDsn,
+    root_validator,
+    validator,
 )
-from pydantic.env_settings import SettingsSourceCallable
-from dotenv import load_dotenv
 
 # Load .env file if it exists
 load_dotenv()

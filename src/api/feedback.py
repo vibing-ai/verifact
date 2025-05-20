@@ -4,21 +4,24 @@ VeriFact Feedback API
 This module provides API endpoints for handling user feedback on factchecking results.
 """
 
-from fastapi import APIRouter, Depends, Request, HTTPException, status, Security, Query
-from fastapi.security.api_key import APIKeyHeader, APIKey
 import logging
 import time
-from typing import Dict, Any, List, Optional
-from datetime import datetime
 import uuid
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, HTTPException, Query, Request, Security, status
+from fastapi.security.api_key import APIKey, APIKeyHeader
 
 from src.models.feedback import (
-    Feedback, FeedbackRequest, FeedbackResponse, FeedbackStats
+    Feedback,
+    FeedbackRequest,
+    FeedbackResponse,
+    FeedbackStats,
 )
-from src.utils.db import SupabaseClient
 from src.utils.cache import Cache
-from src.utils.validation import validate_model
-from src.utils.exceptions import ValidationError, QueryError
+from src.utils.db import SupabaseClient
+from src.utils.exceptions import QueryError, ValidationError
 from src.utils.security.credentials import get_credential
 
 # Setup logging

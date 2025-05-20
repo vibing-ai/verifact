@@ -7,10 +7,11 @@ the VeriFact agents within the Chainlit UI.
 
 import asyncio
 import datetime
-from typing import Dict, List, Optional, Any, Callable
+from typing import Any, Dict, List
 
 import chainlit as cl
-from src.agents.claim_detector import ClaimDetector, Claim
+
+from src.agents.claim_detector import ClaimDetector
 from src.agents.evidence_hunter import EvidenceHunter
 from src.agents.verdict_writer import VerdictWriter
 from src.ui.components import create_evidence_display, create_verdict_display
@@ -147,12 +148,12 @@ async def process_claims(claims: List[Any],
     
     # Process claims either concurrently or sequentially
     if concurrent_processing and total_claims > 1:
-        # Process claims in batches
+        # Process claims concurrently in batches
         all_tasks = []
-        for i in range(0, total_claims, max_concurrent):
+        for i in range(0, len(claims), max_concurrent):
             batch = claims[i:i+max_concurrent]
             tasks = [process_claim(claim) for claim in batch]
-            batch_results = await asyncio.gather(*tasks)
+            await asyncio.gather(*tasks)
             all_tasks.extend(tasks)
     else:
         # Process claims sequentially
@@ -171,7 +172,7 @@ async def process_claims(claims: List[Any],
     await main_msg.update(content=f"✅ Fact-checking complete! Processed {total_claims} claims in {duration:.1f} seconds.")
     
     # Create a summary message with final results
-    summary = f"# Fact-Check Results\n\n"
+    summary = "# Fact-Check Results\n\n"
     summary += f"Processed {total_claims} claims in {duration:.1f} seconds.\n\n"
     
     for i, result in enumerate(results):

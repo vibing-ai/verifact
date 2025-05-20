@@ -6,12 +6,10 @@ proper separation of concerns and dependency injection.
 """
 
 import asyncio
-from typing import Dict, Any, List
+from typing import Any, Dict
 
 from src.agents.factory import AgentFactory
-from src.agents.orchestrator import FactcheckPipeline, FactcheckPipelineFactory
-from src.agents.interfaces import ClaimDetector, EvidenceHunter, VerdictWriter
-from src.agents.dto import Claim, Evidence, Verdict
+from src.agents.orchestrator import FactcheckPipelineFactory
 
 
 async def process_with_full_pipeline() -> None:

@@ -4,15 +4,17 @@ Tests for the VerdictWriter agent.
 Combines both unit tests and standalone testing script functionality.
 """
 
-import pytest
 import asyncio
 import time
-from unittest.mock import AsyncMock, MagicMock, patch
-from src.agents.verdict_writer import VerdictWriter
+from unittest.mock import AsyncMock, patch
+
+import pytest
+
 from src.agents.claim_detector import Claim
-from src.models.factcheck import Evidence, Verdict
-from src.agents.verdict_writer.writer import VerdictWriter as StandaloneVerdictWriter
 from src.agents.evidence_hunter.hunter import Evidence as StandaloneEvidence
+from src.agents.verdict_writer import VerdictWriter
+from src.agents.verdict_writer.writer import VerdictWriter as StandaloneVerdictWriter
+from src.models.factcheck import Evidence, Verdict
 
 
 @pytest.fixture

@@ -4,12 +4,14 @@ User model for VeriFact.
 This module defines the user model with encrypted sensitive fields.
 """
 
-from pydantic import BaseModel, EmailStr, Field
-from typing import Optional, Dict, Any
 import uuid
 from datetime import datetime
+from typing import Any, Dict, Optional
 
-from src.utils.security.encrypted_fields import EncryptedStr, EncryptedModel
+from pydantic import BaseModel, EmailStr, Field
+
+from src.utils.security.encrypted_fields import EncryptedModel, EncryptedStr
+
 
 class User(BaseModel, EncryptedModel):
     """User model with encrypted sensitive fields."""

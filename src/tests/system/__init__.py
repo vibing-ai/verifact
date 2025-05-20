@@ -5,4 +5,4 @@ This package contains full system tests for the complete VeriFact application.
 """
 
 # Import test modules for discovery
-from .test_verifact import * 
+from .test_verifact import *

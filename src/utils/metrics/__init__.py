@@ -6,4 +6,4 @@ This module provides classes and functions for tracking and reporting performanc
 
 from src.utils.metrics.db_metrics import ConnectionPoolMetrics
 
-__all__ = ["ConnectionPoolMetrics"] 
+__all__ = ["ConnectionPoolMetrics"]

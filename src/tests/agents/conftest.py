@@ -3,8 +3,10 @@ Pytest configuration for agent tests.
 
 This module contains fixtures specific to agent component tests.
 """
+from unittest.mock import MagicMock
+
 import pytest
-from unittest.mock import MagicMock, AsyncMock
+
 
 @pytest.fixture
 def sample_claim():

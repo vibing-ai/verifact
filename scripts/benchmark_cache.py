@@ -5,24 +5,24 @@ Benchmark script for the cache layer performance.
 This script tests the performance of the Redis cache for evidence gathering.
 """
 
+import argparse
+import asyncio
+import json
 import os
+import random
+import statistics
 import sys
 import time
-import json
-import asyncio
-import argparse
-import statistics
-from typing import List, Dict, Any
-import random
+from typing import Any, Dict, List
 
 # Add the project root to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.agents.evidence_hunter.hunter import EvidenceHunter, Evidence
 from src.agents.claim_detector.detector import Claim
+from src.agents.evidence_hunter.hunter import EvidenceHunter
 from src.utils.cache.cache import evidence_cache
-from src.utils.metrics import evidence_metrics
 from src.utils.logger import get_component_logger
+from src.utils.metrics import evidence_metrics
 
 # Initialize logger
 logger = get_component_logger("benchmark")

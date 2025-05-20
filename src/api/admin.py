@@ -5,39 +5,37 @@ This module contains admin endpoints for the VeriFact API,
 including API key management and system configuration.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status, Request, Body
-from typing import Dict, Any, List, Optional
-import uuid
-import re
-from pydantic import BaseModel, UUID4, Field
 import datetime
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
+from fastapi import APIRouter, Body, Depends, HTTPException, Request, status
+from pydantic import BaseModel, Field
+
+from src.api.middleware import verify_api_key
+from src.models.security import ApiKey, ApiKeyScope
+from src.utils.cache.cache import (
+    claim_cache,
+    entity_cache,
+    evidence_cache,
+    model_cache,
+    search_cache,
+)
 from src.utils.db.api_keys import (
-    create_api_key, 
-    validate_api_key, 
-    revoke_api_key, 
-    rotate_api_key,
+    create_api_key,
+    list_api_keys,
     list_user_api_keys,
-    list_api_keys
+    revoke_api_key,
+    rotate_api_key,
 )
 from src.utils.exceptions import DatabaseError, InvalidAPIKeyError
-from src.utils.cache.cache import (
-    evidence_cache, 
-    claim_cache, 
-    entity_cache, 
-    search_cache, 
-    model_cache
-)
 from src.utils.metrics import (
-    evidence_metrics,
     claims_metrics,
+    evidence_metrics,
+    model_metrics,
     search_metrics,
-    model_metrics
 )
 from src.utils.metrics.db_metrics import ConnectionPoolMetrics
-from src.models.security import ApiKey, ApiKeyScope
-from src.api.middleware import verify_api_key, APIKey
 
 # Create router
 router = APIRouter(
@@ -349,9 +347,10 @@ async def cache_status(
     admin: Dict[str, Any] = Depends(require_admin)
 ) -> Dict[str, Any]:
     """Get cache status information."""
-    from src.utils.cache.cache import REDIS_ENABLED, REDIS_URL, DEFAULT_CACHE_TTL
     import os
-    
+
+    from src.utils.cache.cache import DEFAULT_CACHE_TTL, REDIS_ENABLED, REDIS_URL
+
     # Get evidence-specific TTL
     evidence_ttl = int(os.environ.get("EVIDENCE_CACHE_TTL", DEFAULT_CACHE_TTL))
     

@@ -4,11 +4,10 @@ Utility functions for the ClaimDetector agent.
 This module contains utility functions used by the ClaimDetector.
 """
 
-import re
 import hashlib
-from typing import List, Dict, Any, Optional, Set
+import re
+from typing import List
 
-from src.utils.logger import get_component_logger
 from src.agents.claim_detector.models import Claim
 
 

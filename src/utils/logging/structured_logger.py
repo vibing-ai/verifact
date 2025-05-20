@@ -1,18 +1,19 @@
-import logging
 import json
-import uuid
-import time
-import socket
+import logging
 import os
+import socket
+import time
 import traceback
-from typing import Any, Dict, Optional, Union, List, Tuple
+import uuid
 from contextvars import ContextVar, Token
+from typing import List, Optional, Tuple
 
 # Context variables for tracking request and execution context
 request_id_var: ContextVar[str] = ContextVar('request_id', default='')
 user_id_var: ContextVar[Optional[str]] = ContextVar('user_id', default=None)
 correlation_id_var: ContextVar[str] = ContextVar('correlation_id', default='')
-session_id_var: ContextVar[Optional[str]] = ContextVar('session_id', default=None)
+session_id_var: ContextVar[Optional[str]] = ContextVar(
+    'session_id', default=None)
 component_var: ContextVar[str] = ContextVar('component', default='')
 operation_var: ContextVar[str] = ContextVar('operation', default='')
 
@@ -21,9 +22,10 @@ HOSTNAME = socket.gethostname()
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 APP_VERSION = os.getenv("APP_VERSION", "0.1.0")
 
+
 class StructuredLogRecord(logging.LogRecord):
     """Extended LogRecord class that includes structured context data."""
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Add context data to log record
@@ -33,22 +35,27 @@ class StructuredLogRecord(logging.LogRecord):
         self.session_id = session_id_var.get()
         self.component = component_var.get()
         self.operation = operation_var.get()
-        
+
         # Add environment metadata
         self.hostname = HOSTNAME
         self.environment = ENVIRONMENT
         self.app_version = APP_VERSION
-        
+
         # Add timestamps for precise timing
         self.timestamp_ms = int(time.time() * 1000)
 
+
 class StructuredLogger(logging.Logger):
     """Logger subclass that creates StructuredLogRecord instances."""
-    
+
     def makeRecord(self, *args, **kwargs):
         return StructuredLogRecord(*args, **kwargs)
-    
-    def process_success(self, message: str, duration_ms: Optional[float] = None, **kwargs):
+
+    def process_success(
+            self,
+            message: str,
+            duration_ms: Optional[float] = None,
+            **kwargs):
         """Log a successful operation with timing information."""
         extra = kwargs.pop("extra", {})
         extra.update({
@@ -57,8 +64,8 @@ class StructuredLogger(logging.Logger):
             **kwargs
         })
         self.info(message, extra=extra)
-    
-    def process_failure(self, message: str, error: Optional[Exception] = None, 
+
+    def process_failure(self, message: str, error: Optional[Exception] = None,
                         duration_ms: Optional[float] = None, **kwargs):
         """Log a failed operation with error details and timing information."""
         extra = kwargs.pop("extra", {})
@@ -67,16 +74,21 @@ class StructuredLogger(logging.Logger):
             "duration_ms": duration_ms,
             **kwargs
         })
-        
+
         if error:
             extra["error_type"] = error.__class__.__name__
             extra["error_message"] = str(error)
             extra["traceback"] = traceback.format_exc()
-            
+
         self.error(message, extra=extra)
-    
-    def api_request(self, method: str, url: str, status_code: Optional[int] = None, 
-                   duration_ms: Optional[float] = None, **kwargs):
+
+    def api_request(
+            self,
+            method: str,
+            url: str,
+            status_code: Optional[int] = None,
+            duration_ms: Optional[float] = None,
+            **kwargs):
         """Log API request information."""
         extra = kwargs.pop("extra", {})
         extra.update({
@@ -87,24 +99,25 @@ class StructuredLogger(logging.Logger):
             "duration_ms": duration_ms,
             **kwargs
         })
-        
+
         if status_code and status_code >= 400:
             self.warning("API request failed", extra=extra)
         else:
             self.info("API request completed", extra=extra)
-    
+
     def with_context(self, **context):
         """Create a context manager for adding temporary context to logs."""
         return LoggingContext(self, **context)
 
+
 class LoggingContext:
     """Context manager for adding temporary context to logs."""
-    
+
     def __init__(self, logger: StructuredLogger, **context):
         self.logger = logger
         self.context = context
         self.tokens: List[Tuple[ContextVar, Token]] = []
-    
+
     def __enter__(self):
         # Set context variables and store tokens for later reset
         for key, value in self.context.items():
@@ -113,7 +126,8 @@ class LoggingContext:
             elif key == 'user_id' and value:
                 self.tokens.append((user_id_var, user_id_var.set(value)))
             elif key == 'correlation_id' and value:
-                self.tokens.append((correlation_id_var, correlation_id_var.set(value)))
+                self.tokens.append(
+                    (correlation_id_var, correlation_id_var.set(value)))
             elif key == 'session_id' and value:
                 self.tokens.append((session_id_var, session_id_var.set(value)))
             elif key == 'component' and value:
@@ -121,19 +135,20 @@ class LoggingContext:
             elif key == 'operation' and value:
                 self.tokens.append((operation_var, operation_var.set(value)))
         return self.logger
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         # Reset context variables to their previous values
         for var, token in reversed(self.tokens):
             var.reset(token)
 
+
 class JSONFormatter(logging.Formatter):
     """Formatter that converts log records to JSON."""
-    
+
     def __init__(self, include_traceback: bool = True):
         super().__init__()
         self.include_traceback = include_traceback
-    
+
     def format(self, record):
         """Format the log record as JSON."""
         # Build basic log data
@@ -149,26 +164,26 @@ class JSONFormatter(logging.Formatter):
             'hostname': record.hostname,
             'app_version': record.app_version,
         }
-        
+
         # Add context data if available
         if hasattr(record, 'request_id') and record.request_id:
             log_data['request_id'] = record.request_id
-            
+
         if hasattr(record, 'user_id') and record.user_id:
             log_data['user_id'] = record.user_id
-            
+
         if hasattr(record, 'correlation_id') and record.correlation_id:
             log_data['correlation_id'] = record.correlation_id
-            
+
         if hasattr(record, 'session_id') and record.session_id:
             log_data['session_id'] = record.session_id
-            
+
         if hasattr(record, 'component') and record.component:
             log_data['component'] = record.component
-            
+
         if hasattr(record, 'operation') and record.operation:
             log_data['operation'] = record.operation
-        
+
         # Add exception info if available
         if record.exc_info and self.include_traceback:
             log_data['exception'] = {
@@ -176,7 +191,7 @@ class JSONFormatter(logging.Formatter):
                 'message': str(record.exc_info[1]),
                 'traceback': self.formatException(record.exc_info)
             }
-        
+
         # Add custom fields from extra
         for key, value in record.__dict__.items():
             if key not in (
@@ -189,9 +204,10 @@ class JSONFormatter(logging.Formatter):
                 'hostname', 'environment', 'app_version'
             ) and not key.startswith('_'):
                 log_data[key] = value
-        
+
         # Convert to JSON
         return json.dumps(log_data)
+
 
 def get_structured_logger(name: str) -> StructuredLogger:
     """Get a structured logger instance with the given name."""
@@ -199,8 +215,9 @@ def get_structured_logger(name: str) -> StructuredLogger:
     logger = logging.getLogger(name)
     return logger
 
+
 def set_request_context(
-    request_id: Optional[str] = None, 
+    request_id: Optional[str] = None,
     user_id: Optional[str] = None,
     correlation_id: Optional[str] = None,
     session_id: Optional[str] = None
@@ -210,22 +227,24 @@ def set_request_context(
         request_id_var.set(request_id)
     else:
         request_id_var.set(str(uuid.uuid4()))
-    
+
     if user_id:
         user_id_var.set(user_id)
-        
+
     if correlation_id:
         correlation_id_var.set(correlation_id)
-    
+
     if session_id:
         session_id_var.set(session_id)
+
 
 def set_component_context(component: str, operation: Optional[str] = None):
     """Set component and operation context for the current async context."""
     component_var.set(component)
-    
+
     if operation:
         operation_var.set(operation)
+
 
 def clear_request_context():
     """Clear request context for the current async context."""
@@ -234,10 +253,12 @@ def clear_request_context():
     correlation_id_var.set('')
     session_id_var.set(None)
 
+
 def clear_component_context():
     """Clear component context for the current async context."""
     component_var.set('')
     operation_var.set('')
+
 
 def configure_logging(
     level: int = logging.INFO,
@@ -249,11 +270,11 @@ def configure_logging(
     """Configure structured logging for the application."""
     root_logger = logging.getLogger()
     root_logger.setLevel(level)
-    
+
     # Remove existing handlers
     for handler in root_logger.handlers[:]:
         root_logger.removeHandler(handler)
-    
+
     # Use provided handlers or create default ones
     if log_handlers:
         for handler in log_handlers:
@@ -262,29 +283,29 @@ def configure_logging(
         # Create console handler
         console_handler = logging.StreamHandler()
         console_handler.setLevel(level)
-        
+
         if json_output:
-            console_handler.setFormatter(JSONFormatter(include_traceback=include_traceback))
+            console_handler.setFormatter(JSONFormatter(
+                include_traceback=include_traceback))
         else:
-            console_handler.setFormatter(
-                logging.Formatter('%(asctime)s - %(levelname)s - [%(request_id)s] - %(name)s - %(message)s')
-            )
-        
+            console_handler.setFormatter(logging.Formatter(
+                '%(asctime)s - %(levelname)s - [%(request_id)s] - %(name)s - %(message)s'))
+
         root_logger.addHandler(console_handler)
-        
+
         # Add file handler if specified
         if log_file:
             file_handler = logging.FileHandler(log_file)
             file_handler.setLevel(level)
-            
+
             if json_output:
-                file_handler.setFormatter(JSONFormatter(include_traceback=include_traceback))
+                file_handler.setFormatter(JSONFormatter(
+                    include_traceback=include_traceback))
             else:
-                file_handler.setFormatter(
-                    logging.Formatter('%(asctime)s - %(levelname)s - [%(request_id)s] - %(name)s - %(message)s')
-                )
-            
+                file_handler.setFormatter(logging.Formatter(
+                    '%(asctime)s - %(levelname)s - [%(request_id)s] - %(name)s - %(message)s'))
+
             root_logger.addHandler(file_handler)
-    
+
     # Set logger class for all new loggers
-    logging.setLoggerClass(StructuredLogger) 
+    logging.setLoggerClass(StructuredLogger)

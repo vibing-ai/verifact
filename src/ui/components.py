@@ -5,10 +5,9 @@ This module contains functions for rendering UI components in the Chainlit inter
 """
 
 import datetime
-import chainlit as cl
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List
 
-from src.models.feedback import Feedback
+import chainlit as cl
 
 
 async def create_feedback_form(fact_check_id: str, claim_text: str) -> None:
@@ -134,7 +133,7 @@ async def create_evidence_display(evidence_list: List[Dict[str, Any]],
                 if isinstance(source_date, str):
                     source_date = datetime.datetime.fromisoformat(source_date.replace('Z', '+00:00'))
                 source_date_str = source_date.strftime('%b %d, %Y')
-            except:
+            except Exception:
                 source_date_str = source_date
         else:
             source_date_str = ''

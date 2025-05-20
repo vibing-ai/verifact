@@ -4,45 +4,47 @@ VeriFact Batch Factchecking API
 This module provides API endpoints for batch factchecking of multiple claims.
 """
 
-from fastapi import APIRouter, Depends, Request, HTTPException, status, Security, BackgroundTasks, Query
-from fastapi.security.api_key import APIKeyHeader, APIKey
-import asyncio
+import logging
 import time
 import uuid
-import logging
-import json
-from typing import Dict, Any, List, Optional, Union, Callable
 from datetime import datetime
+from typing import Any, Dict, Optional
+
 import requests
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    HTTPException,
+    Query,
+    Request,
+    Security,
+    status,
+)
+from fastapi.security.api_key import APIKey, APIKeyHeader
 
 from src.models.factcheck import (
+    BatchClaimStatus,
     BatchFactcheckRequest,
     BatchFactcheckResponse,
     BatchProcessingProgress,
-    BatchClaimStatus,
+    Claim,
     FactcheckJob,
     JobStatus,
-    Claim,
-    Verdict
+    Verdict,
 )
-from src.agents.claim_detector import ClaimDetector
-from src.agents.evidence_hunter import EvidenceHunter
-from src.agents.verdict_writer import VerdictWriter
 from src.pipeline import FactcheckPipeline, PipelineConfig
 from src.utils.async_processor import AsyncClaimProcessor, ProcessingProgress
-from src.utils.priority_queue import ClaimPriorityQueue
-from src.utils.exceptions import (
-    VerifactError, ValidationError, ModelError, 
-    PipelineError, InputTooLongError
-)
-from src.utils.validation import (
-    validate_text_length, sanitize_text, validate_model,
-    convert_verdict_for_response
-)
-from src.utils.retry import with_async_retry
-from src.utils.db import SupabaseClient
 from src.utils.cache import Cache
-from src.utils.metrics import track_api_call, track_performance
+from src.utils.db import SupabaseClient
+from src.utils.exceptions import (
+    PipelineError,
+    ValidationError,
+)
+from src.utils.metrics import track_api_call
+from src.utils.retry import with_async_retry
+from src.utils.validation import (
+    validate_model,
+)
 
 # Setup logging
 logger = logging.getLogger(__name__)

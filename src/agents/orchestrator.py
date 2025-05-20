@@ -7,12 +7,12 @@ and clear error boundaries.
 """
 
 import asyncio
-from typing import List, Dict, Any, Optional, Tuple
-from src.utils.logger import get_component_logger
-from src.agents.interfaces import ClaimDetector, EvidenceHunter, VerdictWriter
+from typing import Any, Dict, List, Optional, Tuple
+
 from src.agents.dto import Claim, Evidence, Verdict
 from src.agents.factory import AgentFactory
-
+from src.agents.interfaces import ClaimDetector, EvidenceHunter, VerdictWriter
+from src.utils.logger import get_component_logger
 
 # Create logger for the orchestrator
 logger = get_component_logger("factcheck_pipeline")

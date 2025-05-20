@@ -5,13 +5,14 @@ This module provides fixtures for testing API endpoints,
 including mocks for authentication and database dependencies.
 """
 
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import MagicMock, AsyncMock
 
 from src.main import app
-from src.pipeline.factcheck_pipeline import FactcheckPipeline
 from src.models.factcheck import Verdict
+from src.pipeline.factcheck_pipeline import FactcheckPipeline
 
 
 @pytest.fixture
@@ -102,7 +103,7 @@ def mock_rate_limiter():
 def override_dependencies(mock_pipeline, mock_auth_service, mock_db, mock_cache, mock_rate_limiter):
     """Override app dependencies for testing."""
     from src.api import dependencies
-    
+
     # Store original dependencies
     original_get_pipeline = dependencies.get_pipeline
     original_get_auth_service = dependencies.get_auth_service

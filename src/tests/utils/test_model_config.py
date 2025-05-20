@@ -2,18 +2,18 @@
 Tests for model configuration utilities.
 """
 
-import os
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 
 from src.utils.model_config import (
+    OPENROUTER_API_ENDPOINT,
+    configure_openai_for_openrouter,
+    get_api_key,
     get_model_name,
     get_model_settings,
-    get_api_key,
     get_openrouter_headers,
-    configure_openai_for_openrouter,
     make_openrouter_request,
-    OPENROUTER_API_ENDPOINT
 )
 
 

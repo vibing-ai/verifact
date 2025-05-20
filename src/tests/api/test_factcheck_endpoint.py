@@ -4,15 +4,14 @@ Tests for the factcheck API endpoints.
 Uses FastAPI TestClient to test the API endpoints with mocked dependencies.
 """
 
-import pytest
-import json
-from fastapi.testclient import TestClient
-from unittest.mock import patch, AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from src.main import app
-from src.models.factcheck import FactcheckRequest, FactcheckResponse
-from src.pipeline.factcheck_pipeline import FactcheckPipeline
+import pytest
+from fastapi.testclient import TestClient
+
 from src.agents.verdict_writer.writer import Verdict
+from src.main import app
+from src.pipeline.factcheck_pipeline import FactcheckPipeline
 
 
 @pytest.fixture

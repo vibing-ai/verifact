@@ -5,12 +5,13 @@ This module handles the extraction and classification of named entities from cla
 """
 
 import re
-from typing import List, Dict, Any, Optional
+from typing import List, Optional
+
 from openai.agents import Agent
 
-from src.utils.logger import get_component_logger, log_performance
-from src.utils.cache import entity_cache
 from src.agents.claim_detector.models import Entity, EntityType
+from src.utils.cache import entity_cache
+from src.utils.logger import get_component_logger, log_performance
 
 
 class EntityExtractor:

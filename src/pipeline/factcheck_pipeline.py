@@ -12,19 +12,20 @@ and provides both synchronous and asynchronous operation modes.
 
 import asyncio
 import time
-from typing import List, Dict, Any, Optional, Callable, Union, TypeVar, AsyncIterator
-from enum import Enum
-import logging
-from functools import wraps
 from dataclasses import dataclass
+from enum import Enum
+from typing import Any, AsyncIterator, Callable, Dict, List, Optional, TypeVar
+
 from pydantic import BaseModel, Field
 
-from src.agents.interfaces import IClaimDetector, IEvidenceHunter, IVerdictWriter
 from src.agents.claim_detector.models import Claim
 from src.agents.evidence_hunter.hunter import Evidence
+from src.agents.interfaces import IClaimDetector, IEvidenceHunter, IVerdictWriter
 from src.agents.verdict_writer.writer import Verdict
-from src.utils.logger import get_component_logger, performance_timer, request_context, log_performance
-
+from src.utils.logger import (
+    get_component_logger,
+    performance_timer,
+)
 
 # Type definitions for progress callbacks
 T = TypeVar('T')
@@ -566,7 +567,7 @@ def create_default_pipeline(config: Optional[PipelineConfig] = None) -> Factchec
     from src.agents.claim_detector.detector import ClaimDetector
     from src.agents.evidence_hunter.hunter import EvidenceHunter
     from src.agents.verdict_writer.writer import VerdictWriter
-    
+
     # Create configuration with defaults if not provided
     config = config or PipelineConfig()
     

@@ -8,24 +8,27 @@ Command-line interface for factchecking text using the VeriFact pipeline.
 import argparse
 import asyncio
 import csv
+import io
 import json
-import os
 import sys
 import time
-import urllib.request
 import urllib.error
-from typing import Dict, Any, List, Optional, Union
-from tqdm import tqdm
+import urllib.request
+from typing import Any, Dict, List, Optional
+from urllib.parse import urlparse
+
 import colorama
 from colorama import Fore, Style
-from urllib.parse import urlparse
-import io
+from tqdm import tqdm
 
+from src.models.factcheck import (
+    FactcheckRequest,
+    PipelineConfig,
+)
 from src.pipeline import FactcheckPipeline, PipelineConfig, PipelineEvent
+from src.utils.exceptions import InputTooLongError, ValidationError, VerifactError
 from src.utils.logger import configure_logging
-from src.utils.exceptions import VerifactError, ValidationError, InputTooLongError
 from src.utils.validation import sanitize_text, validate_text_length
-from src.models.factcheck import Verdict, PipelineConfig, FactcheckRequest, FactcheckResponse
 
 # Initialize colorama for cross-platform color support
 colorama.init()
@@ -498,7 +501,7 @@ def load_test_dataset(path: str) -> List[Dict[str, Any]]:
     except json.JSONDecodeError as e:
         raise ValidationError(
             code="INVALID_JSON", 
-            message=f"Invalid JSON in test dataset",
+            message="Invalid JSON in test dataset",
             details={"path": path, "error": str(e)}
         )
 

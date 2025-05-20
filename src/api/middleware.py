@@ -5,36 +5,37 @@ This module contains middleware components for the VeriFact API,
 including error handling, logging, request/response processing, rate limiting, and security.
 """
 
-from fastapi import FastAPI, Request, Response, status, HTTPException, Depends
-from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.base import BaseHTTPMiddleware
-import time
-import uuid
-import traceback
 import logging
-from typing import Callable, Dict, Any, List, Optional
 import os
 import re
-import hmac
-import hashlib
-import base64
-from datetime import datetime, timedelta
-from fastapi.security import APIKeyHeader
+import time
+import uuid
+from datetime import datetime
+from typing import Any, Callable, Dict, List, Optional
 
-from src.utils.exceptions import (
-    VerifactError, ValidationError, ModelError, 
-    PipelineError, ResourceUnavailableError, AuthError,
-    APIError, RequestTimeoutError, TooManyRequestsError,
-    APIAuthenticationError, InvalidAPIKeyError, ExpiredAPIKeyError,
-    InsufficientQuotaError
-)
+from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from fastapi.security import APIKeyHeader
+from starlette.middleware.base import BaseHTTPMiddleware
+
 from src.utils.cache import Cache
-from src.utils.logging.structured_logger import (
-    set_request_context, clear_request_context, 
-    set_component_context, clear_component_context
+from src.utils.exceptions import (
+    APIAuthenticationError,
+    APIError,
+    PipelineError,
+    RequestTimeoutError,
+    ResourceUnavailableError,
+    TooManyRequestsError,
+    ValidationError,
+    VerifactError,
 )
-from src.utils.security.hashing import secure_compare
+from src.utils.logging.structured_logger import (
+    clear_component_context,
+    clear_request_context,
+    set_component_context,
+    set_request_context,
+)
 
 logger = logging.getLogger("verifact.api")
 
@@ -288,7 +289,7 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
         try:
             # Import here to avoid circular imports
             from src.utils.db.api_keys import validate_api_key
-            
+
             # Validate the key using our database utility
             key_data = await validate_api_key(api_key)
             
@@ -496,7 +497,7 @@ async def verify_api_key(
     
     # Import here to avoid circular imports
     from src.utils.db.api_keys import validate_api_key
-    
+
     # Get the API key from database
     key_data = await validate_api_key(api_key)
     if not key_data:

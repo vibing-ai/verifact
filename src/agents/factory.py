@@ -5,17 +5,20 @@ This module provides a centralized factory for creating configured agent instanc
 ensuring proper dependency injection and encapsulation.
 """
 
-from typing import Dict, Any, Optional, Type, TypeVar, cast
-
-from src.agents.interfaces import (
-    ClaimDetector, EvidenceHunter, VerdictWriter,
-    IClaimDetector, IEvidenceHunter, IVerdictWriter
-)
+from typing import Any, Dict, Optional, TypeVar, cast
 
 # Import concrete implementations (will be replaced with actual implementations)
 # These imports should be updated to point to your actual implementations
 from src.agents.claim_detector.detector import ClaimDetectorImpl
 from src.agents.evidence_hunter.hunter import EvidenceHunter as EvidenceHunterImpl
+from src.agents.interfaces import (
+    ClaimDetector,
+    EvidenceHunter,
+    IClaimDetector,
+    IEvidenceHunter,
+    IVerdictWriter,
+    VerdictWriter,
+)
 from src.agents.verdict_writer.writer import VerdictWriter as VerdictWriterImpl
 
 # Type variable for agent types

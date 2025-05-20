@@ -13,28 +13,31 @@ For CLI access, use `cli.py`.
 
 import logging
 import os
-import sys
-import psutil
-import time
 import platform
-from fastapi import FastAPI, Request, status, HTTPException, APIRouter, Depends
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
-from pydantic import ValidationError as PydanticValidationError
-from typing import Dict, Any, List, Optional
+import time
+from typing import Any, Dict, List
 
+import psutil
+from fastapi import APIRouter, FastAPI, HTTPException, Request, status
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
+from pydantic import ValidationError as PydanticValidationError
+
+from src.api.admin import router as admin_router
 from src.api.factcheck import router as factcheck_router
 from src.api.factcheck_batch import router as batch_router
 from src.api.feedback import router as feedback_router
-from src.api.admin import router as admin_router
-from src.api.middleware import setup_middleware, register_exception_handlers, LoggingContextMiddleware
-from src.pipeline.factcheck_pipeline import create_default_pipeline
-from src.utils.error_handling import ErrorResponseFactory
-from src.utils.logging.structured_logger import configure_logging, get_structured_logger
-from src.utils.health.checkers import check_database, check_redis, check_openrouter_api
-from src.utils.version import get_version_info
+from src.api.middleware import (
+    LoggingContextMiddleware,
+    register_exception_handlers,
+    setup_middleware,
+)
 from src.utils.db.db import SupabaseClient
-from src.utils.db.db_init import initialize_database, verify_pgvector_extension
+from src.utils.db.db_init import initialize_database
+from src.utils.error_handling import ErrorResponseFactory
+from src.utils.health.checkers import check_database, check_openrouter_api, check_redis
+from src.utils.logging.structured_logger import configure_logging, get_structured_logger
+from src.utils.version import get_version_info
 
 # Configure structured logging
 log_level = os.getenv("LOG_LEVEL", "INFO")

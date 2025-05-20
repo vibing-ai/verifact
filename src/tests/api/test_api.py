@@ -5,11 +5,12 @@ API Testing Script for VeriFact
 This script tests the VeriFact API endpoints to ensure they're working correctly.
 """
 
-import requests
 import json
 import time
 from datetime import datetime
 from pathlib import Path
+
+import requests
 
 
 def test_api():

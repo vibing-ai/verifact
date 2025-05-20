@@ -6,7 +6,8 @@ This module contains the data models and types used by the ClaimDetector.
 
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field, validator
 
 

@@ -14,16 +14,15 @@ For integration with CI/CD, the script can output results in various formats:
     python -m src.tests.test_benchmark_pipeline --format json --output benchmark_results.json
 """
 
+import argparse
+import asyncio
+import json
 import os
 import sys
 import time
-import json
-import asyncio
-import argparse
 from datetime import datetime
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Any, Dict, Optional
 
-import pandas as pd
 import matplotlib.pyplot as plt
 from tabulate import tabulate
 

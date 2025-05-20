@@ -4,15 +4,17 @@ Input Validation Utilities
 This module provides functions for validating and sanitizing input data.
 """
 
-from typing import Dict, Any, List, Optional, Callable, Tuple, Union
 import logging
+from typing import Any, Callable, Dict
 
+from src.utils.exceptions import ValidationError
 from src.utils.validation.config import validation_config
 from src.utils.validation.sanitizer import (
-    sanitize_text, sanitize_dict, sanitize_list, sanitize_url,
-    validate_text_length, validate_url_format, validate_email_format
+    sanitize_text,
+    sanitize_url,
+    validate_text_length,
+    validate_url_format,
 )
-from src.utils.exceptions import ValidationError
 
 logger = logging.getLogger("verifact.validation")
 
@@ -21,20 +23,23 @@ class Validator:
     """
     Input validator class that combines validation and sanitization.
     """
-    
+
     @staticmethod
-    def validate_text(text: str, field_name: str = "text", strict: bool = False) -> str:
+    def validate_text(
+            text: str,
+            field_name: str = "text",
+            strict: bool = False) -> str:
         """
         Validate and sanitize text input.
-        
+
         Args:
             text: Text to validate
             field_name: Name of the field (for error messages)
             strict: If True, raise an exception for invalid text
-            
+
         Returns:
             str: Sanitized text
-            
+
         Raises:
             ValidationError: If text is invalid and strict is True
         """
@@ -42,11 +47,11 @@ class Validator:
             if strict:
                 raise ValidationError(f"{field_name} is required")
             return ""
-        
+
         # Get configuration values
         min_length = validation_config.get("text.min_length", 1)
         max_length = validation_config.get("text.max_length", 50000)
-        
+
         # Check length
         if not validate_text_length(text, min_length, max_length):
             if strict:
@@ -56,29 +61,27 @@ class Validator:
                         "field": field_name,
                         "actual_length": len(text),
                         "min_length": min_length,
-                        "max_length": max_length
-                    }
-                )
+                        "max_length": max_length})
             # Truncate text to maximum length if not strict
             text = text[:max_length]
-        
+
         # Sanitize the text
         sanitized = sanitize_text(text)
-        
+
         return sanitized
-    
+
     @staticmethod
     def validate_claim_text(text: str, strict: bool = False) -> str:
         """
         Validate and sanitize claim text.
-        
+
         Args:
             text: Claim text to validate
             strict: If True, raise an exception for invalid text
-            
+
         Returns:
             str: Sanitized claim text
-            
+
         Raises:
             ValidationError: If text is invalid and strict is True
         """
@@ -86,11 +89,11 @@ class Validator:
             if strict:
                 raise ValidationError("Claim text is required")
             return ""
-        
+
         # Get configuration values
         min_length = validation_config.get("claim.min_length", 5)
         max_length = validation_config.get("claim.max_length", 1000)
-        
+
         # Check length
         if not validate_text_length(text, min_length, max_length):
             if strict:
@@ -100,29 +103,27 @@ class Validator:
                         "field": "claim_text",
                         "actual_length": len(text),
                         "min_length": min_length,
-                        "max_length": max_length
-                    }
-                )
+                        "max_length": max_length})
             # Truncate claim to maximum length if not strict
             text = text[:max_length]
-        
+
         # Sanitize the text
         sanitized = sanitize_text(text)
-        
+
         return sanitized
-    
+
     @staticmethod
     def validate_url(url: str, strict: bool = False) -> str:
         """
         Validate and sanitize URL.
-        
+
         Args:
             url: URL to validate
             strict: If True, raise an exception for invalid URL
-            
+
         Returns:
             str: Sanitized URL
-            
+
         Raises:
             ValidationError: If URL is invalid and strict is True
         """
@@ -130,11 +131,12 @@ class Validator:
             if strict:
                 raise ValidationError("URL is required")
             return ""
-        
+
         # Get configuration values
         max_length = validation_config.get("url.max_length", 2048)
-        allowed_schemes = validation_config.get("url.allowed_schemes", ["http", "https"])
-        
+        allowed_schemes = validation_config.get(
+            "url.allowed_schemes", ["http", "https"])
+
         # Check URL format
         if not validate_url_format(url):
             if strict:
@@ -146,7 +148,7 @@ class Validator:
                     }
                 )
             return ""
-        
+
         # Check if scheme is allowed
         for scheme in allowed_schemes:
             if url.startswith(f"{scheme}://"):
@@ -162,7 +164,7 @@ class Validator:
                     }
                 )
             return ""
-        
+
         # Check length
         if len(url) > max_length:
             if strict:
@@ -175,24 +177,24 @@ class Validator:
                     }
                 )
             return ""
-        
+
         # Sanitize the URL
         sanitized = sanitize_url(url)
-        
+
         return sanitized
-    
+
     @staticmethod
     def validate_claims_count(count: int, strict: bool = False) -> int:
         """
         Validate the number of claims.
-        
+
         Args:
             count: Number of claims to validate
             strict: If True, raise an exception for invalid count
-            
+
         Returns:
             int: Validated count
-            
+
         Raises:
             ValidationError: If count is invalid and strict is True
         """
@@ -200,10 +202,10 @@ class Validator:
             if strict:
                 raise ValidationError("Number of claims must be positive")
             return 0
-        
+
         # Get configuration value
         max_claims = validation_config.get("api.max_claims_per_request", 20)
-        
+
         # Check count
         if count > max_claims:
             if strict:
@@ -216,32 +218,33 @@ class Validator:
                     }
                 )
             return max_claims
-        
+
         return count
-    
+
     @staticmethod
     def validate_batch_claims_count(count: int, strict: bool = False) -> int:
         """
         Validate the number of batch claims.
-        
+
         Args:
             count: Number of batch claims to validate
             strict: If True, raise an exception for invalid count
-            
+
         Returns:
             int: Validated count
-            
+
         Raises:
             ValidationError: If count is invalid and strict is True
         """
         if count <= 0:
             if strict:
-                raise ValidationError("Number of batch claims must be positive")
+                raise ValidationError(
+                    "Number of batch claims must be positive")
             return 0
-        
+
         # Get configuration value
         max_batch_claims = validation_config.get("api.max_batch_claims", 100)
-        
+
         # Check count
         if count > max_batch_claims:
             if strict:
@@ -254,21 +257,21 @@ class Validator:
                     }
                 )
             return max_batch_claims
-        
+
         return count
-    
+
     @staticmethod
     def validate_check_worthiness(score: float, strict: bool = False) -> float:
         """
         Validate check-worthiness score.
-        
+
         Args:
             score: Check-worthiness score to validate
             strict: If True, raise an exception for invalid score
-            
+
         Returns:
             float: Validated score
-            
+
         Raises:
             ValidationError: If score is invalid and strict is True
         """
@@ -283,31 +286,31 @@ class Validator:
                 )
             # Clamp score to valid range
             return max(0, min(score, 1))
-        
+
         return score
-    
+
     @staticmethod
     def validate_feedback_comment(comment: str, strict: bool = False) -> str:
         """
         Validate and sanitize feedback comment.
-        
+
         Args:
             comment: Feedback comment to validate
             strict: If True, raise an exception for invalid comment
-            
+
         Returns:
             str: Sanitized feedback comment
-            
+
         Raises:
             ValidationError: If comment is invalid and strict is True
         """
         if not comment:
             return ""
-        
+
         # Get configuration values
         min_length = validation_config.get("feedback.min_comment_length", 5)
         max_length = validation_config.get("feedback.max_comment_length", 1000)
-        
+
         # Check length
         if not validate_text_length(comment, min_length, max_length):
             if strict:
@@ -317,31 +320,33 @@ class Validator:
                         "field": "comment",
                         "actual_length": len(comment),
                         "min_length": min_length,
-                        "max_length": max_length
-                    }
-                )
+                        "max_length": max_length})
             # Truncate comment to maximum length if not strict
             comment = comment[:max_length]
-        
+
         # Sanitize the comment
         sanitized = sanitize_text(comment)
-        
+
         return sanitized
-    
+
     @staticmethod
-    def validate_input(input_data: Dict[str, Any], validation_rules: Dict[str, Callable], 
-                       strict: bool = False) -> Dict[str, Any]:
+    def validate_input(input_data: Dict[str,
+                                        Any],
+                       validation_rules: Dict[str,
+                                              Callable],
+                       strict: bool = False) -> Dict[str,
+                                                     Any]:
         """
         Validate and sanitize input data using validation rules.
-        
+
         Args:
             input_data: Input data to validate
             validation_rules: Dictionary mapping field names to validation functions
             strict: If True, raise an exception for invalid input
-            
+
         Returns:
             Dict[str, Any]: Validated and sanitized input data
-            
+
         Raises:
             ValidationError: If input is invalid and strict is True
         """
@@ -349,10 +354,10 @@ class Validator:
             if strict:
                 raise ValidationError("Input data is required")
             return {}
-        
+
         validated_data = {}
         errors = []
-        
+
         # Apply validation rules to input data
         for field, validator in validation_rules.items():
             try:
@@ -362,11 +367,11 @@ class Validator:
                 if strict:
                     raise
                 errors.append(str(e))
-        
+
         # Log validation errors
         if errors:
             logger.warning(f"Validation errors: {', '.join(errors)}")
-        
+
         return validated_data
 
 
@@ -378,4 +383,4 @@ validate_claims_count = Validator.validate_claims_count
 validate_batch_claims_count = Validator.validate_batch_claims_count
 validate_check_worthiness = Validator.validate_check_worthiness
 validate_feedback_comment = Validator.validate_feedback_comment
-validate_input = Validator.validate_input 
+validate_input = Validator.validate_input

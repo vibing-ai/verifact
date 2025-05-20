@@ -6,20 +6,24 @@ the old agent implementation to the new, more modular architecture with proper
 separation of concerns.
 """
 
-from typing import List, Dict, Any, Optional, Union, Type, cast
 import warnings
+from typing import List, Optional, Union
 
 # Import from old implementation
 from src.agents.claim_detector.models import Claim as LegacyClaim
-from src.agents.evidence_hunter.hunter import Evidence as LegacyEvidence
-from src.agents.verdict_writer.writer import Verdict as LegacyVerdict
 
 # Import from new implementation
-from src.agents.dto import Claim, Evidence, Verdict, DTOFactory
+from src.agents.dto import Claim, DTOFactory, Evidence, Verdict
+from src.agents.evidence_hunter.hunter import Evidence as LegacyEvidence
 from src.agents.interfaces import (
-    ClaimDetector, EvidenceHunter, VerdictWriter,
-    IClaimDetector, IEvidenceHunter, IVerdictWriter
+    ClaimDetector,
+    EvidenceHunter,
+    IClaimDetector,
+    IEvidenceHunter,
+    IVerdictWriter,
+    VerdictWriter,
 )
+from src.agents.verdict_writer.writer import Verdict as LegacyVerdict
 
 
 def adapt_claim_detector(detector: Union[ClaimDetector, IClaimDetector]) -> ClaimDetector:
@@ -143,7 +147,7 @@ def convert_to_legacy_claim(claim: Claim) -> LegacyClaim:
     """Convert a new Claim DTO to a legacy Claim model."""
     # Import here to avoid circular imports
     from src.agents.claim_detector.models import ClaimDomain, Entity, EntityType
-    
+
     # Create entities list
     entities = []
     for entity_dict in claim.entities:

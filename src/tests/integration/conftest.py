@@ -3,8 +3,9 @@ Pytest configuration for integration tests.
 
 This module contains fixtures specific to integration tests.
 """
+
 import pytest
-from unittest.mock import MagicMock, AsyncMock
+
 
 @pytest.fixture
 def mock_pipeline_config():

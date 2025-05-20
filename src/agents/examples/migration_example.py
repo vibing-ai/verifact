@@ -6,21 +6,20 @@ to the new architecture with proper separation of concerns.
 """
 
 import asyncio
-from typing import List, Dict, Any
+from typing import Any, Dict
 
 # Import from legacy implementations
 from src.agents.claim_detector.models import Claim as LegacyClaim
-from src.agents.evidence_hunter.hunter import Evidence as LegacyEvidence, EvidenceHunter as LegacyEvidenceHunter
-from src.agents.verdict_writer.writer import Verdict as LegacyVerdict, VerdictWriter as LegacyVerdictWriter
 
 # Import from new implementations
-from src.agents.dto import Claim, Evidence, Verdict, DTOFactory
+from src.agents.evidence_hunter.hunter import EvidenceHunter as LegacyEvidenceHunter
 from src.agents.factory import AgentFactory
 from src.agents.orchestrator import FactcheckPipeline
 from src.agents.transition import (
-    adapt_claim_detector, adapt_evidence_hunter, adapt_verdict_writer,
-    convert_to_legacy_claim, convert_to_legacy_evidence, convert_to_legacy_verdict
+    adapt_evidence_hunter,
+    adapt_verdict_writer,
 )
+from src.agents.verdict_writer.writer import VerdictWriter as LegacyVerdictWriter
 
 
 async def legacy_workflow():

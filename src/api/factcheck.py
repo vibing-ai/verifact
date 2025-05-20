@@ -4,42 +4,49 @@ VeriFact Factchecking API
 This module provides the API endpoints for the factchecking service.
 """
 
-from fastapi import APIRouter, Depends, BackgroundTasks, Request, HTTPException, status, Security, Query
-from fastapi.security.api_key import APIKeyHeader, APIKey
-from datetime import datetime
-import time
-import asyncio
-import uuid
 import logging
-from typing import Dict, Any, List, Optional, Union
+import time
+import uuid
+from datetime import datetime
+from typing import Any, Dict, Optional
+
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    HTTPException,
+    Query,
+    Request,
+    Security,
+    status,
+)
+from fastapi.security.api_key import APIKey, APIKeyHeader
 
 from src.models.factcheck import (
+    FactcheckJob,
     FactcheckRequest,
     FactcheckResponse,
-    Verdict,
-    Claim,
-    Evidence,
+    JobStatus,
     PipelineConfig,
-    FactcheckJob,
-    JobStatus
 )
-from src.agents.claim_detector import ClaimDetector
-from src.agents.evidence_hunter import EvidenceHunter
-from src.agents.verdict_writer import VerdictWriter
 from src.pipeline import FactcheckPipeline
-from src.utils.exceptions import (
-    VerifactError, ValidationError, ModelError, 
-    PipelineError, InputTooLongError
-)
-from src.utils.validation import (
-    validate_text_length, sanitize_text, validate_model,
-    convert_verdict_for_response
-)
-from src.utils.retry import with_async_retry
-from src.utils.db import SupabaseClient
 from src.utils.cache import Cache
+from src.utils.db import SupabaseClient
+from src.utils.exceptions import (
+    InputTooLongError,
+    ModelError,
+    PipelineError,
+    ValidationError,
+    VerifactError,
+)
 from src.utils.metrics import track_api_call, track_performance
+from src.utils.retry import with_async_retry
 from src.utils.security.credentials import get_credential
+from src.utils.validation import (
+    convert_verdict_for_response,
+    sanitize_text,
+    validate_model,
+    validate_text_length,
+)
 
 # Setup logging
 logger = logging.getLogger(__name__)

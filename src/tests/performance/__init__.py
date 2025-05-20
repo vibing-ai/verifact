@@ -5,4 +5,4 @@ This package contains performance and benchmark tests.
 """
 
 # Import test modules for discovery
-from .test_benchmark_pipeline import * 
+from .test_benchmark_pipeline import *

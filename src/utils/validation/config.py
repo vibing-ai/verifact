@@ -5,34 +5,35 @@ This module loads and provides access to validation configuration settings.
 """
 
 import os
-import yaml
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
+
+import yaml
 
 
 class ValidationConfig:
     """
     Validation configuration manager class.
-    
+
     This class loads and provides access to validation configuration settings
     defined in configs/validation.yml.
     """
-    
+
     def __init__(self):
         """Initialize the validation configuration manager."""
         self._config = {}
         self._load_config()
-    
+
     def _load_config(self):
         """Load validation configuration from file."""
         # Determine the config file path
         config_path = self._find_config_path()
-        
+
         if not config_path:
             # Use default values if config file not found
             self._config = self._get_default_config()
             return
-        
+
         try:
             with open(config_path, 'r') as f:
                 self._config = yaml.safe_load(f) or {}
@@ -40,11 +41,11 @@ class ValidationConfig:
             # Log error and use default values
             print(f"Error loading validation config: {str(e)}")
             self._config = self._get_default_config()
-    
+
     def _find_config_path(self) -> Optional[str]:
         """
         Find the validation configuration file path.
-        
+
         Returns:
             Optional[str]: Path to the configuration file, or None if not found
         """
@@ -57,18 +58,18 @@ class ValidationConfig:
             # Explicit environment variable
             os.environ.get("VERIFACT_VALIDATION_CONFIG")
         ]
-        
+
         # Return the first path that exists
         for path in possible_paths:
             if path and Path(path).is_file():
                 return str(path)
-        
+
         return None
-    
+
     def _get_default_config(self) -> Dict[str, Any]:
         """
         Get default validation configuration.
-        
+
         Returns:
             Dict[str, Any]: Default configuration
         """
@@ -98,29 +99,29 @@ class ValidationConfig:
                 "max_comment_length": 1000
             }
         }
-    
+
     def get(self, key: str, default: Any = None) -> Any:
         """
         Get a configuration value by key.
-        
+
         Args:
             key: Configuration key (e.g., "text.max_length")
             default: Default value if key not found
-            
+
         Returns:
             Any: Configuration value
         """
         keys = key.split('.')
         value = self._config
-        
+
         for k in keys:
             if isinstance(value, dict) and k in value:
                 value = value[k]
             else:
                 return default
-        
+
         return value
 
 
 # Create a singleton instance
-validation_config = ValidationConfig() 
+validation_config = ValidationConfig()

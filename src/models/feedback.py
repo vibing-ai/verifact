@@ -5,10 +5,11 @@ This module contains the data models used for collecting and managing user feedb
 on factchecking results.
 """
 
-from typing import Dict, Any, Optional, List
 from datetime import datetime
-from pydantic import BaseModel, Field, constr, validator, root_validator
 from enum import Enum
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field, constr, root_validator
 
 
 class FeedbackType(str, Enum):

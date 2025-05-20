@@ -2,21 +2,22 @@
 EvidenceHunter agent for gathering evidence for claims.
 """
 
+import hashlib
+import json
 import os
 import re
-import json
 import time
-import hashlib
-from typing import List, Optional, Dict, Any
-from pydantic import BaseModel
+from typing import List, Optional
+
 from openai.agents import Agent, Runner
-from src.utils.model_config import ModelManager
+from pydantic import BaseModel
+
 from src.agents.claim_detector.models import Claim
-from src.utils.search_tools import get_search_tool
-from src.utils.logger import get_component_logger
-from src.utils.cache.cache import evidence_cache
-from src.utils.metrics import evidence_metrics
 from src.agents.interfaces import IEvidenceHunter
+from src.utils.cache.cache import evidence_cache
+from src.utils.logger import get_component_logger
+from src.utils.model_config import ModelManager
+from src.utils.search_tools import get_search_tool
 
 # Create a logger for this module
 logger = get_component_logger("evidence_hunter")

@@ -4,13 +4,11 @@ Domain classification for the ClaimDetector agent.
 This module handles the domain/topic classification of claims.
 """
 
-import re
-from typing import List, Dict, Any, Tuple, Optional, Set
-from openai.agents import Agent
+from typing import Dict, List, Set, Tuple
 
-from src.utils.logger import get_component_logger, log_performance
-from src.utils.cache import model_cache
 from src.agents.claim_detector.models import ClaimDomain
+from src.utils.cache import model_cache
+from src.utils.logger import get_component_logger, log_performance
 
 
 class DomainClassifier:

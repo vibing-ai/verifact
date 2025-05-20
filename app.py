@@ -15,13 +15,6 @@ For CLI access, use `cli.py`.
 """
 
 # Import all necessary UI components from the refactored modules
-from src.ui import (
-    main,
-    on_chat_start,
-    on_chat_resume,
-    create_feedback_form,
-    create_claim_cards
-)
 
 # Additional components are automatically imported via the @cl decorators
 # The event handlers defined in src/ui/app.py and src/ui/events.py will be

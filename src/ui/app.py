@@ -14,27 +14,18 @@ For API access, use `src/main.py`.
 For CLI access, use `cli.py`.
 """
 
-import os
-import json
 import datetime
+import json
+import os
 import sys
-import uuid
-from typing import Dict, List, Optional, Any
 
 import chainlit as cl
-from chainlit.playground.providers import ChatOpenAI
 
-from src.agents.claim_detector import ClaimDetector
-from src.agents.evidence_hunter import EvidenceHunter
-from src.agents.verdict_writer import VerdictWriter
-from src.models.feedback import Feedback, FeedbackStats
-from src.utils.db import SupabaseClient
+from src.ui.agent_manager import handle_selected_claims, process_claims
 
 # Import UI components
-from src.ui.events import on_chat_start, on_chat_resume, on_element_change
-from src.ui.components import create_feedback_form, create_claim_cards
-from src.ui.agent_manager import process_claims, handle_selected_claims
-from src.ui.utils import export_results_to_json, save_feedback, get_feedback_stats
+from src.ui.utils import export_results_to_json, get_feedback_stats, save_feedback
+from src.utils.db import SupabaseClient
 
 # Check that authentication secret is set
 if not os.environ.get("CHAINLIT_AUTH_SECRET"):
@@ -56,8 +47,6 @@ async def main(message: cl.Message):
     """
     # Get the agents from the user session
     claim_detector = cl.user_session.get("claim_detector")
-    evidence_hunter = cl.user_session.get("evidence_hunter")
-    verdict_writer = cl.user_session.get("verdict_writer")
     
     # Get user settings
     settings = cl.user_session.get("settings")
@@ -74,9 +63,6 @@ async def main(message: cl.Message):
     await main_msg.send()
     
     try:
-        # Record start time for performance tracking
-        start_time = datetime.datetime.now()
-        
         # Step 1: Detect claims with progress updates
         with cl.Step(name="Detecting Claims", show_input=True) as step:
             await main_msg.update(content="🔎 Analyzing your input to identify factual claims...")
@@ -113,10 +99,10 @@ async def main(message: cl.Message):
                     claims_content += f"   *Check-worthiness: {claim.check_worthiness:.2f}*\n"
                     if hasattr(claim, 'rank') and claim.rank is not None:
                         claims_content += f"   *Rank: {claim.rank}*\n"
-                    claims_content += f"   *This claim will be fact-checked*\n\n"
+                    claims_content += "   *This claim will be fact-checked*\n\n"
                 else:
                     claims_content += f"   *Check-worthiness: {claim.check_worthiness:.2f}*\n"
-                    claims_content += f"   *This claim is not specific enough to be fact-checked*\n\n"
+                    claims_content += "   *This claim is not specific enough to be fact-checked*\n\n"
             
             await step.stream_token(f"\n\nFound {len(claims)} claims, {len(check_worthy_claims)} are check-worthy.")
             await cl.Message(content=claims_content).send()
@@ -156,7 +142,7 @@ async def main(message: cl.Message):
                 
                 # Store claims for later processing when button is clicked
                 cl.user_session.set("pending_claims", check_worthy_claims)
-                await main_msg.update(content=f"Select which claims to fact-check and click 'Process Selected Claims'")
+                await main_msg.update(content="Select which claims to fact-check and click 'Process Selected Claims'")
                 return
             
             # If only one claim or user doesn't want to select, continue with all check-worthy claims
@@ -207,7 +193,7 @@ async def on_export(action):
     
     # Create a downloadable file
     await cl.Message(
-        content=f"Your fact-check results are ready for download.",
+        content="Your fact-check results are ready for download.",
         attachments=[
             cl.Attachment(
                 name=filename,
@@ -248,7 +234,7 @@ async def on_view_history(action):
                 else:
                     dt = timestamp
                 timestamp_str = dt.strftime("%Y-%m-%d %H:%M:%S")
-            except:
+            except Exception:
                 timestamp_str = str(timestamp)
         else:
             timestamp_str = "Unknown time"
@@ -345,7 +331,7 @@ async def on_view_feedback_admin(action):
                 else:
                     dt = timestamp
                 timestamp_str = dt.strftime("%Y-%m-%d %H:%M:%S")
-            except:
+            except Exception:
                 timestamp_str = str(timestamp)
             
             feedback_content += f"**Time:** {timestamp_str}\n"
@@ -380,7 +366,6 @@ async def on_export_feedback(action):
         return
     
     # Get all feedback data
-    from src.utils.db import SupabaseClient
     db_client = SupabaseClient()
     
     if db_client.is_connected():
@@ -409,7 +394,7 @@ async def on_export_feedback(action):
     
     # Create a downloadable file
     await cl.Message(
-        content=f"Feedback data export is ready for download.",
+        content="Feedback data export is ready for download.",
         attachments=[
             cl.Attachment(
                 name=filename,

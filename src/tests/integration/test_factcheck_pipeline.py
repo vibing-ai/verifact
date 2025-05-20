@@ -4,16 +4,17 @@ Integration tests for the complete factchecking pipeline.
 These tests verify the entire pipeline from claim detection to verdict generation.
 """
 
-import pytest
 import os
-import asyncio
 import time
-from typing import List, Dict, Any, Optional
 
-from src.pipeline.factcheck_pipeline import FactcheckPipeline, PipelineConfig, PipelineEvent, PipelineStage
-from src.agents.claim_detector.detector import Claim, ClaimDomain
-from src.agents.evidence_hunter.hunter import Evidence
+import pytest
+
 from src.agents.verdict_writer.writer import Verdict
+from src.pipeline.factcheck_pipeline import (
+    FactcheckPipeline,
+    PipelineConfig,
+    PipelineEvent,
+)
 
 # Skip all tests in this module if the integration tests are not enabled
 pytestmark = pytest.mark.skipif(

@@ -4,13 +4,14 @@ Tests for the EvidenceHunter agent.
 Combines both unit tests and standalone testing script functionality.
 """
 
-import pytest
 import asyncio
 import time
-from unittest.mock import patch, AsyncMock
+from unittest.mock import AsyncMock, patch
 
-from src.agents.evidence_hunter.hunter import EvidenceHunter, Evidence
+import pytest
+
 from src.agents.claim_detector.detector import Claim
+from src.agents.evidence_hunter.hunter import Evidence, EvidenceHunter
 
 
 @pytest.fixture

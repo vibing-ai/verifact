@@ -2,15 +2,16 @@
 VerdictWriter agent for generating verdicts based on evidence.
 """
 
-import os
-from typing import List, Optional, Literal, Dict
-from pydantic import BaseModel, Field
+from typing import Dict, List, Literal, Optional
+
 from openai.agents import Agent, Runner
-from src.utils.model_config import ModelManager
+from pydantic import BaseModel, Field
+
 from src.agents.claim_detector.models import Claim
 from src.agents.evidence_hunter.hunter import Evidence
-from src.utils.logger import get_component_logger
 from src.agents.interfaces import IVerdictWriter
+from src.utils.logger import get_component_logger
+from src.utils.model_config import ModelManager
 
 # Create a logger for this module
 logger = get_component_logger("verdict_writer")
@@ -104,7 +105,7 @@ class VerdictWriter(IVerdictWriter):
             3. Provide a detailed explanation of your reasoning
             4. Cite all sources used
             5. Summarize key evidence
-            {f"6. Present alternative perspectives" if include_alternative_perspectives else ""}
+            {"6. Present alternative perspectives" if include_alternative_perspectives else ""}
             
             Guidelines for evidence assessment:
             - Base your verdict solely on the provided evidence

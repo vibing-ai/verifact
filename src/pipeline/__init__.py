@@ -29,8 +29,8 @@ from .factcheck_pipeline import (
     FactcheckPipeline,
     PipelineConfig,
     PipelineEvent,
+    PipelineProgress,
     PipelineStage,
-    PipelineProgress
 )
 
 __all__ = [

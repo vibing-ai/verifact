@@ -5,6 +5,6 @@ This module is responsible for finding and evaluating evidence
 related to factual claims.
 """
 
-from src.agents.evidence_hunter.hunter import EvidenceHunter, Evidence
+from src.agents.evidence_hunter.hunter import Evidence, EvidenceHunter
 
 __all__ = ["EvidenceHunter", "Evidence"]

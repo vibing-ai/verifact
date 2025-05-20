@@ -3,9 +3,11 @@ Pytest configuration for utility tests.
 
 This module contains fixtures specific to utility tests.
 """
-import pytest
 import os
-from unittest.mock import MagicMock, AsyncMock
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
+
 
 @pytest.fixture
 def mock_db_session():

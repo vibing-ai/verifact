@@ -3,10 +3,9 @@ Pytest configuration for performance tests.
 
 This module contains fixtures specific to performance and benchmark tests.
 """
+
 import pytest
-import json
-from pathlib import Path
-from unittest.mock import MagicMock, AsyncMock
+
 
 @pytest.fixture
 def benchmark_claims():

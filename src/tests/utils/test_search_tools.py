@@ -3,8 +3,9 @@ Tests for search tools.
 """
 
 import os
+from unittest.mock import AsyncMock, patch
+
 import pytest
-from unittest.mock import patch, AsyncMock, MagicMock
 
 from src.utils.search_tools import SerperSearchTool, get_search_tool
 

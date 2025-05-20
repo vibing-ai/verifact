@@ -5,7 +5,7 @@ This module defines the core protocols and data structures for the agent system,
 establishing a foundation for clean separation of concerns.
 """
 
-from typing import TypeVar, Protocol, Any, Generic
+from typing import Generic, Protocol, TypeVar
 
 # Define a generic input and output type for agents
 T_Input = TypeVar('T_Input')

@@ -4,13 +4,14 @@ Utility functions for the VeriFact UI.
 This module contains utility functions used by the Chainlit UI components.
 """
 
-import json
 import datetime
+import json
 import os
-from typing import Dict, List, Any, Optional
 import uuid
+from typing import Any, Dict, List
 
 import chainlit as cl
+
 from src.models.feedback import Feedback, FeedbackStats
 
 
@@ -101,7 +102,7 @@ async def save_feedback(fact_check_id: str, feedback_data: Dict[str, Any]) -> No
             try:
                 with open(feedback_file, "r") as f:
                     existing_feedback = json.load(f)
-            except:
+            except Exception:
                 existing_feedback = []
         
         # Add new feedback

@@ -6,6 +6,7 @@ base Agent protocol. These interfaces establish clear contracts for agent implem
 """
 
 from typing import List, Optional, Protocol
+
 from src.agents.base import Agent
 from src.agents.dto import Claim, Evidence, Verdict
 

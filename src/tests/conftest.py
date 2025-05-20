@@ -4,13 +4,12 @@ Global pytest configuration for VeriFact tests.
 This module contains global fixtures and configuration for pytest 
 that are used across multiple test domains.
 """
-import os
 import logging
-from unittest.mock import MagicMock, patch
-import json
-from dotenv import load_dotenv
+import os
+from unittest.mock import MagicMock
 
 import pytest
+from dotenv import load_dotenv
 
 # Load environment variables from .env file
 load_dotenv()

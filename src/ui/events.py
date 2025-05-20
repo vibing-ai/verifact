@@ -6,11 +6,9 @@ on_chat_start, on_message, etc.
 """
 
 import os
-import sys
 import uuid
-import datetime
+
 import chainlit as cl
-from typing import Dict, List, Optional, Any
 
 from src.agents.claim_detector import ClaimDetector
 from src.agents.evidence_hunter import EvidenceHunter
@@ -64,29 +62,15 @@ async def on_chat_start():
     cl.user_session.set("session_id", session_id)
     
     # Create settings to let users configure aspects of the factchecking
-    settings = await cl.ChatSettings(
+    await cl.ChatSettings(
         [
             cl.Switch(id="detailed_evidence", label="Show detailed evidence", initial=True),
             cl.Switch(id="show_confidence_scores", label="Show confidence scores", initial=True),
             cl.Switch(id="show_feedback_form", label="Show feedback form", initial=True),
             cl.Switch(id="detect_related_claims", label="Detect related claims", initial=True),
             cl.Switch(id="concurrent_processing", label="Process claims concurrently", initial=True),
-            cl.Slider(
-                id="max_claims", 
-                label="Maximum claims to check", 
-                initial=5, 
-                min=1, 
-                max=10, 
-                step=1
-            ),
-            cl.Slider(
-                id="max_concurrent", 
-                label="Maximum concurrent claims", 
-                initial=3, 
-                min=1, 
-                max=5, 
-                step=1
-            ),
+            cl.Slider(id="max_claims", label="Maximum claims to process", initial=5, min=1, max=10, step=1),
+            cl.Slider(id="max_concurrent", label="Maximum concurrent tasks", initial=3, min=1, max=5, step=1),
         ]
     ).send()
     

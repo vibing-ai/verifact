@@ -6,7 +6,7 @@ This module provides functions for getting version information.
 
 import os
 import subprocess
-from typing import Dict, Any
+from typing import Any, Dict
 
 
 def get_version_info() -> Dict[str, Any]:
