@@ -331,7 +331,8 @@ class VerifactTester:
             )
             
             config = PipelineConfig()
-            pipeline = FactcheckPipeline(config)
+            from src.pipeline.factcheck_pipeline import create_default_pipeline
+            pipeline = create_default_pipeline(config=config)
             
             test_text = "The Earth is approximately 4.54 billion years old. Water covers about 71% of the Earth's surface."
             
@@ -504,7 +505,8 @@ class VerifactTester:
             )
             
             config = PipelineConfig()
-            pipeline = FactcheckPipeline(config)
+            from src.pipeline.factcheck_pipeline import create_default_pipeline
+            pipeline = create_default_pipeline(config=config)
             
             for claim in claim_types:
                 print(f"  Testing {claim['name']}: \"{claim['text']}\"")

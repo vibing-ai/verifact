@@ -238,8 +238,9 @@ async def factcheck(
             # Get pipeline configuration
             config = await get_pipeline_config(request)
             
-            # Create pipeline
-            pipeline = FactcheckPipeline(config=config)
+            # Create pipeline with default agents
+            from src.pipeline.factcheck_pipeline import create_default_pipeline
+            pipeline = create_default_pipeline(config=config)
             
             # Process the text through the pipeline
             verdicts = await pipeline.process_text(text)
@@ -564,8 +565,9 @@ async def _run_factcheck_job(job_id: str, request: FactcheckRequest, request_id:
             # Get pipeline configuration
             config = await get_pipeline_config(request)
             
-            # Create pipeline
-            pipeline = FactcheckPipeline(config=config)
+            # Create pipeline with default agents
+            from src.pipeline.factcheck_pipeline import create_default_pipeline
+            pipeline = create_default_pipeline(config=config)
             
             # Process the text through the pipeline
             start_time = time.time()

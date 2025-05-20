@@ -1157,8 +1157,7 @@ class SupabaseClient:
 
         except Exception as e:
             logger.error(
-                f"Error getting feedback for claim {claim_id}: {
-                    str(e)}")
+                f"Error getting feedback for claim {claim_id}: {str(e)}")
             raise QueryError(f"Failed to get feedback for claim: {str(e)}")
 
     @retry_on_error()

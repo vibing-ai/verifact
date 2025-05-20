@@ -378,7 +378,7 @@ class ModelManager:
 
         # Convert to a stable string and hash
         cache_str = json.dumps(cache_dict, sort_keys=True)
-        return hashlib.md5(cache_str.encode()).hexdigest()
+        return hashlib.md5(cache_str.encode(), usedforsecurity=False).hexdigest()
 
     @lru_cache(maxsize=CACHE_SIZE)
     def _cached_completion(self, cache_key: str, model: str) -> Dict[str, Any]:

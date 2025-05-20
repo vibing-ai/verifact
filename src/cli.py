@@ -415,7 +415,8 @@ async def run_pipeline(text, config, progress_callback=None):
     Returns:
         Tuple of (verdicts, stats)
     """
-    pipeline = FactcheckPipeline(config=config)
+    from src.pipeline.factcheck_pipeline import create_default_pipeline
+    pipeline = create_default_pipeline(config=config)
     
     if progress_callback:
         # Register for progress events

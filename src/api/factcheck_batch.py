@@ -191,8 +191,9 @@ async def process_single_claim(claim_text: str, options: Dict[str, Any]) -> Verd
         # Create pipeline configuration
         config = await create_pipeline_config(options)
         
-        # Create pipeline
-        pipeline = FactcheckPipeline(config=config)
+        # Create pipeline with default agents
+        from src.pipeline.factcheck_pipeline import create_default_pipeline
+        pipeline = create_default_pipeline(config=config)
         
         # Process the claim
         # For a single claim, we wrap it in some context to help the claim detector
@@ -486,8 +487,9 @@ async def cancel_batch_job(
     """
     # Check if job exists
     if job_id not in _batch_jobs:
+        from fastapi import status as status_codes
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=status_codes.HTTP_404_NOT_FOUND,
             detail=f"Batch job with ID {job_id} not found"
         )
     

@@ -379,7 +379,8 @@ class Benchmarker:
             enable_fallbacks=True,
             include_debug_info=True,
         )
-        pipeline = FactcheckPipeline(config=config)
+        from src.pipeline.factcheck_pipeline import create_default_pipeline
+        pipeline = create_default_pipeline(config=config)
         
         for i in range(self.args.iterations):
             # Select input text for this iteration (combine multiple claims)

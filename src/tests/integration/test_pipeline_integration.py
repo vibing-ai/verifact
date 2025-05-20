@@ -31,7 +31,14 @@ class TestPipelineIntegration:
              patch('src.pipeline.factcheck_pipeline.EvidenceHunter', return_value=mock_evidence_hunter), \
              patch('src.pipeline.factcheck_pipeline.VerdictWriter', return_value=mock_verdict_writer):
             
-            pipeline = FactcheckPipeline(PipelineConfig(**mock_pipeline_config))
+            # Create the pipeline with default components
+            from src.pipeline import FactcheckPipeline
+            pipeline = FactcheckPipeline(
+                claim_detector=mock_claim_detector,
+                evidence_hunter=mock_evidence_hunter,
+                verdict_writer=mock_verdict_writer,
+                config=PipelineConfig(**mock_pipeline_config)
+            )
             # Force initialization of components
             pipeline._claim_detector = mock_claim_detector
             pipeline._evidence_hunter = mock_evidence_hunter
@@ -301,7 +308,8 @@ class TestPipelineIntegration:
              patch('src.agents.verdict_writer.openai.OpenAI', return_value=mock_openai_client):
             
             # Create a pipeline with real components
-            pipeline = FactcheckPipeline()
+            from src.pipeline.factcheck_pipeline import create_default_pipeline
+            pipeline = create_default_pipeline()
             
             # Configure the mock OpenAI client to return appropriate responses for each agent
             responses = {
@@ -390,7 +398,9 @@ class TestPipelineIntegration:
                 timeout_seconds=10.0,  # Short timeout
             )
             
-            pipeline = FactcheckPipeline(custom_config)
+            # Create pipeline with default agents
+            from src.pipeline.factcheck_pipeline import create_default_pipeline
+            pipeline = create_default_pipeline(config=custom_config)
             pipeline._claim_detector = mock_claim_detector
             pipeline._evidence_hunter = mock_evidence_hunter
             pipeline._verdict_writer = mock_verdict_writer

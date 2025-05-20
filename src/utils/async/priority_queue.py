@@ -515,8 +515,7 @@ class ClaimPriorityQueue(PriorityQueue[T]):
             check_worthiness = getattr(claim, 'check_worthiness', 0.0)
             if check_worthiness < self.min_check_worthiness:
                 raise ValueError(
-                    f"Claim check-worthiness {check_worthiness} is below the minimum threshold {
-                        self.min_check_worthiness}")
+                    f"Claim check-worthiness {check_worthiness} is below the minimum threshold {self.min_check_worthiness}")
 
         # Add to queue using the generic put method
         return self.put(claim, metadata=metadata)

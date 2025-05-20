@@ -212,7 +212,7 @@ def get_json_serializable_error(exception: Exception) -> Dict[str, Any]:
     if hasattr(
         exception,
         'to_dict') and callable(
-        exception.to_dict):
+            exception.to_dict):
         return cast(Any, exception).to_dict()
 
     return {

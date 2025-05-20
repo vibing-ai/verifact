@@ -35,7 +35,8 @@ def pipeline():
         retry_attempts=1,
         include_debug_info=True
     )
-    return FactcheckPipeline(config=config)
+    from src.pipeline.factcheck_pipeline import create_default_pipeline
+    return create_default_pipeline(config=config)
 
 
 @pytest.fixture
@@ -181,7 +182,8 @@ async def test_pipeline_error_recovery(pipeline):
         retry_attempts=2,
         enable_fallbacks=True,
     )
-    pipeline_with_retries = FactcheckPipeline(config=config)
+    from src.pipeline.factcheck_pipeline import create_default_pipeline
+    pipeline_with_retries = create_default_pipeline(config=config)
     
     # Patch the _gather_evidence method to fail once then succeed
     original_gather_evidence = pipeline_with_retries._gather_evidence

@@ -143,9 +143,10 @@ async def create_key(
     try:
         # Create the API key
         key, key_data = await create_api_key(
-            user_id=request.user_id,
-            permissions=request.permissions,
-            expiry_days=request.expiry_days
+            name="API Key",  # Default name
+            owner_id=request.user_id or "default",
+            scopes=request.permissions or [ApiKeyScope.READ_ONLY],
+            expires_at=datetime.utcnow() + timedelta(days=request.expiry_days) if request.expiry_days else None
         )
         
         # Return the key and metadata
