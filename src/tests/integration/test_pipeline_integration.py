@@ -1,5 +1,4 @@
-"""
-Integration tests for the VeriFact factchecking pipeline.
+"""Integration tests for the VeriFact factchecking pipeline.
 
 These tests verify that the entire pipeline functions correctly from claim detection
 through evidence gathering to verdict generation, and that all components work together seamlessly.
@@ -19,7 +18,7 @@ import pytest
 from src.agents.claim_detector import ClaimDetector
 from src.agents.evidence_hunter import EvidenceHunter
 from src.agents.verdict_writer import VerdictWriter
-from src.pipeline.factcheck_pipeline import FactcheckPipeline, PipelineConfig
+from src.pipeline.factcheck_pipeline import PipelineConfig
 
 
 class TestPipelineIntegration:
@@ -41,7 +40,6 @@ class TestPipelineIntegration:
                 "src.pipeline.factcheck_pipeline.VerdictWriter", return_value=mock_verdict_writer
             ),
         ):
-
             # Create the pipeline with default components
             from src.pipeline import FactcheckPipeline
 
@@ -168,18 +166,18 @@ class TestPipelineIntegration:
             claim_text = verdict["claim"]["text"]
             for key, expected_verdict in expected_verdicts.items():
                 if key in claim_text:
-                    assert (
-                        verdict["verdict"] == expected_verdict
-                    ), f"Verdict for '{claim_text}' should be {expected_verdict}"
+                    assert verdict["verdict"] == expected_verdict, (
+                        f"Verdict for '{claim_text}' should be {expected_verdict}"
+                    )
 
         # Verify each component was called correctly
         patched_pipeline.claim_detector.detect_claims.assert_called_once_with(mixed_claims_text)
-        assert (
-            patched_pipeline.evidence_hunter.gather_evidence.call_count == 5
-        ), "EvidenceHunter should be called for each claim"
-        assert (
-            patched_pipeline.verdict_writer.generate_verdict.call_count == 5
-        ), "VerdictWriter should be called for each claim"
+        assert patched_pipeline.evidence_hunter.gather_evidence.call_count == 5, (
+            "EvidenceHunter should be called for each claim"
+        )
+        assert patched_pipeline.verdict_writer.generate_verdict.call_count == 5, (
+            "VerdictWriter should be called for each claim"
+        )
 
     @pytest.mark.asyncio
     async def test_pipeline_no_claims(self, patched_pipeline):
@@ -214,9 +212,9 @@ class TestPipelineIntegration:
         assert len(results) == 1, "Pipeline should detect one claim"
 
         verdict = results[0]
-        assert (
-            verdict["verdict"] == "UNCERTAIN"
-        ), "Verdict should be UNCERTAIN when no evidence is found"
+        assert verdict["verdict"] == "UNCERTAIN", (
+            "Verdict should be UNCERTAIN when no evidence is found"
+        )
         assert "Earth orbits" in verdict["claim"]["text"], "Claim text should be preserved"
 
         # Verify each component was called correctly
@@ -246,9 +244,9 @@ class TestPipelineIntegration:
         ]
 
         for snippet in expected_snippets:
-            assert any(
-                snippet in text for text in claim_texts
-            ), f"Expected to find a claim containing '{snippet}'"
+            assert any(snippet in text for text in claim_texts), (
+                f"Expected to find a claim containing '{snippet}'"
+            )
 
     def test_pipeline_sync(self, patched_pipeline, true_claim_text):
         """Test the synchronous interface of the pipeline."""
@@ -337,9 +335,9 @@ class TestPipelineIntegration:
         # Verify processing time is reasonable
         # In a real implementation, we'd set an actual threshold based on requirements
         # For now, we'll just log the time and assert it's under 30 seconds as per requirements
-        assert (
-            processing_time < 30.0
-        ), f"Processing time ({processing_time:.2f}s) exceeds 30s threshold"
+        assert processing_time < 30.0, (
+            f"Processing time ({processing_time:.2f}s) exceeds 30s threshold"
+        )
 
         # We'd also assert the pipeline stats have reasonable values
         assert patched_pipeline.stats["claim_detection_time"] is not None
@@ -357,7 +355,6 @@ class TestPipelineIntegration:
             patch("src.agents.evidence_hunter.search.web_search", mock_web_search),
             patch("src.agents.verdict_writer.openai.OpenAI", return_value=mock_openai_client),
         ):
-
             # Create a pipeline with real components
             from src.pipeline.factcheck_pipeline import create_default_pipeline
 
@@ -436,15 +433,15 @@ class TestPipelineIntegration:
         ][1]
 
         # Verify data integrity
-        assert (
-            evidence_hunter_input == claim_detector_output[0]
-        ), "Claim passed to EvidenceHunter should match ClaimDetector output"
-        assert (
-            verdict_writer_input_claim == claim_detector_output[0]
-        ), "Claim passed to VerdictWriter should match ClaimDetector output"
-        assert (
-            verdict_writer_input_evidence == evidence_hunter_output
-        ), "Evidence passed to VerdictWriter should match EvidenceHunter output"
+        assert evidence_hunter_input == claim_detector_output[0], (
+            "Claim passed to EvidenceHunter should match ClaimDetector output"
+        )
+        assert verdict_writer_input_claim == claim_detector_output[0], (
+            "Claim passed to VerdictWriter should match ClaimDetector output"
+        )
+        assert verdict_writer_input_evidence == evidence_hunter_output, (
+            "Evidence passed to VerdictWriter should match EvidenceHunter output"
+        )
 
     @pytest.mark.asyncio
     async def test_pipeline_configuration(
@@ -462,7 +459,6 @@ class TestPipelineIntegration:
                 "src.pipeline.factcheck_pipeline.VerdictWriter", return_value=mock_verdict_writer
             ),
         ):
-
             # Create pipeline with custom configuration
             custom_config = PipelineConfig(
                 max_claims=2,  # Only process top 2 claims
@@ -521,7 +517,7 @@ async def test_pipeline_integration_standalone():
 
     for test in test_inputs:
         print(f"\n\nTesting: {test['name']}")
-        print(f"Text: \"{test['text']}\"")
+        print(f'Text: "{test["text"]}"')
 
         test_result = {
             "name": test["name"],
@@ -554,7 +550,7 @@ async def test_pipeline_integration_standalone():
             for i, claim in enumerate(checkworthy_claims):
                 claim_result = {"claim_text": claim.text, "evidence": [], "steps": {}}
 
-                print(f"\nProcessing claim {i+1}: {claim.text}")
+                print(f"\nProcessing claim {i + 1}: {claim.text}")
 
                 # Step 2: Gather evidence
                 print("Step 2: Gathering evidence...")

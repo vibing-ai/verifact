@@ -1,12 +1,11 @@
-"""
-Error handling utilities for VeriFact.
+"""Error handling utilities for VeriFact.
 
 This module provides standardized error handling through the ErrorResponseFactory class.
 """
 
 import logging
 import os
-from typing import Any, Dict, Optional, Union
+from typing import Any
 
 from fastapi import HTTPException, status
 
@@ -21,7 +20,7 @@ class ErrorDetail:
         self,
         code: str,
         message: str,
-        details: Optional[Union[str, Dict[str, Any]]] = None,
+        details: str | dict[str, Any] | None = None,
         log_level: int = logging.ERROR,
     ):
         self.code = code
@@ -56,13 +55,12 @@ class ErrorResponseFactory:
         cls,
         error_type: str,
         message: str,
-        details: Optional[Union[str, Dict[str, Any]]] = None,
-        status_code: Optional[int] = None,
+        details: str | dict[str, Any] | None = None,
+        status_code: int | None = None,
         log_exception: bool = True,
-        exc_info: Optional[Exception] = None,
-    ) -> Dict[str, Any]:
-        """
-        Create a standardized error response.
+        exc_info: Exception | None = None,
+    ) -> dict[str, Any]:
+        """Create a standardized error response.
 
         Args:
             error_type: Type of error (use class constants)
@@ -100,13 +98,12 @@ class ErrorResponseFactory:
         cls,
         error_type: str,
         message: str,
-        details: Optional[Union[str, Dict[str, Any]]] = None,
-        status_code: Optional[int] = None,
+        details: str | dict[str, Any] | None = None,
+        status_code: int | None = None,
         log_exception: bool = True,
-        exc_info: Optional[Exception] = None,
+        exc_info: Exception | None = None,
     ) -> None:
-        """
-        Create and raise an HTTPException with standardized format.
+        """Create and raise an HTTPException with standardized format.
 
         This is a convenience method for API handlers.
         """

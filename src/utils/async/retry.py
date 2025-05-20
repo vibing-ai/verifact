@@ -1,5 +1,4 @@
-"""
-VeriFact Retry Utilities
+"""VeriFact Retry Utilities
 
 This module provides utilities for implementing retry logic
 for handling recoverable errors in the VeriFact system.
@@ -9,8 +8,9 @@ import asyncio
 import logging
 import random
 import time
+from collections.abc import Callable
 from functools import wraps
-from typing import Any, Callable, List, Type, TypeVar, cast
+from typing import Any, TypeVar, cast
 
 from src.utils.exceptions import (
     ExternalServiceError,
@@ -31,10 +31,9 @@ def with_retry(
     initial_delay: float = 1.0,
     backoff_factor: float = 2.0,
     jitter: bool = True,
-    exceptions: List[Type[Exception]] = None,
+    exceptions: list[type[Exception]] = None,
 ) -> Callable[[F], F]:
-    """
-    Decorator that retries a function on specified exceptions.
+    """Decorator that retries a function on specified exceptions.
 
     Args:
         max_attempts: Maximum number of attempts
@@ -106,10 +105,9 @@ def with_async_retry(
     initial_delay: float = 1.0,
     backoff_factor: float = 2.0,
     jitter: bool = True,
-    exceptions: List[Type[Exception]] = None,
+    exceptions: list[type[Exception]] = None,
 ) -> Callable[[AsyncF], AsyncF]:
-    """
-    Decorator that retries an async function on specified exceptions.
+    """Decorator that retries an async function on specified exceptions.
 
     Args:
         max_attempts: Maximum number of attempts
@@ -181,12 +179,11 @@ async def async_retry_context(
     initial_delay: float = 1.0,
     backoff_factor: float = 2.0,
     jitter: bool = True,
-    exceptions: List[Type[Exception]] = None,
+    exceptions: list[type[Exception]] = None,
     *args: Any,
     **kwargs: Any,
 ) -> Any:
-    """
-    Context for retrying an async function or coroutine.
+    """Context for retrying an async function or coroutine.
 
     Args:
         func: Async function to retry

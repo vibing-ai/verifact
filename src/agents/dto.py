@@ -1,5 +1,4 @@
-"""
-Data Transfer Objects for the agent system.
+"""Data Transfer Objects for the agent system.
 
 This module defines immutable data classes for inter-agent communication,
 ensuring clean boundaries between agents.
@@ -7,7 +6,7 @@ ensuring clean boundaries between agents.
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Literal
 
 # Re-export original models for backward compatibility
 
@@ -22,13 +21,13 @@ class Claim:
     check_worthiness: float = 0.0
     confidence: float = 1.0
     domain: str = "other"
-    sub_domains: List[str] = field(default_factory=list)
-    entities: List[Dict[str, Any]] = field(default_factory=list)
-    source_location: Optional[Dict[str, Any]] = None
-    normalized_text: Optional[str] = None
-    compound_parts: List[str] = field(default_factory=list)
+    sub_domains: list[str] = field(default_factory=list)
+    entities: list[dict[str, Any]] = field(default_factory=list)
+    source_location: dict[str, Any] | None = None
+    normalized_text: str | None = None
+    compound_parts: list[str] = field(default_factory=list)
     extracted_at: datetime = field(default_factory=datetime.now)
-    rank: Optional[int] = None
+    rank: int | None = None
     specificity_score: float = 0.0
     public_interest_score: float = 0.0
     impact_score: float = 0.0
@@ -68,11 +67,11 @@ class Verdict:
     verdict: Literal["true", "false", "partially true", "unverifiable"]
     confidence: float
     explanation: str
-    sources: List[str]
-    evidence_summary: Optional[str] = None
-    alternative_perspectives: Optional[str] = None
-    key_evidence: Optional[List[Dict]] = None
-    citation_metadata: Optional[Dict] = None
+    sources: list[str]
+    evidence_summary: str | None = None
+    alternative_perspectives: str | None = None
+    key_evidence: list[dict] | None = None
+    citation_metadata: dict | None = None
 
     def __post_init__(self):
         """Validate verdict data after initialization."""

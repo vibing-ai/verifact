@@ -1,5 +1,4 @@
-"""
-VeriFact API Middleware
+"""VeriFact API Middleware
 
 This module contains middleware components for the VeriFact API,
 including error handling, logging, request/response processing, rate limiting, and security.
@@ -10,8 +9,9 @@ import os
 import re
 import time
 import uuid
+from collections.abc import Callable
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
 
 from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -260,9 +260,8 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
         except ValueError:
             return False
 
-    async def _validate_and_get_key_data(self, api_key: str) -> Optional[Dict[str, Any]]:
-        """
-        Validate an API key and return its metadata.
+    async def _validate_and_get_key_data(self, api_key: str) -> dict[str, Any] | None:
+        """Validate an API key and return its metadata.
 
         Args:
             api_key: The API key to validate
@@ -302,9 +301,8 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
         """Check if the path is exempt from API key authentication."""
         return any(path.startswith(exempt_path) for exempt_path in API_KEY_EXEMPT_PATHS)
 
-    def _has_required_scope(self, key_data: Dict[str, Any], path: str, method: str) -> bool:
-        """
-        Check if the API key has the required scope for this endpoint.
+    def _has_required_scope(self, key_data: dict[str, Any], path: str, method: str) -> bool:
+        """Check if the API key has the required scope for this endpoint.
 
         Args:
             key_data: Metadata for the API key
@@ -461,10 +459,9 @@ class GlobalRateLimitMiddleware(BaseHTTPMiddleware):
 
 
 async def verify_api_key(
-    api_key: str = Depends(API_KEY_HEADER), required_scopes: Optional[List[ApiKeyScope]] = None
+    api_key: str = Depends(API_KEY_HEADER), required_scopes: list[ApiKeyScope] | None = None
 ) -> str:
-    """
-    Verify the API key and check required scopes.
+    """Verify the API key and check required scopes.
 
     Args:
         api_key: The API key from the header
@@ -511,8 +508,7 @@ async def verify_api_key(
 
 
 def setup_middleware(app: FastAPI) -> None:
-    """
-    Set up all middleware for the FastAPI application.
+    """Set up all middleware for the FastAPI application.
 
     Args:
         app: The FastAPI application
@@ -543,8 +539,7 @@ def setup_middleware(app: FastAPI) -> None:
 
 
 def register_exception_handlers(app: FastAPI) -> None:
-    """
-    Register exception handlers for specific exception types.
+    """Register exception handlers for specific exception types.
 
     Args:
         app: The FastAPI application

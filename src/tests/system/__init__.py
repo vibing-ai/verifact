@@ -1,5 +1,4 @@
-"""
-System and end-to-end tests.
+"""System and end-to-end tests.
 
 This package contains full system tests for the complete VeriFact application.
 """

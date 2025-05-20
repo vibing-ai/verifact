@@ -1,5 +1,4 @@
-"""
-Logging utilities for VeriFact.
+"""Logging utilities for VeriFact.
 
 This module provides a comprehensive logging framework with support for structured JSON logging,
 component-specific loggers, context tracking, and performance monitoring.

@@ -1,5 +1,4 @@
-"""
-Security models for VeriFact.
+"""Security models for VeriFact.
 
 This module defines models for:
 - API keys
@@ -11,7 +10,6 @@ import secrets
 import uuid
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -35,21 +33,20 @@ class ApiKey(BaseModel):
     key_hash: str
     name: str
     owner_id: str
-    scopes: List[ApiKeyScope] = [ApiKeyScope.READ_ONLY]
+    scopes: list[ApiKeyScope] = [ApiKeyScope.READ_ONLY]
     created_at: datetime = Field(default_factory=datetime.utcnow)
-    expires_at: Optional[datetime] = None
-    last_used_at: Optional[datetime] = None
+    expires_at: datetime | None = None
+    last_used_at: datetime | None = None
 
     @classmethod
     def create(
         cls,
         name: str,
         owner_id: str,
-        scopes: List[ApiKeyScope],
-        expires_at: Optional[datetime] = None,
+        scopes: list[ApiKeyScope],
+        expires_at: datetime | None = None,
     ) -> tuple["ApiKey", str]:
-        """
-        Create a new API key with a secure random value.
+        """Create a new API key with a secure random value.
 
         Returns:
             Tuple of (ApiKey object, plain text key for one-time display)
@@ -97,8 +94,7 @@ class AuthToken(BaseModel):
     def create(
         cls, user_id: str, token_type: TokenType, expires_at: datetime
     ) -> tuple["AuthToken", str]:
-        """
-        Create a new authentication token.
+        """Create a new authentication token.
 
         Returns:
             Tuple of (AuthToken object, plain text token for one-time use)

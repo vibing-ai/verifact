@@ -1,5 +1,4 @@
-"""
-Model configuration utilities for VeriFact.
+"""Model configuration utilities for VeriFact.
 
 This module provides a unified configuration system for AI models, including
 model selection, parameter management, API key handling, and token usage tracking.

@@ -1,19 +1,17 @@
-"""
-Validation Configuration Loader
+"""Validation Configuration Loader
 
 This module loads and provides access to validation configuration settings.
 """
 
 import os
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 import yaml
 
 
 class ValidationConfig:
-    """
-    Validation configuration manager class.
+    """Validation configuration manager class.
 
     This class loads and provides access to validation configuration settings
     defined in configs/validation.yml.
@@ -35,16 +33,15 @@ class ValidationConfig:
             return
 
         try:
-            with open(config_path, "r") as f:
+            with open(config_path) as f:
                 self._config = yaml.safe_load(f) or {}
         except Exception as e:
             # Log error and use default values
             print(f"Error loading validation config: {str(e)}")
             self._config = self._get_default_config()
 
-    def _find_config_path(self) -> Optional[str]:
-        """
-        Find the validation configuration file path.
+    def _find_config_path(self) -> str | None:
+        """Find the validation configuration file path.
 
         Returns:
             Optional[str]: Path to the configuration file, or None if not found
@@ -66,9 +63,8 @@ class ValidationConfig:
 
         return None
 
-    def _get_default_config(self) -> Dict[str, Any]:
-        """
-        Get default validation configuration.
+    def _get_default_config(self) -> dict[str, Any]:
+        """Get default validation configuration.
 
         Returns:
             Dict[str, Any]: Default configuration
@@ -87,8 +83,7 @@ class ValidationConfig:
         }
 
     def get(self, key: str, default: Any = None) -> Any:
-        """
-        Get a configuration value by key.
+        """Get a configuration value by key.
 
         Args:
             key: Configuration key (e.g., "text.max_length")

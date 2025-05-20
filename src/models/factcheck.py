@@ -1,5 +1,4 @@
-"""
-Pydantic models for the VeriFact factchecking system.
+"""Pydantic models for the VeriFact factchecking system.
 
 This module contains the data models used throughout the application for:
 - Claims: Factual statements identified for verification
@@ -9,7 +8,7 @@ This module contains the data models used throughout the application for:
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Literal, Union
 
 from pydantic import (
     AnyUrl,
@@ -61,19 +60,17 @@ class Claim(BaseModel):
     )
     context: constr(max_length=5000) = Field("", description="Surrounding context of the claim")
     checkworthy: bool = Field(True, description="Whether the claim is worth checking")
-    domain: Optional[str] = Field(
+    domain: str | None = Field(
         None, description="Domain/category of the claim (politics, health, etc.)"
     )
-    entities: List[str] = Field(
+    entities: list[str] = Field(
         default_factory=list, description="Named entities mentioned in the claim"
     )
-    extracted_at: Optional[datetime] = Field(
+    extracted_at: datetime | None = Field(
         default_factory=datetime.now, description="When the claim was extracted"
     )
-    source_text: Optional[str] = Field(
-        None, description="Original text the claim was extracted from"
-    )
-    source_url: Optional[AnyUrl] = Field(None, description="URL where the claim was found")
+    source_text: str | None = Field(None, description="Original text the claim was extracted from")
+    source_url: AnyUrl | None = Field(None, description="URL where the claim was found")
 
     @validator("text")
     def text_not_empty(cls, v):
@@ -97,18 +94,18 @@ class Evidence(BaseModel):
 
     text: constr(min_length=5, max_length=10000) = Field(..., description="The evidence text")
     source: str = Field(..., description="Source of the evidence (URL, document, etc.)")
-    source_name: Optional[str] = Field(None, description="Name of the source")
+    source_name: str | None = Field(None, description="Name of the source")
     source_type: SourceType = Field(SourceType.UNKNOWN, description="Type of source")
     relevance: float = Field(..., ge=0.0, le=1.0, description="Relevance score (0-1)")
     stance: StanceType = Field(
         ..., description="Whether evidence supports or contradicts the claim"
     )
-    timestamp: Optional[datetime] = Field(None, description="Publication date/time of the evidence")
-    credibility: Optional[float] = Field(
+    timestamp: datetime | None = Field(None, description="Publication date/time of the evidence")
+    credibility: float | None = Field(
         None, ge=0.0, le=1.0, description="Source credibility score (0-1)"
     )
-    excerpt_context: Optional[str] = Field(None, description="Context around the evidence excerpt")
-    retrieval_date: Optional[datetime] = Field(
+    excerpt_context: str | None = Field(None, description="Context around the evidence excerpt")
+    retrieval_date: datetime | None = Field(
         default_factory=datetime.now, description="When the evidence was retrieved"
     )
 
@@ -149,15 +146,15 @@ class Verdict(BaseModel):
     """Verdict on a factual claim."""
 
     claim: str = Field(..., description="The claim being verified")
-    claim_id: Optional[str] = Field(None, description="ID of the claim if available")
+    claim_id: str | None = Field(None, description="ID of the claim if available")
     verdict: VerdictType = Field(..., description="Final assessment of claim truthfulness")
     confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence in the verdict (0-1)")
     explanation: constr(min_length=10) = Field(
         ..., description="Detailed explanation of the verdict"
     )
-    sources: List[str] = Field(..., description="Sources used for verification")
-    evidence_summary: Optional[str] = Field(None, description="Summary of key evidence")
-    key_evidence: List[Evidence] = Field(
+    sources: list[str] = Field(..., description="Sources used for verification")
+    evidence_summary: str | None = Field(None, description="Summary of key evidence")
+    key_evidence: list[Evidence] = Field(
         default_factory=list, description="Key evidence supporting the verdict"
     )
     generated_at: datetime = Field(
@@ -187,11 +184,11 @@ class ProcessingStats(BaseModel):
     claims_detected: int = Field(..., ge=0, description="Number of claims detected")
     evidence_gathered: int = Field(..., ge=0, description="Total pieces of evidence gathered")
     verdicts_generated: int = Field(..., ge=0, description="Number of verdicts generated")
-    sources_consulted: Optional[int] = Field(
+    sources_consulted: int | None = Field(
         None, ge=0, description="Number of distinct sources consulted"
     )
-    tokens_processed: Optional[int] = Field(None, ge=0, description="Total tokens processed")
-    model_calls: Optional[Dict[str, int]] = Field(
+    tokens_processed: int | None = Field(None, ge=0, description="Total tokens processed")
+    model_calls: dict[str, int] | None = Field(
         default_factory=dict, description="Number of calls to each model"
     )
 
@@ -209,16 +206,14 @@ class PipelineConfig(BaseModel):
     relevance_threshold: float = Field(
         0.7, ge=0.0, le=1.0, description="Minimum relevance score for evidence"
     )
-    allowed_domains: Optional[List[str]] = Field(
+    allowed_domains: list[str] | None = Field(
         None, description="List of allowed domains for evidence sources"
     )
-    blocked_domains: List[str] = Field(
+    blocked_domains: list[str] = Field(
         default_factory=list, description="List of blocked domains for evidence sources"
     )
-    claim_categories: Optional[List[str]] = Field(
-        None, description="Categories of claims to focus on"
-    )
-    min_credibility_score: Optional[float] = Field(
+    claim_categories: list[str] | None = Field(None, description="Categories of claims to focus on")
+    min_credibility_score: float | None = Field(
         None, ge=0.0, le=1.0, description="Minimum credibility score for sources"
     )
     # Enhanced configuration options
@@ -231,7 +226,7 @@ class PipelineConfig(BaseModel):
     include_evidence: bool = Field(
         True, description="Whether to include evidence details in responses"
     )
-    domains: Optional[List[str]] = Field(None, description="Filter claims by domain/category")
+    domains: list[str] | None = Field(None, description="Filter claims by domain/category")
 
     @validator("max_claims")
     def validate_max_claims(cls, v):
@@ -255,7 +250,7 @@ class FactcheckRequest(BaseModel):
     text: constr(min_length=10, max_length=50000) = Field(
         ..., description="Text containing claims to verify"
     )
-    options: Optional[Dict[str, Any]] = Field(
+    options: dict[str, Any] | None = Field(
         default_factory=dict,
         description="""
         Optional configuration parameters:
@@ -269,8 +264,8 @@ class FactcheckRequest(BaseModel):
         - claim_categories: Categories of claims to focus on (list of strings)
     """,
     )
-    url: Optional[AnyUrl] = Field(None, description="URL to fetch content from instead of text")
-    callback_url: Optional[AnyUrl] = Field(
+    url: AnyUrl | None = Field(None, description="URL to fetch content from instead of text")
+    callback_url: AnyUrl | None = Field(
         None, description="URL to call with results when processing is complete"
     )
 
@@ -335,12 +330,12 @@ class FactcheckRequest(BaseModel):
 class FactcheckResponse(BaseModel):
     """Response model for factchecking API."""
 
-    claims: List[Verdict] = Field(..., description="Verified claims with verdicts")
-    metadata: Dict[str, Any] = Field(
+    claims: list[Verdict] = Field(..., description="Verified claims with verdicts")
+    metadata: dict[str, Any] = Field(
         default_factory=dict, description="Processing metadata and statistics"
     )
-    request_id: Optional[str] = Field(None, description="ID of the original request")
-    original_text: Optional[str] = Field(
+    request_id: str | None = Field(None, description="ID of the original request")
+    original_text: str | None = Field(
         None, description="First 200 chars of the original text that was analyzed"
     )
 
@@ -383,10 +378,10 @@ class FactcheckJob(BaseModel):
     created_at: datetime = Field(
         default_factory=datetime.now, description="When the job was created"
     )
-    updated_at: Optional[datetime] = Field(None, description="When the job was last updated")
-    completed_at: Optional[datetime] = Field(None, description="When the job was completed")
-    result: Optional[FactcheckResponse] = Field(None, description="Results when job is completed")
-    error: Optional[Dict[str, Any]] = Field(None, description="Error details if job failed")
+    updated_at: datetime | None = Field(None, description="When the job was last updated")
+    completed_at: datetime | None = Field(None, description="When the job was completed")
+    result: FactcheckResponse | None = Field(None, description="Results when job is completed")
+    error: dict[str, Any] | None = Field(None, description="Error details if job failed")
 
     @root_validator(skip_on_failure=True)
     def update_timestamps(cls, values):
@@ -404,18 +399,18 @@ class BatchClaim(BaseModel):
     text: constr(min_length=3, max_length=1000) = Field(
         ..., description="The exact text of the claim"
     )
-    id: Optional[str] = Field(None, description="Optional client-provided identifier for the claim")
-    context: Optional[constr(max_length=5000)] = Field(
+    id: str | None = Field(None, description="Optional client-provided identifier for the claim")
+    context: constr(max_length=5000) | None = Field(
         None, description="Optional context surrounding the claim"
     )
-    priority: Optional[float] = Field(
+    priority: float | None = Field(
         None,
         ge=0.0,
         le=1.0,
         description="Optional priority for processing (higher = higher priority)",
     )
-    domain: Optional[str] = Field(None, description="Optional domain/category of the claim")
-    metadata: Optional[Dict[str, Any]] = Field(
+    domain: str | None = Field(None, description="Optional domain/category of the claim")
+    metadata: dict[str, Any] | None = Field(
         None, description="Optional metadata associated with the claim"
     )
 
@@ -431,10 +426,10 @@ class BatchClaim(BaseModel):
 class BatchFactcheckRequest(BaseModel):
     """Request model for batch factchecking API."""
 
-    claims: List[BatchClaim] = Field(
+    claims: list[BatchClaim] = Field(
         ..., min_items=1, max_items=100, description="List of claims to verify"
     )
-    options: Optional[Dict[str, Any]] = Field(
+    options: dict[str, Any] | None = Field(
         default_factory=dict,
         description="""
         Optional configuration parameters:
@@ -449,7 +444,7 @@ class BatchFactcheckRequest(BaseModel):
         - webhook_notification: Whether to send webhook notification on completion (boolean)
     """,
     )
-    callback_url: Optional[AnyUrl] = Field(
+    callback_url: AnyUrl | None = Field(
         None, description="URL to call with results when processing is complete"
     )
 
@@ -505,13 +500,13 @@ class BatchProcessingProgress(BaseModel):
     pending_claims: int = Field(..., description="Number of claims pending processing")
     failed_claims: int = Field(..., description="Number of claims that failed processing")
     success_rate: float = Field(..., description="Rate of successful processing (0-1)")
-    estimated_time_remaining: Optional[float] = Field(
+    estimated_time_remaining: float | None = Field(
         None, description="Estimated time remaining in seconds"
     )
-    avg_processing_time: Optional[float] = Field(
+    avg_processing_time: float | None = Field(
         None, description="Average time to process a claim in seconds"
     )
-    start_time: Optional[datetime] = Field(None, description="When processing started")
+    start_time: datetime | None = Field(None, description="When processing started")
     last_update_time: datetime = Field(
         default_factory=datetime.now, description="When progress was last updated"
     )
@@ -522,16 +517,16 @@ class BatchClaimStatus(BaseModel):
 
     claim_id: str = Field(..., description="Identifier for the claim")
     status: JobStatus = Field(..., description="Current status of the claim")
-    position: Optional[int] = Field(None, description="Position in processing queue")
-    started_at: Optional[datetime] = Field(None, description="When processing started")
-    completed_at: Optional[datetime] = Field(None, description="When processing completed")
-    error: Optional[str] = Field(None, description="Error message if failed")
-    processing_time: Optional[float] = Field(
+    position: int | None = Field(None, description="Position in processing queue")
+    started_at: datetime | None = Field(None, description="When processing started")
+    completed_at: datetime | None = Field(None, description="When processing completed")
+    error: str | None = Field(None, description="Error message if failed")
+    processing_time: float | None = Field(
         None, description="Processing time in seconds if completed"
     )
-    verdict: Optional[Verdict] = Field(None, description="Verdict if completed successfully")
+    verdict: Verdict | None = Field(None, description="Verdict if completed successfully")
     claim_text: str = Field(..., description="The text of the claim")
-    related_claims: List[str] = Field(
+    related_claims: list[str] = Field(
         default_factory=list, description="IDs of related claims in the batch"
     )
 
@@ -544,16 +539,16 @@ class FactcheckJob(BaseModel):
     created_at: datetime = Field(
         default_factory=datetime.now, description="When the job was created"
     )
-    updated_at: Optional[datetime] = Field(None, description="When the job was last updated")
-    completed_at: Optional[datetime] = Field(None, description="When the job was completed")
-    result: Optional[Union[FactcheckResponse, "BatchFactcheckResponse"]] = Field(
+    updated_at: datetime | None = Field(None, description="When the job was last updated")
+    completed_at: datetime | None = Field(None, description="When the job was completed")
+    result: Union[FactcheckResponse, "BatchFactcheckResponse"] | None = Field(
         None, description="Results when job is completed"
     )
-    error: Optional[Dict[str, Any]] = Field(None, description="Error details if job failed")
-    progress: Optional[BatchProcessingProgress] = Field(
+    error: dict[str, Any] | None = Field(None, description="Error details if job failed")
+    progress: BatchProcessingProgress | None = Field(
         None, description="Progress information for batch jobs"
     )
-    claim_statuses: Optional[Dict[str, BatchClaimStatus]] = Field(
+    claim_statuses: dict[str, BatchClaimStatus] | None = Field(
         None, description="Status of individual claims for batch jobs"
     )
     is_batch: bool = Field(False, description="Whether this is a batch job")
@@ -583,18 +578,18 @@ class FactcheckJob(BaseModel):
 class BatchFactcheckResponse(BaseModel):
     """Response model for batch factchecking API."""
 
-    verdicts: Dict[str, Verdict] = Field(..., description="Map of claim IDs to verdicts")
-    failed_claims: Dict[str, Dict[str, Any]] = Field(
+    verdicts: dict[str, Verdict] = Field(..., description="Map of claim IDs to verdicts")
+    failed_claims: dict[str, dict[str, Any]] = Field(
         default_factory=dict, description="Map of claim IDs to failure details"
     )
-    metadata: Dict[str, Any] = Field(
+    metadata: dict[str, Any] = Field(
         default_factory=dict, description="Processing metadata and statistics"
     )
-    request_id: Optional[str] = Field(None, description="ID of the original request")
+    request_id: str | None = Field(None, description="ID of the original request")
     total_claims: int = Field(..., description="Total number of claims processed")
     successful_claims: int = Field(..., description="Number of claims processed successfully")
     processing_time: float = Field(..., description="Total processing time in seconds")
-    related_claims: Optional[Dict[str, List[str]]] = Field(
+    related_claims: dict[str, list[str]] | None = Field(
         None, description="Mapping of related claims"
     )
 

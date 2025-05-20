@@ -1,5 +1,4 @@
-"""
-Example of testing the factchecking pipeline with the new agent architecture.
+"""Example of testing the factchecking pipeline with the new agent architecture.
 
 This script demonstrates how to test agents and the pipeline using mocks,
 showing how the new architecture supports proper unit testing.
@@ -7,7 +6,6 @@ showing how the new architecture supports proper unit testing.
 
 import asyncio
 import unittest
-from typing import List, Optional
 from unittest.mock import AsyncMock, MagicMock
 
 from src.agents.dto import Claim, Evidence, Verdict
@@ -18,7 +16,7 @@ from src.agents.orchestrator import FactcheckPipeline
 class MockClaimDetector:
     """Mock implementation of ClaimDetector for testing."""
 
-    def __init__(self, claims_to_return: List[Claim] = None):
+    def __init__(self, claims_to_return: list[Claim] = None):
         self.claims_to_return = claims_to_return or []
         self.detect_claims_called = False
         self.last_text = ""
@@ -28,10 +26,10 @@ class MockClaimDetector:
     async def detect_claims(
         self,
         text: str,
-        min_check_worthiness: Optional[float] = None,
-        expected_claims: Optional[List[dict]] = None,
-        max_claims: Optional[int] = None,
-    ) -> List[Claim]:
+        min_check_worthiness: float | None = None,
+        expected_claims: list[dict] | None = None,
+        max_claims: int | None = None,
+    ) -> list[Claim]:
         """Mock implementation of detect_claims."""
         self.detect_claims_called = True
         self.last_text = text
@@ -39,7 +37,7 @@ class MockClaimDetector:
         self.last_max_claims = max_claims
         return self.claims_to_return
 
-    async def process(self, input_data: str) -> List[Claim]:
+    async def process(self, input_data: str) -> list[Claim]:
         """Mock implementation of process."""
         return await self.detect_claims(input_data)
 
@@ -47,18 +45,18 @@ class MockClaimDetector:
 class MockEvidenceHunter:
     """Mock implementation of EvidenceHunter for testing."""
 
-    def __init__(self, evidence_to_return: List[Evidence] = None):
+    def __init__(self, evidence_to_return: list[Evidence] = None):
         self.evidence_to_return = evidence_to_return or []
         self.gather_evidence_called = False
         self.last_claim = None
 
-    async def gather_evidence(self, claim: Claim) -> List[Evidence]:
+    async def gather_evidence(self, claim: Claim) -> list[Evidence]:
         """Mock implementation of gather_evidence."""
         self.gather_evidence_called = True
         self.last_claim = claim
         return self.evidence_to_return
 
-    async def process(self, input_data: Claim) -> List[Evidence]:
+    async def process(self, input_data: Claim) -> list[Evidence]:
         """Mock implementation of process."""
         return await self.gather_evidence(input_data)
 
@@ -75,10 +73,10 @@ class MockVerdictWriter:
     async def generate_verdict(
         self,
         claim: Claim,
-        evidence: List[Evidence],
-        explanation_detail: Optional[str] = None,
-        citation_style: Optional[str] = None,
-        include_alternative_perspectives: Optional[bool] = None,
+        evidence: list[Evidence],
+        explanation_detail: str | None = None,
+        citation_style: str | None = None,
+        include_alternative_perspectives: bool | None = None,
     ) -> Verdict:
         """Mock implementation of generate_verdict."""
         self.generate_verdict_called = True
@@ -86,7 +84,7 @@ class MockVerdictWriter:
         self.last_evidence = evidence
         return self.verdict_to_return
 
-    async def process(self, input_data: tuple[Claim, List[Evidence]]) -> Verdict:
+    async def process(self, input_data: tuple[Claim, list[Evidence]]) -> Verdict:
         """Mock implementation of process."""
         claim, evidence = input_data
         return await self.generate_verdict(claim, evidence)
@@ -227,8 +225,7 @@ class PipelineTest(unittest.TestCase):
 
 # Example with unittest.mock
 class PipelineTestWithUnitTestMock(unittest.TestCase):
-    """
-    Tests for the factchecking pipeline using unittest.mock.
+    """Tests for the factchecking pipeline using unittest.mock.
 
     This demonstrates an alternative approach using standard Python mocking tools.
     """

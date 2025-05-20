@@ -1,5 +1,4 @@
-"""
-VeriFact agent module for factchecking.
+"""VeriFact agent module for factchecking.
 
 This package contains the three main agents:
 - ClaimDetector: Identifies factual claims in text

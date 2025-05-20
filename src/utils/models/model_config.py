@@ -1,5 +1,4 @@
-"""
-Model configuration utilities for VeriFact.
+"""Model configuration utilities for VeriFact.
 
 This module provides a centralized system for AI model configuration and management.
 
@@ -16,7 +15,7 @@ import json
 import os
 import time
 from functools import lru_cache
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import httpx
 from dotenv import load_dotenv
@@ -122,8 +121,7 @@ class ModelUnavailableError(ModelError):
 
 
 class ModelManager:
-    """
-    Unified model manager class for handling all model interactions.
+    """Unified model manager class for handling all model interactions.
 
     This class provides a centralized interface for:
     - Model configuration and parameter management
@@ -142,9 +140,8 @@ class ModelManager:
     Custom models can be specified through environment variables.
     """
 
-    def __init__(self, agent_type: Optional[str] = None):
-        """
-        Initialize the ModelManager.
+    def __init__(self, agent_type: str | None = None):
+        """Initialize the ModelManager.
 
         Args:
             agent_type: Optional type of agent (claim_detector, evidence_hunter, verdict_writer)
@@ -156,9 +153,8 @@ class ModelManager:
         self.token_usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
         self.httpx_client = httpx.Client(timeout=self.parameters["request_timeout"])
 
-    def _load_parameters(self) -> Dict[str, Any]:
-        """
-        Load model parameters from environment variables or defaults.
+    def _load_parameters(self) -> dict[str, Any]:
+        """Load model parameters from environment variables or defaults.
 
         Returns:
             Dictionary of model parameters
@@ -189,8 +185,7 @@ class ModelManager:
         return parameters
 
     def _convert_parameter_value(self, param: str, value: str) -> Any:
-        """
-        Convert parameter value from string to appropriate type.
+        """Convert parameter value from string to appropriate type.
 
         Args:
             param: Parameter name
@@ -209,8 +204,7 @@ class ModelManager:
             return value
 
     def _get_model_name(self) -> str:
-        """
-        Get the model name for the agent type.
+        """Get the model name for the agent type.
 
         Returns:
             The appropriate model name to use with OpenRouter
@@ -234,9 +228,8 @@ class ModelManager:
         # Fall back to the default fallback model
         return DEFAULT_MODELS["fallback"]
 
-    def _get_fallback_chain(self) -> List[str]:
-        """
-        Get the chain of fallback models.
+    def _get_fallback_chain(self) -> list[str]:
+        """Get the chain of fallback models.
 
         Returns:
             List of model names to try in sequence
@@ -263,8 +256,7 @@ class ModelManager:
         return models
 
     def set_parameter(self, name: str, value: Any) -> None:
-        """
-        Set a model parameter.
+        """Set a model parameter.
 
         Args:
             name: Parameter name
@@ -276,8 +268,7 @@ class ModelManager:
             raise ValueError(f"Unknown parameter: {name}")
 
     def get_parameter(self, name: str) -> Any:
-        """
-        Get a model parameter value.
+        """Get a model parameter value.
 
         Args:
             name: Parameter name
@@ -288,8 +279,7 @@ class ModelManager:
         return self.parameters.get(name)
 
     def update_parameters(self, **kwargs) -> None:
-        """
-        Update multiple parameters at once.
+        """Update multiple parameters at once.
 
         Args:
             **kwargs: Parameter name-value pairs
@@ -298,8 +288,7 @@ class ModelManager:
             self.set_parameter(name, value)
 
     def get_api_key(self, provider: str = "openrouter") -> str:
-        """
-        Get the API key for the specified provider.
+        """Get the API key for the specified provider.
 
         Args:
             provider: Name of the provider (openrouter, openai, anthropic, etc.)
@@ -332,9 +321,8 @@ class ModelManager:
 
         return api_key
 
-    def get_request_headers(self) -> Dict[str, str]:
-        """
-        Get the headers required for API calls.
+    def get_request_headers(self) -> dict[str, str]:
+        """Get the headers required for API calls.
 
         Returns:
             Dictionary of headers for API calls
@@ -357,10 +345,9 @@ class ModelManager:
         return headers
 
     def _generate_cache_key(
-        self, messages: List[Dict[str, str]], parameters: Dict[str, Any]
+        self, messages: list[dict[str, str]], parameters: dict[str, Any]
     ) -> str:
-        """
-        Generate a cache key from messages and parameters.
+        """Generate a cache key from messages and parameters.
 
         Args:
             messages: List of message dictionaries
@@ -382,9 +369,8 @@ class ModelManager:
         return hashlib.md5(cache_str.encode(), usedforsecurity=False).hexdigest()
 
     @lru_cache(maxsize=CACHE_SIZE)
-    def _cached_completion(self, cache_key: str, model: str) -> Dict[str, Any]:
-        """
-        LRU cache for model completions.
+    def _cached_completion(self, cache_key: str, model: str) -> dict[str, Any]:
+        """LRU cache for model completions.
 
         This is a placeholder function that never gets called directly
         but is used to store cached results keyed by cache_key and model.
@@ -402,8 +388,7 @@ class ModelManager:
         pass
 
     def _handle_error_response(self, response: httpx.Response) -> None:
-        """
-        Handle error responses from the API.
+        """Handle error responses from the API.
 
         Args:
             response: The API response
@@ -448,9 +433,8 @@ class ModelManager:
                 "API error: " + error_message, status_code=status_code, request_id=request_id
             )
 
-    def _update_token_usage(self, response_data: Dict[str, Any]) -> None:
-        """
-        Update token usage statistics from a response.
+    def _update_token_usage(self, response_data: dict[str, Any]) -> None:
+        """Update token usage statistics from a response.
 
         Args:
             response_data: The API response data
@@ -473,9 +457,8 @@ class ModelManager:
             },
         )
 
-    def get_token_usage(self) -> Dict[str, int]:
-        """
-        Get current token usage statistics.
+    def get_token_usage(self) -> dict[str, int]:
+        """Get current token usage statistics.
 
         Returns:
             Dictionary with token usage counts
@@ -495,9 +478,8 @@ class ModelManager:
         reraise=True,
     )
     @log_performance(operation="model_completion_async", level="info")
-    async def completion_async(self, messages: List[Dict[str, str]], **kwargs) -> Dict[str, Any]:
-        """
-        Get a completion from the model with fallback and caching (async version).
+    async def completion_async(self, messages: list[dict[str, str]], **kwargs) -> dict[str, Any]:
+        """Get a completion from the model with fallback and caching (async version).
 
         Args:
             messages: List of message dictionaries
@@ -684,9 +666,8 @@ class ModelManager:
             raise ModelError(error_msg)
 
     @log_performance(operation="model_completion", level="info")
-    def completion(self, messages: List[Dict[str, str]], **kwargs) -> Dict[str, Any]:
-        """
-        Get a completion from the model with fallback and caching (sync version).
+    def completion(self, messages: list[dict[str, str]], **kwargs) -> dict[str, Any]:
+        """Get a completion from the model with fallback and caching (sync version).
 
         Args:
             messages: List of message dictionaries
@@ -930,8 +911,7 @@ class ModelManager:
             raise ModelError(error_msg)
 
     def create_openai_client(self):
-        """
-        Create an OpenAI client configured to use the selected model via OpenRouter.
+        """Create an OpenAI client configured to use the selected model via OpenRouter.
 
         Returns:
             An OpenAI client configured for OpenRouter
@@ -974,8 +954,7 @@ class ModelManager:
             )
 
     def configure_openai_for_agent(self):
-        """
-        Configure the OpenAI library and Agent SDK to use this model manager's settings.
+        """Configure the OpenAI library and Agent SDK to use this model manager's settings.
 
         This adds proper configuration for OpenRouter, model selection, and parameters.
         """
@@ -1011,8 +990,7 @@ class ModelManager:
             )
 
     def get_agent_client(self):
-        """
-        Get a properly configured client for the Agent SDK.
+        """Get a properly configured client for the Agent SDK.
 
         Returns:
             Configured Agent client
@@ -1032,9 +1010,8 @@ class ModelManager:
         if hasattr(self, "httpx_client") and self.httpx_client:
             self.httpx_client.close()
 
-    def _adjust_parameters_for_model(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Adjust parameters based on the specific model's capabilities.
+    def _adjust_parameters_for_model(self, parameters: dict[str, Any]) -> dict[str, Any]:
+        """Adjust parameters based on the specific model's capabilities.
 
         Args:
             parameters: Current parameter dictionary
@@ -1070,9 +1047,8 @@ class ModelManager:
 
 
 # Legacy functions for backward compatibility
-def get_model_name(model_name: Optional[str] = None, agent_type: Optional[str] = None) -> str:
-    """
-    Legacy function to get the model name for backwards compatibility.
+def get_model_name(model_name: str | None = None, agent_type: str | None = None) -> str:
+    """Legacy function to get the model name for backwards compatibility.
 
     Args:
         model_name: Explicitly provided model name
@@ -1085,9 +1061,8 @@ def get_model_name(model_name: Optional[str] = None, agent_type: Optional[str] =
     return manager._get_model_name() if model_name is None else model_name
 
 
-def get_model_settings() -> Dict[str, Any]:
-    """
-    Legacy function to get model settings for backwards compatibility.
+def get_model_settings() -> dict[str, Any]:
+    """Legacy function to get model settings for backwards compatibility.
 
     Returns:
         Dictionary of model settings
@@ -1097,8 +1072,7 @@ def get_model_settings() -> Dict[str, Any]:
 
 
 def get_api_key(provider: str = "openrouter") -> str:
-    """
-    Legacy function to get API key for backwards compatibility.
+    """Legacy function to get API key for backwards compatibility.
 
     Args:
         provider: Name of the provider
@@ -1110,9 +1084,8 @@ def get_api_key(provider: str = "openrouter") -> str:
     return manager.get_api_key(provider)
 
 
-def get_openrouter_headers() -> Dict[str, str]:
-    """
-    Legacy function to get OpenRouter headers for backwards compatibility.
+def get_openrouter_headers() -> dict[str, str]:
+    """Legacy function to get OpenRouter headers for backwards compatibility.
 
     Returns:
         Dictionary of headers for OpenRouter API calls
@@ -1122,8 +1095,7 @@ def get_openrouter_headers() -> Dict[str, str]:
 
 
 def create_openrouter_client():
-    """
-    Legacy function to create an OpenRouter client for backwards compatibility.
+    """Legacy function to create an OpenRouter client for backwards compatibility.
 
     Returns:
         An OpenAI client configured for OpenRouter
@@ -1133,17 +1105,14 @@ def create_openrouter_client():
 
 
 def configure_openai_for_openrouter():
-    """
-    Legacy function to configure OpenAI for OpenRouter for backwards compatibility.
-    """
+    """Legacy function to configure OpenAI for OpenRouter for backwards compatibility."""
     manager = ModelManager()
     manager.configure_openai_for_agent()
 
 
 @retry(stop=stop_after_attempt(MAX_RETRIES), wait=wait_exponential(multiplier=1, min=2, max=30))
 def make_openrouter_request(url, payload, headers):
-    """
-    Legacy function to make a request to OpenRouter with retry logic.
+    """Legacy function to make a request to OpenRouter with retry logic.
 
     Args:
         url: The API endpoint URL

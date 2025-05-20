@@ -1,11 +1,11 @@
-"""
-Input Validation Utilities
+"""Input Validation Utilities
 
 This module provides functions for validating and sanitizing input data.
 """
 
 import logging
-from typing import Any, Callable, Dict
+from collections.abc import Callable
+from typing import Any
 
 from src.utils.exceptions import ValidationError
 from src.utils.validation.config import validation_config
@@ -20,14 +20,11 @@ logger = logging.getLogger("verifact.validation")
 
 
 class Validator:
-    """
-    Input validator class that combines validation and sanitization.
-    """
+    """Input validator class that combines validation and sanitization."""
 
     @staticmethod
     def validate_text(text: str, field_name: str = "text", strict: bool = False) -> str:
-        """
-        Validate and sanitize text input.
+        """Validate and sanitize text input.
 
         Args:
             text: Text to validate
@@ -71,8 +68,7 @@ class Validator:
 
     @staticmethod
     def validate_claim_text(text: str, strict: bool = False) -> str:
-        """
-        Validate and sanitize claim text.
+        """Validate and sanitize claim text.
 
         Args:
             text: Claim text to validate
@@ -115,8 +111,7 @@ class Validator:
 
     @staticmethod
     def validate_url(url: str, strict: bool = False) -> str:
-        """
-        Validate and sanitize URL.
+        """Validate and sanitize URL.
 
         Args:
             url: URL to validate
@@ -177,8 +172,7 @@ class Validator:
 
     @staticmethod
     def validate_claims_count(count: int, strict: bool = False) -> int:
-        """
-        Validate the number of claims.
+        """Validate the number of claims.
 
         Args:
             count: Number of claims to validate
@@ -215,8 +209,7 @@ class Validator:
 
     @staticmethod
     def validate_batch_claims_count(count: int, strict: bool = False) -> int:
-        """
-        Validate the number of batch claims.
+        """Validate the number of batch claims.
 
         Args:
             count: Number of batch claims to validate
@@ -253,8 +246,7 @@ class Validator:
 
     @staticmethod
     def validate_check_worthiness(score: float, strict: bool = False) -> float:
-        """
-        Validate check-worthiness score.
+        """Validate check-worthiness score.
 
         Args:
             score: Check-worthiness score to validate
@@ -279,8 +271,7 @@ class Validator:
 
     @staticmethod
     def validate_feedback_comment(comment: str, strict: bool = False) -> str:
-        """
-        Validate and sanitize feedback comment.
+        """Validate and sanitize feedback comment.
 
         Args:
             comment: Feedback comment to validate
@@ -321,10 +312,9 @@ class Validator:
 
     @staticmethod
     def validate_input(
-        input_data: Dict[str, Any], validation_rules: Dict[str, Callable], strict: bool = False
-    ) -> Dict[str, Any]:
-        """
-        Validate and sanitize input data using validation rules.
+        input_data: dict[str, Any], validation_rules: dict[str, Callable], strict: bool = False
+    ) -> dict[str, Any]:
+        """Validate and sanitize input data using validation rules.
 
         Args:
             input_data: Input data to validate

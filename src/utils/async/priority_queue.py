@@ -1,5 +1,4 @@
-"""
-Priority Queue Implementation for VeriFact
+"""Priority Queue Implementation for VeriFact
 
 This module provides a priority queue implementation for processing claims
 in order of their importance. It supports:
@@ -13,9 +12,10 @@ import heapq
 import threading
 import time
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, Generic, List, Optional, Tuple, TypeVar
+from typing import Any, Generic, TypeVar
 
 
 class JobStatus(str, Enum):
@@ -42,15 +42,14 @@ class PrioritizedItem(Generic[T]):
     item: T = field(compare=False)
     status: JobStatus = field(default=JobStatus.PENDING, compare=False)
     result: Any = field(default=None, compare=False)
-    error: Optional[str] = field(default=None, compare=False)
-    started_at: Optional[float] = field(default=None, compare=False)
-    completed_at: Optional[float] = field(default=None, compare=False)
-    metadata: Dict[str, Any] = field(default_factory=dict, compare=False)
+    error: str | None = field(default=None, compare=False)
+    started_at: float | None = field(default=None, compare=False)
+    completed_at: float | None = field(default=None, compare=False)
+    metadata: dict[str, Any] = field(default_factory=dict, compare=False)
 
 
 class PriorityQueue(Generic[T]):
-    """
-    Thread-safe priority queue implementation with status tracking.
+    """Thread-safe priority queue implementation with status tracking.
 
     This queue allows items to be processed in order of their priority,
     with higher priority items (lower priority numbers) processed first.
@@ -58,13 +57,12 @@ class PriorityQueue(Generic[T]):
 
     def __init__(
         self,
-        priority_function: Optional[Callable[[T], float]] = None,
+        priority_function: Callable[[T], float] | None = None,
         min_priority_threshold: float = 0.0,
         max_batch_size: int = 10,
         allow_duplicate_items: bool = False,
     ):
-        """
-        Initialize the priority queue.
+        """Initialize the priority queue.
 
         Args:
             priority_function: Optional function to calculate priority from item.
@@ -73,10 +71,10 @@ class PriorityQueue(Generic[T]):
             max_batch_size: Maximum number of items to process in a batch
             allow_duplicate_items: Whether to allow duplicate items in the queue
         """
-        self._queue: List[PrioritizedItem[T]] = []
+        self._queue: list[PrioritizedItem[T]] = []
         self._lock = threading.RLock()
         # Maps item_id to prioritized item
-        self._item_map: Dict[str, PrioritizedItem[T]] = {}
+        self._item_map: dict[str, PrioritizedItem[T]] = {}
         self._priority_function = priority_function or (lambda _: 0.0)
         self._min_priority_threshold = min_priority_threshold
         self._max_batch_size = max_batch_size
@@ -86,10 +84,9 @@ class PriorityQueue(Generic[T]):
         self._failed_count = 0
 
     def put(
-        self, item: T, priority: Optional[float] = None, metadata: Optional[Dict[str, Any]] = None
+        self, item: T, priority: float | None = None, metadata: dict[str, Any] | None = None
     ) -> str:
-        """
-        Add an item to the priority queue.
+        """Add an item to the priority queue.
 
         Args:
             item: The item to add
@@ -134,9 +131,8 @@ class PriorityQueue(Generic[T]):
 
         return prioritized_item.item_id
 
-    def get(self, block: bool = True) -> Optional[PrioritizedItem[T]]:
-        """
-        Get the highest priority item from the queue.
+    def get(self, block: bool = True) -> PrioritizedItem[T] | None:
+        """Get the highest priority item from the queue.
 
         Args:
             block: Whether to block until an item is available
@@ -167,9 +163,8 @@ class PriorityQueue(Generic[T]):
 
             return item
 
-    def get_batch(self, max_items: Optional[int] = None) -> List[PrioritizedItem[T]]:
-        """
-        Get a batch of items from the queue, ordered by priority.
+    def get_batch(self, max_items: int | None = None) -> list[PrioritizedItem[T]]:
+        """Get a batch of items from the queue, ordered by priority.
 
         Args:
             max_items: Maximum number of items to get (defaults to max_batch_size)
@@ -190,8 +185,7 @@ class PriorityQueue(Generic[T]):
         return result
 
     def complete(self, item_id: str, result: Any = None) -> bool:
-        """
-        Mark an item as completed with an optional result.
+        """Mark an item as completed with an optional result.
 
         Args:
             item_id: ID of the item to mark as completed
@@ -214,8 +208,7 @@ class PriorityQueue(Generic[T]):
             return True
 
     def fail(self, item_id: str, error: str) -> bool:
-        """
-        Mark an item as failed with an error message.
+        """Mark an item as failed with an error message.
 
         Args:
             item_id: ID of the item to mark as failed
@@ -237,9 +230,8 @@ class PriorityQueue(Generic[T]):
 
             return True
 
-    def requeue(self, item_id: str, new_priority: Optional[float] = None) -> bool:
-        """
-        Requeue a previously processed item.
+    def requeue(self, item_id: str, new_priority: float | None = None) -> bool:
+        """Requeue a previously processed item.
 
         Args:
             item_id: ID of the item to requeue
@@ -279,8 +271,7 @@ class PriorityQueue(Generic[T]):
             return True
 
     def cancel(self, item_id: str) -> bool:
-        """
-        Cancel a pending or processing item.
+        """Cancel a pending or processing item.
 
         Args:
             item_id: ID of the item to cancel
@@ -309,9 +300,8 @@ class PriorityQueue(Generic[T]):
 
             return True
 
-    def get_item(self, item_id: str) -> Optional[PrioritizedItem[T]]:
-        """
-        Get an item by its ID.
+    def get_item(self, item_id: str) -> PrioritizedItem[T] | None:
+        """Get an item by its ID.
 
         Args:
             item_id: ID of the item to get
@@ -322,9 +312,8 @@ class PriorityQueue(Generic[T]):
         with self._lock:
             return self._item_map.get(item_id)
 
-    def get_all_items(self) -> List[PrioritizedItem[T]]:
-        """
-        Get all items in the queue and tracking system.
+    def get_all_items(self) -> list[PrioritizedItem[T]]:
+        """Get all items in the queue and tracking system.
 
         Returns:
             List of all items, sorted by priority
@@ -334,14 +323,13 @@ class PriorityQueue(Generic[T]):
             all_items.sort()  # Sort by priority
             return all_items
 
-    def get_status_counts(self) -> Dict[JobStatus, int]:
-        """
-        Get counts of items by status.
+    def get_status_counts(self) -> dict[JobStatus, int]:
+        """Get counts of items by status.
 
         Returns:
             Dictionary of status counts
         """
-        status_counts = {status: 0 for status in JobStatus}
+        status_counts = dict.fromkeys(JobStatus, 0)
 
         with self._lock:
             for item in self._item_map.values():
@@ -349,9 +337,8 @@ class PriorityQueue(Generic[T]):
 
         return status_counts
 
-    def get_queue_statistics(self) -> Dict[str, Any]:
-        """
-        Get statistics about the queue.
+    def get_queue_statistics(self) -> dict[str, Any]:
+        """Get statistics about the queue.
 
         Returns:
             Dictionary of queue statistics
@@ -397,8 +384,7 @@ class PriorityQueue(Generic[T]):
             }
 
     def clear(self) -> int:
-        """
-        Clear all items from the queue.
+        """Clear all items from the queue.
 
         Returns:
             Number of items cleared
@@ -435,8 +421,7 @@ class PriorityQueue(Generic[T]):
 
 
 class ClaimPriorityQueue(PriorityQueue[T]):
-    """
-    Specialized priority queue for processing claims.
+    """Specialized priority queue for processing claims.
 
     This extends the generic PriorityQueue with claim-specific functionality:
     - Priority calculation based on claim check-worthiness
@@ -450,8 +435,7 @@ class ClaimPriorityQueue(PriorityQueue[T]):
         max_batch_size: int = 5,
         allow_duplicate_claims: bool = False,
     ):
-        """
-        Initialize the claim priority queue.
+        """Initialize the claim priority queue.
 
         Args:
             min_check_worthiness: Minimum check-worthiness threshold for claims to be processed
@@ -490,9 +474,8 @@ class ClaimPriorityQueue(PriorityQueue[T]):
         # Store claim-specific settings
         self.min_check_worthiness = min_check_worthiness
 
-    def put_claim(self, claim: T, metadata: Optional[Dict[str, Any]] = None) -> str:
-        """
-        Add a claim to the priority queue.
+    def put_claim(self, claim: T, metadata: dict[str, Any] | None = None) -> str:
+        """Add a claim to the priority queue.
 
         Args:
             claim: The claim to add
@@ -515,9 +498,8 @@ class ClaimPriorityQueue(PriorityQueue[T]):
         # Add to queue using the generic put method
         return self.put(claim, metadata=metadata)
 
-    def get_related_claims(self, claim: T) -> List[Tuple[str, T]]:
-        """
-        Find claims that may be related to the given claim.
+    def get_related_claims(self, claim: T) -> list[tuple[str, T]]:
+        """Find claims that may be related to the given claim.
 
         Args:
             claim: The claim to find related claims for
@@ -549,8 +531,7 @@ class ClaimPriorityQueue(PriorityQueue[T]):
         return related_claims
 
     def _calculate_similarity(self, text1: str, text2: str) -> float:
-        """
-        Calculate similarity between two texts (simple implementation).
+        """Calculate similarity between two texts (simple implementation).
 
         Args:
             text1: First text

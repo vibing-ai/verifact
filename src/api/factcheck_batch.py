@@ -1,5 +1,4 @@
-"""
-VeriFact Batch Factchecking API
+"""VeriFact Batch Factchecking API
 
 This module provides API endpoints for batch factchecking of multiple claims.
 """
@@ -8,7 +7,7 @@ import logging
 import time
 import uuid
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any
 
 import requests
 from fastapi import (
@@ -32,7 +31,7 @@ from src.models.factcheck import (
     JobStatus,
     Verdict,
 )
-from src.pipeline import FactcheckPipeline, PipelineConfig
+from src.pipeline import PipelineConfig
 from src.utils.async_processor import AsyncClaimProcessor, ProcessingProgress
 from src.utils.cache import Cache
 from src.utils.db import SupabaseClient
@@ -50,7 +49,7 @@ from src.utils.validation import (
 logger = logging.getLogger(__name__)
 
 # In-memory store for batch job results
-_batch_jobs: Dict[str, FactcheckJob] = {}
+_batch_jobs: dict[str, FactcheckJob] = {}
 
 # Setup rate limiting
 batch_rate_limit_cache = Cache(max_size=1000, ttl_seconds=3600)
@@ -81,8 +80,7 @@ router = APIRouter(
 async def get_api_key(
     api_key_header: str = Security(api_key_header),
 ) -> APIKey:
-    """
-    Validate API key for protected endpoints.
+    """Validate API key for protected endpoints.
 
     Args:
         api_key_header: API key from request header
@@ -110,8 +108,7 @@ async def get_api_key(
 
 
 def check_rate_limit(api_key: str, limit: int = 5, window: int = 60):
-    """
-    Check if the request exceeds rate limits.
+    """Check if the request exceeds rate limits.
 
     Args:
         api_key: API key from authenticated request
@@ -143,9 +140,8 @@ def check_rate_limit(api_key: str, limit: int = 5, window: int = 60):
     batch_rate_limit_cache.set(key, recent_requests)
 
 
-async def create_pipeline_config(options: Dict[str, Any]) -> PipelineConfig:
-    """
-    Create a pipeline configuration from options.
+async def create_pipeline_config(options: dict[str, Any]) -> PipelineConfig:
+    """Create a pipeline configuration from options.
 
     Args:
         options: Configuration options
@@ -179,9 +175,8 @@ async def create_pipeline_config(options: Dict[str, Any]) -> PipelineConfig:
         )
 
 
-async def process_single_claim(claim_text: str, options: Dict[str, Any]) -> Verdict:
-    """
-    Process a single claim through the factchecking pipeline.
+async def process_single_claim(claim_text: str, options: dict[str, Any]) -> Verdict:
+    """Process a single claim through the factchecking pipeline.
 
     Args:
         claim_text: The claim text to process
@@ -219,8 +214,7 @@ async def process_single_claim(claim_text: str, options: Dict[str, Any]) -> Verd
 def convert_to_batch_claim_status(
     claim_id: str, claim_text: str, status: JobStatus
 ) -> BatchClaimStatus:
-    """
-    Convert claim information to a BatchClaimStatus object.
+    """Convert claim information to a BatchClaimStatus object.
 
     Args:
         claim_id: ID of the claim
@@ -234,8 +228,7 @@ def convert_to_batch_claim_status(
 
 
 def log_job_progress(job_id: str, progress: ProcessingProgress) -> None:
-    """
-    Log job progress information.
+    """Log job progress information.
 
     Args:
         job_id: ID of the job
@@ -250,9 +243,8 @@ def log_job_progress(job_id: str, progress: ProcessingProgress) -> None:
     )
 
 
-def send_webhook_notification(url: str, data: Dict[str, Any]) -> bool:
-    """
-    Send webhook notification to the specified URL.
+def send_webhook_notification(url: str, data: dict[str, Any]) -> bool:
+    """Send webhook notification to the specified URL.
 
     Args:
         url: URL to send notification to
@@ -279,7 +271,7 @@ def send_webhook_notification(url: str, data: Dict[str, Any]) -> bool:
 
 @router.post(
     "/factcheck",
-    response_model=Dict[str, Any],
+    response_model=dict[str, Any],
     summary="Process multiple claims in a batch",
     description="""
     Start an asynchronous batch processing job for multiple claims.
@@ -298,8 +290,7 @@ async def batch_factcheck(
     api_request: Request,
     api_key: APIKey = Security(get_api_key),
 ):
-    """
-    Process multiple claims in a batch.
+    """Process multiple claims in a batch.
 
     Args:
         request: Batch factchecking request with claims and options
@@ -330,7 +321,7 @@ async def batch_factcheck(
     claim_statuses = {}
     for i, claim in enumerate(request.claims):
         # Generate claim ID if not provided
-        claim_id = claim.id or f"{job_id}-claim-{i+1}"
+        claim_id = claim.id or f"{job_id}-claim-{i + 1}"
 
         # Create status entry
         claim_statuses[claim_id] = convert_to_batch_claim_status(
@@ -379,7 +370,7 @@ async def batch_factcheck(
 
 @router.get(
     "/factcheck/job/{job_id}",
-    response_model=Dict[str, Any],
+    response_model=dict[str, Any],
     summary="Get status of a batch factchecking job",
     description="""
     Check the status of a batch factchecking job and retrieve results if available.
@@ -399,8 +390,7 @@ async def get_batch_job_status(
     ),
     api_key: APIKey = Security(get_api_key),
 ):
-    """
-    Get status and results of a batch factchecking job.
+    """Get status and results of a batch factchecking job.
 
     Args:
         job_id: ID of the batch job
@@ -467,13 +457,12 @@ async def get_batch_job_status(
 
 @router.post(
     "/factcheck/job/{job_id}/cancel",
-    response_model=Dict[str, Any],
+    response_model=dict[str, Any],
     summary="Cancel a batch factchecking job",
     description="Cancel a running batch factchecking job.",
 )
 async def cancel_batch_job(job_id: str, api_key: APIKey = Security(get_api_key)):
-    """
-    Cancel a batch factchecking job.
+    """Cancel a batch factchecking job.
 
     Args:
         job_id: ID of the job to cancel
@@ -527,10 +516,9 @@ async def _run_batch_factcheck_job(
     api_key: str,
     max_concurrent: int = 3,
     detect_related_claims: bool = True,
-    webhook_url: Optional[str] = None,
+    webhook_url: str | None = None,
 ):
-    """
-    Run a batch factchecking job.
+    """Run a batch factchecking job.
 
     Args:
         job_id: ID of the job
@@ -561,7 +549,7 @@ async def _run_batch_factcheck_job(
 
         for i, batch_claim in enumerate(request.claims):
             # Generate claim ID if not provided
-            claim_id = batch_claim.id or f"{job_id}-claim-{i+1}"
+            claim_id = batch_claim.id or f"{job_id}-claim-{i + 1}"
 
             # Create claim object
             claim_obj = Claim(

@@ -1,5 +1,4 @@
-"""
-Tests for the factcheck API endpoints.
+"""Tests for the factcheck API endpoints.
 
 Uses FastAPI TestClient to test the API endpoints with mocked dependencies.
 """

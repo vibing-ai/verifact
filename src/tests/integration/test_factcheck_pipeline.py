@@ -1,5 +1,4 @@
-"""
-Integration tests for the complete factchecking pipeline.
+"""Integration tests for the complete factchecking pipeline.
 
 These tests verify the entire pipeline from claim detection to verdict generation.
 """
@@ -137,9 +136,9 @@ async def test_pipeline_e2e_controversial_claim(pipeline):
     assert verdict.verdict in ["partially true", "unverifiable"]  # It's not simply true or false
 
     # Should include alternative perspectives
-    assert (
-        verdict.alternative_perspectives is not None
-    ), "Should include alternative perspectives for controversial claims"
+    assert verdict.alternative_perspectives is not None, (
+        "Should include alternative perspectives for controversial claims"
+    )
 
 
 @pytest.mark.asyncio

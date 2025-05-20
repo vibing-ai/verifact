@@ -1,6 +1,4 @@
-"""
-Unit tests for the ClaimDetector agent.
-"""
+"""Unit tests for the ClaimDetector agent."""
 
 from unittest.mock import MagicMock, patch
 

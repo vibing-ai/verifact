@@ -1,5 +1,4 @@
-"""
-Pytest configuration for system tests.
+"""Pytest configuration for system tests.
 
 This module contains fixtures specific to system and end-to-end tests.
 """

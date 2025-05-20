@@ -1,5 +1,4 @@
-"""
-Rate Limiting Utilities
+"""Rate Limiting Utilities
 
 This module provides utilities for rate limiting API requests.
 """
@@ -9,7 +8,7 @@ import os
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from src.utils.cache import Cache
 from src.utils.validation.config import validation_config
@@ -25,16 +24,15 @@ class RateLimitResult:
     limit: int  # The rate limit
     remaining: int  # Remaining requests
     reset: int  # Seconds until the rate limit resets
-    retry_after: Optional[int] = None  # Seconds to wait before retrying
+    retry_after: int | None = None  # Seconds to wait before retrying
 
 
 class RateLimitStore(ABC):
     """Abstract base class for rate limit storage backends."""
 
     @abstractmethod
-    async def increment(self, key: str, window_seconds: int) -> Tuple[int, List[float]]:
-        """
-        Increment request count for a key and return the count and timestamps.
+    async def increment(self, key: str, window_seconds: int) -> tuple[int, list[float]]:
+        """Increment request count for a key and return the count and timestamps.
 
         Args:
             key: Rate limit key
@@ -46,9 +44,8 @@ class RateLimitStore(ABC):
         pass
 
     @abstractmethod
-    async def get_count(self, key: str, window_seconds: int) -> Tuple[int, List[float]]:
-        """
-        Get the current request count for a key.
+    async def get_count(self, key: str, window_seconds: int) -> tuple[int, list[float]]:
+        """Get the current request count for a key.
 
         Args:
             key: Rate limit key
@@ -61,8 +58,7 @@ class RateLimitStore(ABC):
 
     @abstractmethod
     async def reset(self, key: str) -> bool:
-        """
-        Reset the request count for a key.
+        """Reset the request count for a key.
 
         Args:
             key: Rate limit key
@@ -77,8 +73,7 @@ class MemoryRateLimitStore(RateLimitStore):
     """In-memory rate limit storage using Cache."""
 
     def __init__(self, max_size: int = 10000, ttl_seconds: int = 3600 * 2):
-        """
-        Initialize the in-memory rate limit store.
+        """Initialize the in-memory rate limit store.
 
         Args:
             max_size: Maximum number of keys to store
@@ -86,9 +81,8 @@ class MemoryRateLimitStore(RateLimitStore):
         """
         self.cache = Cache(max_size=max_size, ttl_seconds=ttl_seconds)
 
-    async def increment(self, key: str, window_seconds: int) -> Tuple[int, List[float]]:
-        """
-        Increment request count for a key and return the count and timestamps.
+    async def increment(self, key: str, window_seconds: int) -> tuple[int, list[float]]:
+        """Increment request count for a key and return the count and timestamps.
 
         Args:
             key: Rate limit key
@@ -118,9 +112,8 @@ class MemoryRateLimitStore(RateLimitStore):
 
         return len(timestamps), timestamps
 
-    async def get_count(self, key: str, window_seconds: int) -> Tuple[int, List[float]]:
-        """
-        Get the current request count for a key.
+    async def get_count(self, key: str, window_seconds: int) -> tuple[int, list[float]]:
+        """Get the current request count for a key.
 
         Args:
             key: Rate limit key
@@ -142,8 +135,7 @@ class MemoryRateLimitStore(RateLimitStore):
         return len(timestamps), timestamps
 
     async def reset(self, key: str) -> bool:
-        """
-        Reset the request count for a key.
+        """Reset the request count for a key.
 
         Args:
             key: Rate limit key
@@ -173,9 +165,8 @@ class DatabaseRateLimitStore(RateLimitStore):
 
         return self._pool
 
-    async def increment(self, key: str, window_seconds: int) -> Tuple[int, List[float]]:
-        """
-        Increment request count for a key and return the count and timestamps.
+    async def increment(self, key: str, window_seconds: int) -> tuple[int, list[float]]:
+        """Increment request count for a key and return the count and timestamps.
 
         Args:
             key: Rate limit key
@@ -227,9 +218,8 @@ class DatabaseRateLimitStore(RateLimitStore):
 
             return len(timestamps), timestamps
 
-    async def get_count(self, key: str, window_seconds: int) -> Tuple[int, List[float]]:
-        """
-        Get the current request count for a key.
+    async def get_count(self, key: str, window_seconds: int) -> tuple[int, list[float]]:
+        """Get the current request count for a key.
 
         Args:
             key: Rate limit key
@@ -256,8 +246,7 @@ class DatabaseRateLimitStore(RateLimitStore):
             return len(timestamps), timestamps
 
     async def reset(self, key: str) -> bool:
-        """
-        Reset the request count for a key.
+        """Reset the request count for a key.
 
         Args:
             key: Rate limit key
@@ -285,9 +274,8 @@ class DatabaseRateLimitStore(RateLimitStore):
 class RateLimiter:
     """Rate limiter for API requests."""
 
-    def __init__(self, store: Optional[RateLimitStore] = None):
-        """
-        Initialize the rate limiter.
+    def __init__(self, store: RateLimitStore | None = None):
+        """Initialize the rate limiter.
 
         Args:
             store: Storage backend for rate limits
@@ -308,9 +296,8 @@ class RateLimiter:
             "enterprise": self.authenticated_limit * 10,
         }
 
-    def _get_limit_for_key(self, key: str, api_key_data: Optional[Dict[str, Any]] = None) -> int:
-        """
-        Get the rate limit for a key.
+    def _get_limit_for_key(self, key: str, api_key_data: dict[str, Any] | None = None) -> int:
+        """Get the rate limit for a key.
 
         Args:
             key: Rate limit key
@@ -330,11 +317,10 @@ class RateLimiter:
     async def check(
         self,
         identifier: str,
-        api_key_data: Optional[Dict[str, Any]] = None,
-        window_seconds: Optional[int] = None,
+        api_key_data: dict[str, Any] | None = None,
+        window_seconds: int | None = None,
     ) -> RateLimitResult:
-        """
-        Check if a request is allowed or rate limited.
+        """Check if a request is allowed or rate limited.
 
         Args:
             identifier: Request identifier (e.g., IP address or API key)
@@ -385,8 +371,7 @@ class RateLimiter:
         )
 
     async def reset(self, identifier: str) -> bool:
-        """
-        Reset the rate limit for an identifier.
+        """Reset the rate limit for an identifier.
 
         Args:
             identifier: Request identifier to reset

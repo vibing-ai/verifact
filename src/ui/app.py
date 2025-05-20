@@ -1,5 +1,4 @@
-"""
-VeriFact Chainlit UI Entry Point
+"""VeriFact Chainlit UI Entry Point
 
 This module serves as the main entry point for the VeriFact Chainlit web interface.
 It initializes a Chainlit chat application with the three main agents:
@@ -42,9 +41,7 @@ if not os.environ.get("CHAINLIT_AUTH_SECRET"):
 
 @cl.on_message
 async def main(message: cl.Message):
-    """
-    Process user messages and run the VeriFact pipeline.
-    """
+    """Process user messages and run the VeriFact pipeline."""
     # Get the agents from the user session
     claim_detector = cl.user_session.get("claim_detector")
 
@@ -95,7 +92,7 @@ async def main(message: cl.Message):
                 check_icon = "✅" if is_check_worthy else "⏩"
 
                 # Show claim with ranking information
-                claims_content += f"{check_icon} **Claim {i+1}:** {claim.text}\n"
+                claims_content += f"{check_icon} **Claim {i + 1}:** {claim.text}\n"
 
                 # Add claim details if check-worthy
                 if is_check_worthy:
@@ -125,7 +122,7 @@ async def main(message: cl.Message):
                         cl.Checkbox(
                             id=f"claim_{i}",
                             label=(
-                                f"Claim {i+1}: {claim.text[:60]}..."
+                                f"Claim {i + 1}: {claim.text[:60]}..."
                                 if len(claim.text) > 60
                                 else claim.text
                             ),
@@ -236,7 +233,11 @@ async def on_view_history(action):
         rating_emoji = (
             "✅"
             if rating == "True"
-            else "❌" if rating == "False" else "⚠️" if rating == "Partially True" else "❓"
+            else "❌"
+            if rating == "False"
+            else "⚠️"
+            if rating == "Partially True"
+            else "❓"
         )
 
         # Format timestamp
@@ -253,7 +254,7 @@ async def on_view_history(action):
         else:
             timestamp_str = "Unknown time"
 
-        history_content += f"## {i+1}. {rating_emoji} {rating} - {timestamp_str}\n\n"
+        history_content += f"## {i + 1}. {rating_emoji} {rating} - {timestamp_str}\n\n"
         history_content += f"**Claim:** {claim_text}\n\n"
 
         if "explanation" in verdict:
@@ -335,7 +336,7 @@ async def on_view_feedback_admin(action):
     # Recent feedback
     feedback_content += "## Recent Feedback\n\n"
     for i, feedback in enumerate(stats.recent_feedback):
-        feedback_content += f"### Feedback {i+1}\n\n"
+        feedback_content += f"### Feedback {i + 1}\n\n"
         feedback_content += f"**Accuracy:** {feedback.get('accuracy_rating', 'N/A')}\n"
         feedback_content += f"**Helpfulness:** {feedback.get('helpfulness_rating', 'N/A')}\n"
 
@@ -400,7 +401,7 @@ async def on_export_feedback(action):
             await cl.Message(content="No feedback data found").send()
             return
 
-        with open(feedback_file, "r") as f:
+        with open(feedback_file) as f:
             all_feedback = json.load(f)
 
     # Convert to JSON

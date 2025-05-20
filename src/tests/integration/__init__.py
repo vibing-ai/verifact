@@ -1,5 +1,4 @@
-"""
-Integration tests.
+"""Integration tests.
 
 This package contains integration tests:
 - Database integration tests

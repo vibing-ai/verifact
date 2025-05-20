@@ -1,5 +1,4 @@
-"""
-Pytest configuration for performance tests.
+"""Pytest configuration for performance tests.
 
 This module contains fixtures specific to performance and benchmark tests.
 """

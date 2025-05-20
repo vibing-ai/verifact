@@ -1,5 +1,4 @@
-"""
-Integration tests for database operations.
+"""Integration tests for database operations.
 
 These tests verify that database operations work correctly.
 """

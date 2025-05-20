@@ -1,5 +1,4 @@
-"""
-Caching utilities for VeriFact.
+"""Caching utilities for VeriFact.
 
 This module provides caching mechanisms for storing and retrieving frequently accessed data.
 """

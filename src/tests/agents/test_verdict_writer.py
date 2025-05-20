@@ -1,5 +1,4 @@
-"""
-Tests for the VerdictWriter agent.
+"""Tests for the VerdictWriter agent.
 
 Combines both unit tests and standalone testing script functionality.
 """
@@ -223,7 +222,7 @@ async def test_verdict_writer_standalone():
     # Test each case
     for case in test_cases:
         print(f"\nTesting: {case['name']}")
-        print(f"Claim: \"{case['claim'].text}\"")
+        print(f'Claim: "{case["claim"].text}"')
         print(f"Evidence: {len(case['evidence'])} pieces")
 
         try:

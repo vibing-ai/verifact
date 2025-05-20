@@ -1,19 +1,16 @@
-"""
-Utility functions for the ClaimDetector agent.
+"""Utility functions for the ClaimDetector agent.
 
 This module contains utility functions used by the ClaimDetector.
 """
 
 import hashlib
 import re
-from typing import List
 
 from src.agents.claim_detector.models import Claim
 
 
 def generate_claim_id(claim_text: str) -> str:
-    """
-    Generate a unique ID for a claim based on its text.
+    """Generate a unique ID for a claim based on its text.
 
     Args:
         claim_text: The text of the claim
@@ -26,8 +23,7 @@ def generate_claim_id(claim_text: str) -> str:
 
 
 def contains_opinion_indicators(text: str) -> bool:
-    """
-    Check if text contains indicators of subjective opinions.
+    """Check if text contains indicators of subjective opinions.
 
     Args:
         text: The text to check
@@ -61,8 +57,7 @@ def contains_opinion_indicators(text: str) -> bool:
 
 
 def contains_question_indicators(text: str) -> bool:
-    """
-    Check if text is a question rather than a claim.
+    """Check if text is a question rather than a claim.
 
     Args:
         text: The text to check
@@ -104,8 +99,7 @@ def contains_question_indicators(text: str) -> bool:
 
 
 def contains_future_prediction(text: str) -> bool:
-    """
-    Check if text contains predictions about the future that can't be verified now.
+    """Check if text contains predictions about the future that can't be verified now.
 
     Args:
         text: The text to check
@@ -133,9 +127,8 @@ def contains_future_prediction(text: str) -> bool:
     return False
 
 
-def contains_specificity_indicators(text: str) -> List[str]:
-    """
-    Identify specific, verifiable elements in the text.
+def contains_specificity_indicators(text: str) -> list[str]:
+    """Identify specific, verifiable elements in the text.
 
     Args:
         text: The text to analyze
@@ -182,8 +175,7 @@ def contains_specificity_indicators(text: str) -> List[str]:
 
 
 def normalize_claim_text(text: str) -> str:
-    """
-    Normalize claim text by standardizing formats and expansions.
+    """Normalize claim text by standardizing formats and expansions.
 
     Args:
         text: The claim text to normalize
@@ -234,9 +226,8 @@ def normalize_claim_text(text: str) -> str:
     return normalized
 
 
-def split_compound_claim(claim_text: str) -> List[str]:
-    """
-    Split a compound claim into individual claims.
+def split_compound_claim(claim_text: str) -> list[str]:
+    """Split a compound claim into individual claims.
 
     Args:
         claim_text: The compound claim text
@@ -296,8 +287,7 @@ def split_compound_claim(claim_text: str) -> List[str]:
 
 
 def calculate_similarity(claim1: Claim, claim2: Claim) -> float:
-    """
-    Calculate the semantic similarity between two claims.
+    """Calculate the semantic similarity between two claims.
 
     Args:
         claim1: First claim

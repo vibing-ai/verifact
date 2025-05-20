@@ -1,6 +1,4 @@
-"""
-Tests for search tools.
-"""
+"""Tests for search tools."""
 
 import os
 from unittest.mock import AsyncMock, patch

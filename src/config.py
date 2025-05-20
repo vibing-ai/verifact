@@ -1,5 +1,4 @@
-"""
-VeriFact Configuration Module
+"""VeriFact Configuration Module
 
 This module provides centralized configuration management using Pydantic for
 validation of environment variables.
@@ -7,7 +6,7 @@ validation of environment variables.
 
 import os
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 from dotenv import load_dotenv
 from pydantic import (
@@ -61,7 +60,7 @@ class DatabaseConfig(BaseModel):
     command_timeout: float = Field(60.0, ge=0, description="Command timeout in seconds")
 
     @validator("url", pre=True)
-    def build_db_url(cls, v: Optional[str]) -> str:
+    def build_db_url(cls, v: str | None) -> str:
         if v:
             return v
 
@@ -79,13 +78,13 @@ class RedisConfig(BaseModel):
     """Redis configuration settings."""
 
     enabled: bool = Field(True, description="Enable Redis caching")
-    url: Optional[RedisDsn] = Field(None, description="Redis connection URL")
-    password: Optional[str] = Field("", description="Redis password")
+    url: RedisDsn | None = Field(None, description="Redis connection URL")
+    password: str | None = Field("", description="Redis password")
     cache_ttl: int = Field(86400, ge=0, description="Default cache TTL in seconds (24 hours)")
     evidence_cache_ttl: int = Field(86400, ge=0, description="Evidence cache TTL in seconds")
 
     @validator("url", pre=True)
-    def build_redis_url(cls, v: Optional[str], values: Dict[str, Any]) -> Optional[str]:
+    def build_redis_url(cls, v: str | None, values: dict[str, Any]) -> str | None:
         if not values.get("enabled", True):
             return None
 
@@ -106,7 +105,7 @@ class APIConfig(BaseModel):
 
     host: str = Field("0.0.0.0", description="API host")
     port: int = Field(8000, gt=0, lt=65536, description="API port")
-    api_keys: List[str] = Field([], description="List of valid API keys")
+    api_keys: list[str] = Field([], description="List of valid API keys")
     rate_limit_enabled: bool = Field(True, description="Enable rate limiting")
     rate_limit_requests: int = Field(100, gt=0, description="Maximum requests per window")
     rate_limit_window: int = Field(3600, gt=0, description="Rate limit window in seconds")
@@ -115,7 +114,7 @@ class APIConfig(BaseModel):
     api_key_expiry_days: int = Field(30, ge=1, description="API key expiry in days")
 
     @validator("api_keys", pre=True)
-    def parse_api_keys(cls, v: Union[str, List[str]]) -> List[str]:
+    def parse_api_keys(cls, v: str | list[str]) -> list[str]:
         if isinstance(v, str):
             return [key.strip() for key in v.split(",") if key.strip()]
         return v
@@ -127,7 +126,7 @@ class UIConfig(BaseModel):
     host: str = Field("0.0.0.0", description="UI host")
     port: int = Field(8501, gt=0, lt=65536, description="UI port")
     auth_enabled: bool = Field(False, description="Enable authentication")
-    auth_secret: Optional[str] = Field(None, description="Authentication secret")
+    auth_secret: str | None = Field(None, description="Authentication secret")
     admin_user: str = Field("admin", description="Admin username")
     persist: bool = Field(True, description="Persist chats in database")
 
@@ -136,7 +135,7 @@ class OpenRouterConfig(BaseModel):
     """OpenRouter API configuration."""
 
     api_key: str = Field(..., description="OpenRouter API key")
-    site_url: Optional[HttpUrl] = Field(None, description="Site URL for OpenRouter")
+    site_url: HttpUrl | None = Field(None, description="Site URL for OpenRouter")
     site_name: str = Field("VeriFact", description="Site name for OpenRouter")
 
 
@@ -154,7 +153,7 @@ class ModelSelectionConfig(BaseModel):
     embedding_model: str = Field("text-embedding-3-small", description="Embedding model")
     enable_caching: bool = Field(True, description="Enable model response caching")
     cache_size: int = Field(1000, gt=0, description="Size of model response cache")
-    fallback_models: Optional[List[str]] = Field(None, description="Fallback models")
+    fallback_models: list[str] | None = Field(None, description="Fallback models")
 
 
 class LoggingConfig(BaseModel):
@@ -162,7 +161,7 @@ class LoggingConfig(BaseModel):
 
     level: LogLevel = Field(LogLevel.INFO, description="Log level")
     format: str = Field("json", description="Log format (json or text)")
-    file: Optional[str] = Field(None, description="Log file path")
+    file: str | None = Field(None, description="Log file path")
     rotation_size: int = Field(10485760, gt=0, description="Log rotation size in bytes")
     rotation_count: int = Field(5, ge=0, description="Number of rotated logs to keep")
     daily_rotation: bool = Field(False, description="Enable daily log rotation")
@@ -172,10 +171,10 @@ class SearchConfig(BaseModel):
     """Search configuration."""
 
     use_serper: bool = Field(False, description="Use Serper.dev API")
-    serper_api_key: Optional[str] = Field(None, description="Serper.dev API key")
+    serper_api_key: str | None = Field(None, description="Serper.dev API key")
 
     @validator("serper_api_key")
-    def validate_serper_api_key(cls, v: Optional[str], values: Dict[str, Any]) -> Optional[str]:
+    def validate_serper_api_key(cls, v: str | None, values: dict[str, Any]) -> str | None:
         if values.get("use_serper", False) and not v:
             raise ValueError("Serper API key is required when use_serper is True")
         return v
@@ -211,7 +210,7 @@ class Settings(BaseSettings):
         extra = "ignore"
 
     @root_validator(pre=True, skip_on_failure=True)
-    def build_config(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+    def build_config(cls, values: dict[str, Any]) -> dict[str, Any]:
         """Pre-process raw values to inject nested configuration."""
         result = dict(values)
 
@@ -326,8 +325,7 @@ settings = Settings()
 
 
 def get_settings() -> Settings:
-    """
-    Get the application settings singleton.
+    """Get the application settings singleton.
 
     This function is provided for use with FastAPI Depends.
 

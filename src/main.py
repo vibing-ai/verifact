@@ -1,5 +1,4 @@
-"""
-VeriFact API Entry Point
+"""VeriFact API Entry Point
 
 This module serves as the main entry point for the VeriFact API service.
 It initializes a FastAPI application with the factcheck router.
@@ -15,7 +14,7 @@ import logging
 import os
 import platform
 import time
-from typing import Any, Dict, List
+from typing import Any
 
 import psutil
 from fastapi import APIRouter, FastAPI, HTTPException, Request, status
@@ -154,10 +153,9 @@ app = FastAPI(
 health_router = APIRouter(tags=["Health"])
 
 
-@health_router.get("/health", response_model=Dict[str, Any])
+@health_router.get("/health", response_model=dict[str, Any])
 async def health_check(full: bool = False):
-    """
-    Health check endpoint that verifies system status.
+    """Health check endpoint that verifies system status.
 
     Args:
         full: If True, returns detailed health information about all dependencies
@@ -191,7 +189,7 @@ async def health_check(full: bool = False):
     return health_info
 
 
-async def check_dependencies() -> List[Dict[str, Any]]:
+async def check_dependencies() -> list[dict[str, Any]]:
     """Check the health of all system dependencies."""
     dependencies = []
 
@@ -235,7 +233,7 @@ async def check_dependencies() -> List[Dict[str, Any]]:
     return dependencies
 
 
-def get_system_info() -> Dict[str, Any]:
+def get_system_info() -> dict[str, Any]:
     """Get system information for health check."""
     return {
         "os": platform.system(),

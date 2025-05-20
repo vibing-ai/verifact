@@ -1,10 +1,7 @@
-"""
-Domain classification for the ClaimDetector agent.
+"""Domain classification for the ClaimDetector agent.
 
 This module handles the domain/topic classification of claims.
 """
-
-from typing import Dict, List, Set, Tuple
 
 from src.agents.claim_detector.models import ClaimDomain
 from src.utils.cache import model_cache
@@ -26,9 +23,8 @@ class DomainClassifier:
         # Domain keyword dictionaries
         self._domain_keywords = self._initialize_domain_keywords()
 
-    def _initialize_domain_keywords(self) -> Dict[ClaimDomain, Set[str]]:
-        """
-        Initialize keyword sets for each domain.
+    def _initialize_domain_keywords(self) -> dict[ClaimDomain, set[str]]:
+        """Initialize keyword sets for each domain.
 
         Returns:
             Dictionary mapping domains to sets of keywords
@@ -306,9 +302,8 @@ class DomainClassifier:
         }
 
     @log_performance(operation="classify_domain", level="debug")
-    def classify_domain(self, claim_text: str) -> Tuple[ClaimDomain, List[str]]:
-        """
-        Classify a claim into one or more domains.
+    def classify_domain(self, claim_text: str) -> tuple[ClaimDomain, list[str]]:
+        """Classify a claim into one or more domains.
 
         Args:
             claim_text: The text of the claim to classify
@@ -350,9 +345,8 @@ class DomainClassifier:
 
         return result
 
-    def get_domain_keywords(self, domain: ClaimDomain) -> Set[str]:
-        """
-        Get the keywords associated with a specific domain.
+    def get_domain_keywords(self, domain: ClaimDomain) -> set[str]:
+        """Get the keywords associated with a specific domain.
 
         Args:
             domain: The domain to get keywords for
@@ -363,8 +357,7 @@ class DomainClassifier:
         return self._domain_keywords.get(domain, set())
 
     def add_domain_keyword(self, domain: ClaimDomain, keyword: str) -> None:
-        """
-        Add a new keyword to a domain.
+        """Add a new keyword to a domain.
 
         Args:
             domain: The domain to add the keyword to

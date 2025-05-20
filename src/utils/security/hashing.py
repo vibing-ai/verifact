@@ -18,8 +18,7 @@ def get_hash_key() -> bytes:
 
 
 def hash_value(value: str) -> str:
-    """
-    Create a secure hash of a value using HMAC-SHA256.
+    """Create a secure hash of a value using HMAC-SHA256.
 
     Args:
         value: The value to hash
@@ -32,8 +31,7 @@ def hash_value(value: str) -> str:
 
 
 def secure_compare(val1: str, val2: str) -> bool:
-    """
-    Compare two strings in constant time to prevent timing attacks.
+    """Compare two strings in constant time to prevent timing attacks.
 
     Args:
         val1: First value

@@ -1,5 +1,4 @@
-"""
-Metrics utilities for VeriFact.
+"""Metrics utilities for VeriFact.
 
 This module provides classes and functions for tracking and reporting performance metrics.
 """
@@ -7,7 +6,7 @@ This module provides classes and functions for tracking and reporting performanc
 import threading
 import time
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any
 
 # Thread-local storage for metrics
 _local = threading.local()
@@ -17,8 +16,7 @@ class CacheMetrics:
     """Class to track and report cache performance metrics."""
 
     def __init__(self, namespace: str):
-        """
-        Initialize cache metrics for a namespace.
+        """Initialize cache metrics for a namespace.
 
         Args:
             namespace: The cache namespace to track
@@ -28,13 +26,12 @@ class CacheMetrics:
         self.misses = 0
         self.set_operations = 0
         self.last_reset_time = time.time()
-        self.hit_latencies: List[float] = []
-        self.miss_latencies: List[float] = []
+        self.hit_latencies: list[float] = []
+        self.miss_latencies: list[float] = []
         self._lock = threading.Lock()
 
     def record_hit(self, latency: float = 0.0) -> None:
-        """
-        Record a cache hit.
+        """Record a cache hit.
 
         Args:
             latency: Time taken for the cache operation in seconds
@@ -45,8 +42,7 @@ class CacheMetrics:
                 self.hit_latencies.append(latency)
 
     def record_miss(self, latency: float = 0.0) -> None:
-        """
-        Record a cache miss.
+        """Record a cache miss.
 
         Args:
             latency: Time taken for the cache operation in seconds
@@ -62,8 +58,7 @@ class CacheMetrics:
             self.set_operations += 1
 
     def hit_rate(self) -> float:
-        """
-        Calculate the cache hit rate.
+        """Calculate the cache hit rate.
 
         Returns:
             float: The cache hit rate (0-1)
@@ -73,8 +68,7 @@ class CacheMetrics:
             return self.hits / total if total > 0 else 0
 
     def miss_rate(self) -> float:
-        """
-        Calculate the cache miss rate.
+        """Calculate the cache miss rate.
 
         Returns:
             float: The cache miss rate (0-1)
@@ -84,8 +78,7 @@ class CacheMetrics:
             return self.misses / total if total > 0 else 0
 
     def avg_hit_latency(self) -> float:
-        """
-        Calculate the average hit latency.
+        """Calculate the average hit latency.
 
         Returns:
             float: The average hit latency in seconds
@@ -94,8 +87,7 @@ class CacheMetrics:
             return sum(self.hit_latencies) / len(self.hit_latencies) if self.hit_latencies else 0
 
     def avg_miss_latency(self) -> float:
-        """
-        Calculate the average miss latency.
+        """Calculate the average miss latency.
 
         Returns:
             float: The average miss latency in seconds
@@ -113,9 +105,8 @@ class CacheMetrics:
             self.miss_latencies = []
             self.last_reset_time = time.time()
 
-    def stats(self) -> Dict[str, Any]:
-        """
-        Get metrics statistics.
+    def stats(self) -> dict[str, Any]:
+        """Get metrics statistics.
 
         Returns:
             Dict[str, Any]: Metrics statistics

@@ -1,19 +1,17 @@
-"""
-Agent interfaces for the VeriFact factchecking system.
+"""Agent interfaces for the VeriFact factchecking system.
 
 This module defines the specific interfaces for each agent type, building on the
 base Agent protocol. These interfaces establish clear contracts for agent implementations.
 """
 
-from typing import List, Optional, Protocol
+from typing import Protocol
 
 from src.agents.base import Agent
 from src.agents.dto import Claim, Evidence, Verdict
 
 
-class ClaimDetector(Agent[str, List[Claim]], Protocol):
-    """
-    Agent responsible for detecting claims in text.
+class ClaimDetector(Agent[str, list[Claim]], Protocol):
+    """Agent responsible for detecting claims in text.
 
     This agent analyzes input text and extracts check-worthy factual claims.
     """
@@ -21,12 +19,11 @@ class ClaimDetector(Agent[str, List[Claim]], Protocol):
     async def detect_claims(
         self,
         text: str,
-        min_check_worthiness: Optional[float] = None,
-        expected_claims: Optional[List[dict]] = None,
-        max_claims: Optional[int] = None,
-    ) -> List[Claim]:
-        """
-        Detect factual claims in the provided text.
+        min_check_worthiness: float | None = None,
+        expected_claims: list[dict] | None = None,
+        max_claims: int | None = None,
+    ) -> list[Claim]:
+        """Detect factual claims in the provided text.
 
         Args:
             text: The text to analyze for claims
@@ -39,9 +36,8 @@ class ClaimDetector(Agent[str, List[Claim]], Protocol):
         """
         ...
 
-    async def process(self, input_data: str) -> List[Claim]:
-        """
-        Process the input text and return detected claims.
+    async def process(self, input_data: str) -> list[Claim]:
+        """Process the input text and return detected claims.
 
         This method fulfills the base Agent protocol by calling detect_claims.
 
@@ -54,16 +50,14 @@ class ClaimDetector(Agent[str, List[Claim]], Protocol):
         return await self.detect_claims(input_data)
 
 
-class EvidenceHunter(Agent[Claim, List[Evidence]], Protocol):
-    """
-    Agent responsible for finding evidence for claims.
+class EvidenceHunter(Agent[Claim, list[Evidence]], Protocol):
+    """Agent responsible for finding evidence for claims.
 
     This agent gathers evidence related to a claim from various sources.
     """
 
-    async def gather_evidence(self, claim: Claim) -> List[Evidence]:
-        """
-        Gather evidence for the provided claim.
+    async def gather_evidence(self, claim: Claim) -> list[Evidence]:
+        """Gather evidence for the provided claim.
 
         Args:
             claim: The claim to gather evidence for
@@ -73,9 +67,8 @@ class EvidenceHunter(Agent[Claim, List[Evidence]], Protocol):
         """
         ...
 
-    async def process(self, input_data: Claim) -> List[Evidence]:
-        """
-        Process the input claim and return gathered evidence.
+    async def process(self, input_data: Claim) -> list[Evidence]:
+        """Process the input claim and return gathered evidence.
 
         This method fulfills the base Agent protocol by calling gather_evidence.
 
@@ -88,9 +81,8 @@ class EvidenceHunter(Agent[Claim, List[Evidence]], Protocol):
         return await self.gather_evidence(input_data)
 
 
-class VerdictWriter(Agent[tuple[Claim, List[Evidence]], Verdict], Protocol):
-    """
-    Agent responsible for generating verdicts based on evidence.
+class VerdictWriter(Agent[tuple[Claim, list[Evidence]], Verdict], Protocol):
+    """Agent responsible for generating verdicts based on evidence.
 
     This agent analyzes a claim and its evidence to generate a factchecking verdict.
     """
@@ -98,13 +90,12 @@ class VerdictWriter(Agent[tuple[Claim, List[Evidence]], Verdict], Protocol):
     async def generate_verdict(
         self,
         claim: Claim,
-        evidence: List[Evidence],
-        explanation_detail: Optional[str] = None,
-        citation_style: Optional[str] = None,
-        include_alternative_perspectives: Optional[bool] = None,
+        evidence: list[Evidence],
+        explanation_detail: str | None = None,
+        citation_style: str | None = None,
+        include_alternative_perspectives: bool | None = None,
     ) -> Verdict:
-        """
-        Generate a verdict for the claim based on evidence.
+        """Generate a verdict for the claim based on evidence.
 
         Args:
             claim: The claim to generate a verdict for
@@ -118,9 +109,8 @@ class VerdictWriter(Agent[tuple[Claim, List[Evidence]], Verdict], Protocol):
         """
         ...
 
-    async def process(self, input_data: tuple[Claim, List[Evidence]]) -> Verdict:
-        """
-        Process the input claim and evidence and return a verdict.
+    async def process(self, input_data: tuple[Claim, list[Evidence]]) -> Verdict:
+        """Process the input claim and evidence and return a verdict.
 
         This method fulfills the base Agent protocol by calling generate_verdict.
 

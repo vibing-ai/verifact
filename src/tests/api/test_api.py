@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-API Testing Script for VeriFact
+"""API Testing Script for VeriFact
 
 This script tests the VeriFact API endpoints to ensure they're working correctly.
 """
@@ -53,7 +52,6 @@ def test_api():
 
 def test_endpoints(api_url, results):
     """Test the various API endpoints."""
-
     # 1. Test factcheck endpoint
     print("\nTesting POST /api/v1/factcheck...")
 

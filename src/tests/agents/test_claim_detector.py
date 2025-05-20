@@ -1,5 +1,4 @@
-"""
-Tests for the ClaimDetector agent.
+"""Tests for the ClaimDetector agent.
 
 This test suite provides comprehensive coverage of the ClaimDetector functionality,
 including claim detection, check-worthiness scoring, domain classification, entity extraction,
@@ -743,9 +742,9 @@ class TestClaimDetector:
         for i, entity_type in enumerate(entity_types):
             mock_entities.append(
                 Entity(
-                    text=f"Entity{i+1}",
+                    text=f"Entity{i + 1}",
                     type=entity_type,
-                    normalized_text=f"Entity{i+1}",
+                    normalized_text=f"Entity{i + 1}",
                     relevance=0.9,
                 )
             )
@@ -813,9 +812,9 @@ class TestClaimDetector:
         for i in range(3):
             mock_claims.append(
                 Claim(
-                    text=f"Claim {i+1}",
-                    original_text=f"Claim {i+1}",
-                    normalized_text=f"Claim {i+1}",
+                    text=f"Claim {i + 1}",
+                    original_text=f"Claim {i + 1}",
+                    normalized_text=f"Claim {i + 1}",
                     check_worthiness=0.9 - (i * 0.1),  # Decreasing check-worthiness
                     specificity_score=0.8,
                     public_interest_score=0.7,
@@ -837,7 +836,7 @@ class TestClaimDetector:
 
         # Verify claims are in correct order (ranked by check-worthiness)
         for i in range(len(claims)):
-            assert claims[i].text == f"Claim {i+1}"
+            assert claims[i].text == f"Claim {i + 1}"
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -992,7 +991,7 @@ async def test_claim_detector_standalone():
     # Test each case
     for case in test_cases:
         print(f"\nTesting: {case['name']}")
-        print(f"Text: \"{case['text']}\"")
+        print(f'Text: "{case["text"]}"')
 
         try:
             # Time the detection process
@@ -1013,7 +1012,7 @@ async def test_claim_detector_standalone():
                     check_status = (
                         "Checkworthy" if claim.check_worthiness >= 0.5 else "Not checkworthy"
                     )
-                    print(f'  {i+1}. "{claim.text}" ({check_status})')
+                    print(f'  {i + 1}. "{claim.text}" ({check_status})')
                     if hasattr(claim, "context") and claim.context:
                         print(f"     Context: {claim.context}")
                     if hasattr(claim, "domain") and claim.domain:

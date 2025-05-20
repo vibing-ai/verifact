@@ -1,5 +1,4 @@
-"""
-Asynchronous processing utilities for VeriFact.
+"""Asynchronous processing utilities for VeriFact.
 
 This module provides tools for processing tasks asynchronously with priority handling.
 """
@@ -8,9 +7,10 @@ import asyncio
 import logging
 import time
 import traceback
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, TypeVar, Generic, Tuple
+from typing import Any, Generic, TypeVar
 
 from ..logging.logger import get_component_logger
 
@@ -47,9 +47,9 @@ class ProcessingProgress:
     pending_items: int
     failed_items: int
     success_rate: float
-    estimated_time_remaining: Optional[float] = None
-    avg_processing_time: Optional[float] = None
-    start_time: Optional[float] = None
+    estimated_time_remaining: float | None = None
+    avg_processing_time: float | None = None
+    start_time: float | None = None
     last_update_time: float = field(default_factory=time.time)
 
 
@@ -58,18 +58,17 @@ class ProcessingResult(Generic[T, R]):
     """Result of a processing operation."""
 
     item: T
-    result: Optional[R] = None
+    result: R | None = None
     success: bool = True
-    error: Optional[str] = None
+    error: str | None = None
     processing_time: float = 0.0
-    item_id: Optional[str] = None
+    item_id: str | None = None
     timestamp: float = field(default_factory=time.time)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class AsyncProcessor(Generic[T, R]):
-    """
-    Generic asynchronous processor for handling multiple items concurrently.
+    """Generic asynchronous processor for handling multiple items concurrently.
 
     This class provides:
     - Controlled concurrency with semaphores
@@ -85,11 +84,10 @@ class AsyncProcessor(Generic[T, R]):
         max_concurrency: int = 5,
         timeout_seconds: float = 60.0,
         retry_attempts: int = 1,
-        logger: Optional[logging.Logger] = None,
-        priority_queue: Optional[PriorityQueue[T]] = None,
+        logger: logging.Logger | None = None,
+        priority_queue: PriorityQueue[T] | None = None,
     ):
-        """
-        Initialize the asynchronous processor.
+        """Initialize the asynchronous processor.
 
         Args:
             process_func: Function that processes a single item
@@ -118,26 +116,25 @@ class AsyncProcessor(Generic[T, R]):
         )
 
         # Processing statistics
-        self._processing_times: List[float] = []
-        self._start_time: Optional[float] = None
-        self._results: Dict[str, ProcessingResult[T, R]] = {}
+        self._processing_times: list[float] = []
+        self._start_time: float | None = None
+        self._results: dict[str, ProcessingResult[T, R]] = {}
 
         # Task management
-        self._processing_task: Optional[asyncio.Task] = None
+        self._processing_task: asyncio.Task | None = None
         self._paused = False
         self._cancel_requested = False
 
         # Progress callback
-        self._progress_callback: Optional[Callable[[ProcessingProgress], None]] = None
+        self._progress_callback: Callable[[ProcessingProgress], None] | None = None
 
     async def process_items(
         self,
-        items: List[T],
-        progress_callback: Optional[Callable[[ProcessingProgress], None]] = None,
+        items: list[T],
+        progress_callback: Callable[[ProcessingProgress], None] | None = None,
         wait_for_completion: bool = True,
-    ) -> List[ProcessingResult[T, R]]:
-        """
-        Process multiple items concurrently.
+    ) -> list[ProcessingResult[T, R]]:
+        """Process multiple items concurrently.
 
         Args:
             items: List of items to process
@@ -253,8 +250,7 @@ class AsyncProcessor(Generic[T, R]):
             await self._process_item(prioritized_item)
 
     async def _process_item(self, prioritized_item: PrioritizedItem[T]) -> None:
-        """
-        Process a single item with timeout and retry handling.
+        """Process a single item with timeout and retry handling.
 
         Args:
             prioritized_item: The prioritized item to process
@@ -400,7 +396,7 @@ class AsyncProcessor(Generic[T, R]):
         """Get current processing progress."""
         return self._progress
 
-    def get_results(self) -> Dict[str, ProcessingResult[T, R]]:
+    def get_results(self) -> dict[str, ProcessingResult[T, R]]:
         """Get all processing results."""
         return self._results.copy()
 
@@ -411,8 +407,7 @@ class AsyncProcessor(Generic[T, R]):
 
 
 class AsyncClaimProcessor(AsyncProcessor[T, R]):
-    """
-    Specialized asynchronous processor for handling claims.
+    """Specialized asynchronous processor for handling claims.
 
     Extends AsyncProcessor with claim-specific functionality:
     - Claim prioritization based on check-worthiness
@@ -430,8 +425,7 @@ class AsyncClaimProcessor(AsyncProcessor[T, R]):
         max_batch_size: int = 5,
         allow_duplicate_claims: bool = False,
     ):
-        """
-        Initialize the claim processor.
+        """Initialize the claim processor.
 
         Args:
             process_func: Function that processes a single claim
@@ -463,11 +457,10 @@ class AsyncClaimProcessor(AsyncProcessor[T, R]):
         )
 
         # Claim-specific tracking
-        self._claim_relationships: Dict[str, List[str]] = {}
+        self._claim_relationships: dict[str, list[str]] = {}
 
-    def get_related_claims(self, item: T) -> List[Tuple[str, T, Optional[R]]]:
-        """
-        Get claims related to the specified item.
+    def get_related_claims(self, item: T) -> list[tuple[str, T, R | None]]:
+        """Get claims related to the specified item.
 
         Args:
             item: The item to find related claims for
@@ -491,9 +484,8 @@ class AsyncClaimProcessor(AsyncProcessor[T, R]):
 
         return []
 
-    def get_claim_result(self, item_id: str) -> Optional[R]:
-        """
-        Get the result for a specific claim by ID.
+    def get_claim_result(self, item_id: str) -> R | None:
+        """Get the result for a specific claim by ID.
 
         Args:
             item_id: ID of the claim
@@ -507,8 +499,7 @@ class AsyncClaimProcessor(AsyncProcessor[T, R]):
         return None
 
     def set_result_relationships(self) -> None:
-        """
-        Establish relationships between results based on claim content.
+        """Establish relationships between results based on claim content.
 
         This method analyzes the results and establishes relationships
         between claims that are related but were processed separately.
@@ -564,9 +555,8 @@ class AsyncClaimProcessor(AsyncProcessor[T, R]):
             f"Found {len(relationship_pairs)} relationships between {len(self._claim_relationships)} claims"
         )
 
-    def get_claim_relationships(self, item_id: str) -> List[Tuple[str, T, Optional[R]]]:
-        """
-        Get all claims related to the specified claim.
+    def get_claim_relationships(self, item_id: str) -> list[tuple[str, T, R | None]]:
+        """Get all claims related to the specified claim.
 
         Args:
             item_id: ID of the claim to find relationships for

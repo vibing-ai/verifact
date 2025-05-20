@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-"""
-VeriFact CLI
+"""VeriFact CLI
 
 Command-line interface for factchecking text using the VeriFact pipeline.
 """
@@ -14,7 +13,7 @@ import sys
 import time
 import urllib.error
 import urllib.request
-from typing import Any, Dict, List, Optional
+from typing import Any
 from urllib.parse import urlparse
 
 import colorama
@@ -25,7 +24,7 @@ from src.models.factcheck import (
     FactcheckRequest,
     PipelineConfig,
 )
-from src.pipeline import FactcheckPipeline, PipelineConfig, PipelineEvent
+from src.pipeline import PipelineConfig, PipelineEvent
 from src.utils.exceptions import InputTooLongError, ValidationError, VerifactError
 from src.utils.logger import configure_logging
 from src.utils.validation import sanitize_text, validate_text_length
@@ -152,8 +151,7 @@ def parse_args():
 
 
 def build_pipeline_config(args) -> PipelineConfig:
-    """
-    Build pipeline configuration from command line arguments.
+    """Build pipeline configuration from command line arguments.
 
     Args:
         args: Parsed command line arguments
@@ -181,8 +179,7 @@ def build_pipeline_config(args) -> PipelineConfig:
 
 
 def create_progress_callback(total_claims: int, use_progress_bar: bool = True):
-    """
-    Create a callback for tracking pipeline progress.
+    """Create a callback for tracking pipeline progress.
 
     Args:
         total_claims: Total number of claims to process
@@ -196,7 +193,7 @@ def create_progress_callback(total_claims: int, use_progress_bar: bool = True):
 
     pbar = tqdm(total=100, desc="Overall progress", unit="%")
 
-    def progress_callback(event: PipelineEvent, data: Dict[str, Any]):
+    def progress_callback(event: PipelineEvent, data: dict[str, Any]):
         """Handle progress events from the pipeline."""
         if event == PipelineEvent.STAGE_STARTED and "message" in data:
             stage = data.get("stage", "")
@@ -252,8 +249,7 @@ def truncate_text(text: str, max_length: int = MAX_TEXT_DISPLAY_LENGTH) -> str:
 
 
 def format_results_as_text(verdicts, stats, use_color: bool = True):
-    """
-    Format results as human-readable text.
+    """Format results as human-readable text.
 
     Args:
         verdicts: List of verdict objects
@@ -321,8 +317,7 @@ def format_results_as_text(verdicts, stats, use_color: bool = True):
 
 
 def format_results_as_csv(verdicts, stats):
-    """
-    Format results as CSV.
+    """Format results as CSV.
 
     Args:
         verdicts: List of verdict objects
@@ -382,8 +377,7 @@ def format_results_as_csv(verdicts, stats):
 
 
 async def run_pipeline(text, config, progress_callback=None):
-    """
-    Run the factchecking pipeline.
+    """Run the factchecking pipeline.
 
     Args:
         text: Input text to process
@@ -411,8 +405,7 @@ async def run_pipeline(text, config, progress_callback=None):
 
 
 def fetch_url_content(url: str) -> str:
-    """
-    Fetch content from a URL.
+    """Fetch content from a URL.
 
     Args:
         url: URL to fetch content from
@@ -442,9 +435,8 @@ def fetch_url_content(url: str) -> str:
         raise ValueError("Failed to decode content as UTF-8")
 
 
-def load_test_dataset(path: str) -> List[Dict[str, Any]]:
-    """
-    Load test dataset from a JSON file.
+def load_test_dataset(path: str) -> list[dict[str, Any]]:
+    """Load test dataset from a JSON file.
 
     Args:
         path: Path to the test dataset file
@@ -456,7 +448,7 @@ def load_test_dataset(path: str) -> List[Dict[str, Any]]:
         ValidationError: If file cannot be loaded or parsed
     """
     try:
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             dataset = json.load(f)
 
             # Handle both formats:
@@ -489,10 +481,9 @@ def load_test_dataset(path: str) -> List[Dict[str, Any]]:
 
 
 def filter_test_cases(
-    test_cases: List[Dict[str, Any]], category: Optional[str] = None, level: Optional[str] = None
-) -> List[Dict[str, Any]]:
-    """
-    Filter test cases by category and level.
+    test_cases: list[dict[str, Any]], category: str | None = None, level: str | None = None
+) -> list[dict[str, Any]]:
+    """Filter test cases by category and level.
 
     Args:
         test_cases: List of test cases
@@ -520,10 +511,9 @@ def filter_test_cases(
 
 
 async def run_test(
-    test_case: Dict[str, Any], config: PipelineConfig, verbose: bool = False
-) -> Dict[str, Any]:
-    """
-    Run a single test case.
+    test_case: dict[str, Any], config: PipelineConfig, verbose: bool = False
+) -> dict[str, Any]:
+    """Run a single test case.
 
     Args:
         test_case: Test case dictionary
@@ -616,10 +606,9 @@ async def run_test(
 
 
 async def run_tests(
-    test_cases: List[Dict[str, Any]], config: PipelineConfig, verbose: bool = False
-) -> Dict[str, Any]:
-    """
-    Run multiple test cases and summarize results.
+    test_cases: list[dict[str, Any]], config: PipelineConfig, verbose: bool = False
+) -> dict[str, Any]:
+    """Run multiple test cases and summarize results.
 
     Args:
         test_cases: List of test cases to run
@@ -637,7 +626,7 @@ async def run_tests(
 
     with tqdm(total=len(test_cases), disable=verbose) as progress_bar:
         for i, test_case in enumerate(test_cases):
-            test_id = test_case.get("id", f"test-{i+1}")
+            test_id = test_case.get("id", f"test-{i + 1}")
             category = test_case.get("category", "unknown")
             level = test_case.get("level", test_case.get("difficulty", "unknown"))
 
@@ -732,10 +721,9 @@ async def run_tests(
 
 
 def format_test_results_as_text(
-    summary: Dict[str, Any], detailed: bool = False, use_color: bool = True
+    summary: dict[str, Any], detailed: bool = False, use_color: bool = True
 ) -> str:
-    """
-    Format test results as text.
+    """Format test results as text.
 
     Args:
         summary: Test summary dictionary
@@ -886,7 +874,7 @@ async def run_factcheck_command(args):
             input_text = args.text
         elif args.file:
             try:
-                with open(args.file, "r", encoding="utf-8") as f:
+                with open(args.file, encoding="utf-8") as f:
                     input_text = f.read()
             except FileNotFoundError:
                 raise ValidationError(
@@ -1040,7 +1028,9 @@ async def run_test_command(args):
 
         # Create pipeline config based on test needs
         config = PipelineConfig(
-            timeout=timeout, retries=1, verbose=verbose  # Reduce retries for faster testing
+            timeout=timeout,
+            retries=1,
+            verbose=verbose,  # Reduce retries for faster testing
         )
 
         # Set a timeout for the entire test run

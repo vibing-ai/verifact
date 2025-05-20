@@ -1,5 +1,4 @@
-"""
-Tests for utility components.
+"""Tests for utility components.
 
 This package contains tests for utility functions and modules:
 - Database utilities

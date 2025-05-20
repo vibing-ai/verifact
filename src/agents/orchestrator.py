@@ -1,5 +1,4 @@
-"""
-Orchestrator for the factchecking pipeline.
+"""Orchestrator for the factchecking pipeline.
 
 This module defines the orchestrator for coordinating the workflow between the
 different agents in the factchecking pipeline, with explicit dependency injection
@@ -7,7 +6,7 @@ and clear error boundaries.
 """
 
 import asyncio
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from src.agents.dto import Claim, Evidence, Verdict
 from src.agents.factory import AgentFactory
@@ -19,8 +18,7 @@ logger = get_component_logger("factcheck_pipeline")
 
 
 class FactcheckPipeline:
-    """
-    Orchestrates the factchecking workflow.
+    """Orchestrates the factchecking workflow.
 
     This class coordinates the flow between different agents in the factchecking
     pipeline, ensuring proper separation of concerns and clear error boundaries.
@@ -37,8 +35,7 @@ class FactcheckPipeline:
         min_check_worthiness: float = 0.5,
         max_claims: int = 10,
     ):
-        """
-        Initialize the factchecking pipeline with explicit dependencies.
+        """Initialize the factchecking pipeline with explicit dependencies.
 
         Args:
             claim_detector: Agent for detecting claims in text
@@ -61,9 +58,8 @@ class FactcheckPipeline:
             self.max_claims,
         )
 
-    async def process_text(self, text: str) -> List[Verdict]:
-        """
-        Process text through the full factchecking pipeline.
+    async def process_text(self, text: str) -> list[Verdict]:
+        """Process text through the full factchecking pipeline.
 
         Args:
             text: The text to factcheck
@@ -100,9 +96,8 @@ class FactcheckPipeline:
         logger.info("Factchecking pipeline completed. Generated %d verdicts.", len(verdicts))
         return verdicts
 
-    async def _detect_claims(self, text: str) -> List[Claim]:
-        """
-        Detect check-worthy claims in the text.
+    async def _detect_claims(self, text: str) -> list[Claim]:
+        """Detect check-worthy claims in the text.
 
         Args:
             text: The text to analyze
@@ -120,10 +115,9 @@ class FactcheckPipeline:
         return claims
 
     async def _gather_evidence_for_claims(
-        self, claims: List[Claim]
-    ) -> List[Tuple[Claim, List[Evidence]]]:
-        """
-        Gather evidence for multiple claims with controlled parallelism.
+        self, claims: list[Claim]
+    ) -> list[tuple[Claim, list[Evidence]]]:
+        """Gather evidence for multiple claims with controlled parallelism.
 
         Args:
             claims: List of claims to gather evidence for
@@ -138,7 +132,7 @@ class FactcheckPipeline:
         # Create a semaphore to limit concurrency
         semaphore = asyncio.Semaphore(self.parallelism)
 
-        async def gather_with_limit(claim: Claim) -> Tuple[Claim, List[Evidence]]:
+        async def gather_with_limit(claim: Claim) -> tuple[Claim, list[Evidence]]:
             async with semaphore:
                 logger.info("Gathering evidence for claim: '%s'", claim.text[:50] + "...")
                 evidence = await self.evidence_hunter.gather_evidence(claim)
@@ -155,10 +149,9 @@ class FactcheckPipeline:
         return results
 
     async def _generate_verdicts(
-        self, claims_with_evidence: List[Tuple[Claim, List[Evidence]]]
-    ) -> List[Verdict]:
-        """
-        Generate verdicts for claims based on gathered evidence.
+        self, claims_with_evidence: list[tuple[Claim, list[Evidence]]]
+    ) -> list[Verdict]:
+        """Generate verdicts for claims based on gathered evidence.
 
         Args:
             claims_with_evidence: List of claims paired with their evidence
@@ -186,9 +179,8 @@ class FactcheckPipelineFactory:
     """Factory for creating configured FactcheckPipeline instances."""
 
     @staticmethod
-    def create_pipeline(config: Optional[Dict[str, Any]] = None) -> FactcheckPipeline:
-        """
-        Create a configured FactcheckPipeline instance.
+    def create_pipeline(config: dict[str, Any] | None = None) -> FactcheckPipeline:
+        """Create a configured FactcheckPipeline instance.
 
         Args:
             config: Optional configuration dictionary for the pipeline

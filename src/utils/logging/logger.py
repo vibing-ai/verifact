@@ -1,5 +1,4 @@
-"""
-Comprehensive logging framework for VeriFact.
+"""Comprehensive logging framework for VeriFact.
 
 This module provides a unified logging system with support for:
 1. Structured JSON logging
@@ -18,12 +17,13 @@ import logging
 import os
 import re
 import sys
-import uuid
 import time
+import uuid
+from collections.abc import Callable
 from contextlib import contextmanager
 from functools import wraps
 from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
-from typing import Any, Callable, Dict, Optional, TypeVar, Union, cast
+from typing import Any, TypeVar, cast
 
 # For performance timing
 
@@ -125,7 +125,7 @@ try:
     # Context variables for tracking request context across async boundaries
     request_id_var: ContextVar[str] = ContextVar("request_id", default="")
     component_var: ContextVar[str] = ContextVar("component", default="")
-    context_data_var: ContextVar[Dict[str, Any]] = ContextVar("context_data", default={})
+    context_data_var: ContextVar[dict[str, Any]] = ContextVar("context_data", default={})
 except ImportError:
     # Fallback for older Python versions
     request_id_var = None
@@ -169,7 +169,7 @@ class SensitiveFilter(logging.Filter):
 
         return True
 
-    def _redact_dict(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def _redact_dict(self, data: dict[str, Any]) -> dict[str, Any]:
         """Recursively redact sensitive values in a dictionary."""
         sensitive_keys = {"api_key", "key", "secret", "password", "token", "authorization"}
 
@@ -214,8 +214,7 @@ class ContextFilter(logging.Filter):
 
 
 class LogManager:
-    """
-    Central manager for logging configuration and retrieval.
+    """Central manager for logging configuration and retrieval.
 
     This class provides a centralized interface for configuring loggers,
     maintaining context across components, and tracking performance.
@@ -236,15 +235,14 @@ class LogManager:
 
     def configure(
         self,
-        level: Optional[Union[str, int]] = None,
-        json_logging: Optional[bool] = None,
-        log_file: Optional[str] = None,
-        rotation_size: Optional[int] = None,
-        rotation_count: Optional[int] = None,
-        daily_rotation: Optional[bool] = None,
+        level: str | int | None = None,
+        json_logging: bool | None = None,
+        log_file: str | None = None,
+        rotation_size: int | None = None,
+        rotation_count: int | None = None,
+        daily_rotation: bool | None = None,
     ) -> None:
-        """
-        Configure the logging system.
+        """Configure the logging system.
 
         Args:
             level: Log level (debug, info, warning, error, critical)
@@ -330,8 +328,7 @@ class LogManager:
         self.configured = True
 
     def get_logger(self, name: str = "verifact", **kwargs) -> logging.Logger:
-        """
-        Get a logger for the specified name, creating it if necessary.
+        """Get a logger for the specified name, creating it if necessary.
 
         Args:
             name: Logger name
@@ -357,8 +354,7 @@ class LogManager:
         return logger
 
     def get_component_logger(self, component: str) -> logging.Logger:
-        """
-        Get a logger for a specific component.
+        """Get a logger for a specific component.
 
         Args:
             component: Component name (e.g., 'claim_detector', 'evidence_hunter')
@@ -372,9 +368,8 @@ class LogManager:
         # Get logger with the component name
         return self.get_logger(f"verifact.{component}")
 
-    def set_request_id(self, request_id: Optional[str] = None) -> str:
-        """
-        Set the current request ID for context tracking.
+    def set_request_id(self, request_id: str | None = None) -> str:
+        """Set the current request ID for context tracking.
 
         Args:
             request_id: Request ID to set, or None to generate a new one
@@ -400,8 +395,7 @@ class LogManager:
             return getattr(_thread_local, "request_id", "")
 
     def set_component(self, component: str) -> None:
-        """
-        Set the current component name for context tracking.
+        """Set the current component name for context tracking.
 
         Args:
             component: Component name
@@ -419,8 +413,7 @@ class LogManager:
             return getattr(_thread_local, "component", "")
 
     def add_context(self, **kwargs) -> None:
-        """
-        Add data to the current logging context.
+        """Add data to the current logging context.
 
         Args:
             **kwargs: Key-value pairs to add to context
@@ -442,9 +435,8 @@ class LogManager:
             _thread_local.context_data = {}
 
     @contextmanager
-    def request_context(self, request_id: Optional[str] = None, **kwargs):
-        """
-        Context manager for tracking request context.
+    def request_context(self, request_id: str | None = None, **kwargs):
+        """Context manager for tracking request context.
 
         Args:
             request_id: Request ID (generated if not provided)
@@ -485,12 +477,11 @@ class LogManager:
     def performance_timer(
         self,
         operation: str,
-        logger: Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
         log_level: str = "debug",
         **kwargs,
     ):
-        """
-        Context manager for timing and logging operation performance.
+        """Context manager for timing and logging operation performance.
 
         Args:
             operation: Name of the operation being timed
@@ -544,15 +535,14 @@ log_manager = LogManager()
 
 def setup_logger(
     name: str = "verifact",
-    level: Union[str, int] = "info",
-    log_file: Optional[str] = None,
+    level: str | int = "info",
+    log_file: str | None = None,
     log_format: str = DEFAULT_TEXT_FORMAT,
     max_file_size: int = 10 * 1024 * 1024,  # 10 MB
     backup_count: int = 5,
     json_logging: bool = False,
 ) -> logging.Logger:
-    """
-    Set up a logger with the specified configuration.
+    """Set up a logger with the specified configuration.
 
     Args:
         name: Logger name
@@ -580,8 +570,7 @@ def setup_logger(
 
 
 def get_logger(name: str = "verifact") -> logging.Logger:
-    """
-    Get a logger for the specified name, creating it if necessary.
+    """Get a logger for the specified name, creating it if necessary.
 
     Args:
         name: Logger name
@@ -593,8 +582,7 @@ def get_logger(name: str = "verifact") -> logging.Logger:
 
 
 def get_component_logger(component: str) -> logging.Logger:
-    """
-    Get a logger for a specific component.
+    """Get a logger for a specific component.
 
     Args:
         component: Component name (e.g., 'claim_detector', 'evidence_hunter')
@@ -610,12 +598,11 @@ F = TypeVar("F", bound=Callable[..., Any])
 
 
 def log_performance(
-    operation: Optional[str] = None,
-    logger: Optional[Union[str, logging.Logger]] = None,
+    operation: str | None = None,
+    logger: str | logging.Logger | None = None,
     level: str = "debug",
 ) -> Callable[[F], F]:
-    """
-    Decorator for timing and logging function execution.
+    """Decorator for timing and logging function execution.
 
     Args:
         operation: Name of the operation (defaults to function name)
@@ -649,13 +636,13 @@ def log_performance(
 
 
 # Context manager shortcuts
-def request_context(request_id: Optional[str] = None, **kwargs):
+def request_context(request_id: str | None = None, **kwargs):
     """Context manager for tracking request context."""
     return log_manager.request_context(request_id, **kwargs)
 
 
 def performance_timer(
-    operation: str, logger: Optional[logging.Logger] = None, level: str = "debug", **kwargs
+    operation: str, logger: logging.Logger | None = None, level: str = "debug", **kwargs
 ):
     """Context manager for timing and logging operation performance."""
     return log_manager.performance_timer(operation, logger, level, **kwargs)

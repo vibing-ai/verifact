@@ -1,5 +1,4 @@
-"""
-VeriFact Factchecking API
+"""VeriFact Factchecking API
 
 This module provides the API endpoints for the factchecking service.
 """
@@ -8,7 +7,7 @@ import logging
 import time
 import uuid
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any
 
 from fastapi import (
     APIRouter,
@@ -28,7 +27,6 @@ from src.models.factcheck import (
     JobStatus,
     PipelineConfig,
 )
-from src.pipeline import FactcheckPipeline
 from src.utils.cache import Cache
 from src.utils.db import SupabaseClient
 from src.utils.exceptions import (
@@ -52,7 +50,7 @@ from src.utils.validation import (
 logger = logging.getLogger(__name__)
 
 # In-memory store for job results (would be a database in production)
-_job_results: Dict[str, Dict[str, Any]] = {}
+_job_results: dict[str, dict[str, Any]] = {}
 
 # Setup rate limiting
 rate_limit_cache = Cache(max_size=1000, ttl_seconds=3600)
@@ -82,8 +80,7 @@ router = APIRouter(
 async def get_api_key(
     api_key_header: str = Security(api_key_header),
 ) -> APIKey:
-    """
-    Validate API key for protected endpoints.
+    """Validate API key for protected endpoints.
 
     Args:
         api_key_header: API key from request header
@@ -108,8 +105,7 @@ async def get_api_key(
 
 
 def check_rate_limit(api_key: str, limit: int = 10, window: int = 60):
-    """
-    Check if the request exceeds rate limits.
+    """Check if the request exceeds rate limits.
 
     Args:
         api_key: API key from authenticated request
@@ -142,8 +138,7 @@ def check_rate_limit(api_key: str, limit: int = 10, window: int = 60):
 
 
 async def get_pipeline_config(request: FactcheckRequest) -> PipelineConfig:
-    """
-    Create a pipeline configuration from request options.
+    """Create a pipeline configuration from request options.
 
     Args:
         request: Factchecking request
@@ -204,8 +199,7 @@ async def get_pipeline_config(request: FactcheckRequest) -> PipelineConfig:
 async def factcheck(
     request: FactcheckRequest, api_request: Request, api_key: APIKey = Security(get_api_key)
 ):
-    """
-    Factcheck claims in the provided text.
+    """Factcheck claims in the provided text.
 
     Args:
         request: The factchecking request containing text and options
@@ -314,7 +308,7 @@ async def factcheck(
 
 @router.post(
     "/factcheck/async",
-    response_model=Dict[str, Any],
+    response_model=dict[str, Any],
     summary="Asynchronously factcheck claims in text",
     description="""
     Start an asynchronous factchecking process. This endpoint returns immediately with a job ID
@@ -329,8 +323,7 @@ async def factcheck_async(
     api_request: Request,
     api_key: APIKey = Security(get_api_key),
 ):
-    """
-    Start an asynchronous factchecking job.
+    """Start an asynchronous factchecking job.
 
     Args:
         request: The factchecking request containing text and options
@@ -389,15 +382,14 @@ async def factcheck_async(
 
 @router.get(
     "/factcheck/job/{job_id}",
-    response_model=Dict[str, Any],
+    response_model=dict[str, Any],
     summary="Get status of an asynchronous factchecking job",
     description="""
     Check the status of an asynchronous factchecking job and retrieve results if available.
     """,
 )
 async def get_job_status(job_id: str, api_key: APIKey = Security(get_api_key)):
-    """
-    Get the status of a factchecking job.
+    """Get the status of a factchecking job.
 
     Args:
         job_id: The job ID to check
@@ -443,17 +435,16 @@ async def get_job_status(job_id: str, api_key: APIKey = Security(get_api_key)):
     "/factchecks",
     summary="Get recent factchecks",
     description="Retrieve a list of recent factchecks with pagination and filtering options.",
-    response_model=Dict[str, Any],
+    response_model=dict[str, Any],
 )
 async def get_factchecks(
     limit: int = Query(10, ge=1, le=100),
     offset: int = Query(0, ge=0),
-    domain: Optional[str] = None,
-    verdict_type: Optional[str] = None,
+    domain: str | None = None,
+    verdict_type: str | None = None,
     api_key: APIKey = Security(get_api_key),
 ):
-    """
-    Get recent factchecks with pagination and filtering.
+    """Get recent factchecks with pagination and filtering.
 
     Args:
         limit: Maximum number of results to return
@@ -488,11 +479,10 @@ async def get_factchecks(
     "/factchecks/{factcheck_id}",
     summary="Get factcheck by ID",
     description="Retrieve a specific factcheck by its ID.",
-    response_model=Dict[str, Any],
+    response_model=dict[str, Any],
 )
 async def get_factcheck(factcheck_id: str, api_key: APIKey = Security(get_api_key)):
-    """
-    Get a specific factcheck by ID.
+    """Get a specific factcheck by ID.
 
     Args:
         factcheck_id: The ID of the factcheck to retrieve
@@ -529,8 +519,7 @@ async def get_factcheck(factcheck_id: str, api_key: APIKey = Security(get_api_ke
 
 @with_async_retry(max_attempts=3, initial_delay=1.0)
 async def _run_factcheck_job(job_id: str, request: FactcheckRequest, request_id: str, api_key: str):
-    """
-    Run a factchecking job in the background.
+    """Run a factchecking job in the background.
 
     Args:
         job_id: Unique job identifier

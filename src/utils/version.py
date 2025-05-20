@@ -1,17 +1,15 @@
-"""
-Version information utilities for VeriFact.
+"""Version information utilities for VeriFact.
 
 This module provides functions for getting version information.
 """
 
 import os
 import subprocess
-from typing import Any, Dict
+from typing import Any
 
 
-def get_version_info() -> Dict[str, Any]:
-    """
-    Get detailed version information including git commit if available.
+def get_version_info() -> dict[str, Any]:
+    """Get detailed version information including git commit if available.
 
     Returns:
         Dictionary with version information

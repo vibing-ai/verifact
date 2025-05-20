@@ -1,5 +1,4 @@
-"""
-Asynchronous processing utilities for VeriFact.
+"""Asynchronous processing utilities for VeriFact.
 
 This module provides tools for asynchronous processing, task queues, and retry mechanisms.
 """

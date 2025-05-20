@@ -1,5 +1,4 @@
-"""
-Tests for agent components.
+"""Tests for agent components.
 
 This package contains tests for all agent components:
 - ClaimDetector

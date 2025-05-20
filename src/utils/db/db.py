@@ -1,5 +1,4 @@
-"""
-Database utilities for Supabase and PGVector integration.
+"""Database utilities for Supabase and PGVector integration.
 
 This module provides functions and classes for:
 - Connecting to Supabase databases
@@ -15,7 +14,7 @@ import time
 from dataclasses import dataclass
 from datetime import datetime
 from functools import wraps
-from typing import Any, Dict, Generic, List, Optional, TypeVar, Union
+from typing import Any, Generic, TypeVar, Union
 
 # Import Pydantic for model validation
 from pydantic import BaseModel
@@ -95,13 +94,13 @@ class QueryOptions:
     offset: int = 0
     order_by: str = "created_at"
     order_direction: str = "desc"
-    filters: Dict[str, Any] = None
+    filters: dict[str, Any] = None
 
 
 class PaginatedResult(Generic[T], BaseModel):
     """A paginated result set."""
 
-    items: List[T]
+    items: list[T]
     total: int
     page: int
     page_size: int
@@ -137,8 +136,7 @@ class SupabaseClient:
     """Client for interacting with Supabase and PGVector."""
 
     def __init__(self, min_conn=1, max_conn=10):
-        """
-        Initialize Supabase connection with connection pooling.
+        """Initialize Supabase connection with connection pooling.
 
         Args:
             min_conn: Minimum connections in the pool
@@ -157,7 +155,7 @@ class SupabaseClient:
         self.max_conn = max_conn
 
         # Initialize Supabase client if credentials are available
-        self.supabase: Optional[Client] = None
+        self.supabase: Client | None = None
 
         if not SUPABASE_AVAILABLE:
             logger.warning("Supabase package not installed. Install with 'pip install supabase'")
@@ -204,8 +202,7 @@ class SupabaseClient:
 
     @contextlib.contextmanager
     def get_connection(self):
-        """
-        Get a connection from the pool with context management.
+        """Get a connection from the pool with context management.
 
         Yields:
             A database connection from the pool
@@ -232,8 +229,7 @@ class SupabaseClient:
 
     @contextlib.contextmanager
     def get_cursor(self, cursor_factory=DictCursor):
-        """
-        Get a database cursor with context management.
+        """Get a database cursor with context management.
 
         Args:
             cursor_factory: The cursor factory to use (default: DictCursor)
@@ -263,8 +259,7 @@ class SupabaseClient:
             logger.info("Closed all database connections")
 
     def setup_pgvector(self) -> bool:
-        """
-        Set up pgvector extension if not already installed.
+        """Set up pgvector extension if not already installed.
 
         Returns:
             bool: True if pgvector is set up successfully, False otherwise
@@ -291,9 +286,8 @@ class SupabaseClient:
             return False
 
     @retry_on_error()
-    def generate_embedding(self, text: str) -> List[float]:
-        """
-        Generate vector embedding for text using OpenAI's API.
+    def generate_embedding(self, text: str) -> list[float]:
+        """Generate vector embedding for text using OpenAI's API.
 
         Args:
             text: Text to generate embedding for
@@ -326,10 +320,9 @@ class SupabaseClient:
 
     @retry_on_error()
     def store_embedding(
-        self, content: str, embedding: List[float], metadata: Dict[str, Any] = None
-    ) -> Dict[str, Any]:
-        """
-        Store a vector embedding in the database.
+        self, content: str, embedding: list[float], metadata: dict[str, Any] = None
+    ) -> dict[str, Any]:
+        """Store a vector embedding in the database.
 
         Args:
             content: The original text content
@@ -368,10 +361,9 @@ class SupabaseClient:
         query_text: str,
         threshold: float = DEFAULT_SIMILARITY_THRESHOLD,
         limit: int = DEFAULT_MAX_RESULTS,
-        filter_metadata: Dict[str, Any] = None,
-    ) -> List[Dict[str, Any]]:
-        """
-        Find similar content using vector similarity search.
+        filter_metadata: dict[str, Any] = None,
+    ) -> list[dict[str, Any]]:
+        """Find similar content using vector similarity search.
 
         Args:
             query_text: Text to find similar content for
@@ -424,9 +416,8 @@ class SupabaseClient:
         claim_text: str,
         threshold: float = DEFAULT_SIMILARITY_THRESHOLD,
         limit: int = DEFAULT_MAX_RESULTS,
-    ) -> List[Dict[str, Any]]:
-        """
-        Find similar previously checked claims.
+    ) -> list[dict[str, Any]]:
+        """Find similar previously checked claims.
 
         Args:
             claim_text: The claim text to find similar claims for
@@ -449,9 +440,8 @@ class SupabaseClient:
         )
 
     @retry_on_error()
-    def store_claim_with_embedding(self, claim: Union[Claim, Dict[str, Any]]) -> Dict[str, Any]:
-        """
-        Store a claim with its vector embedding.
+    def store_claim_with_embedding(self, claim: Claim | dict[str, Any]) -> dict[str, Any]:
+        """Store a claim with its vector embedding.
 
         Args:
             claim: The claim to store (Pydantic model or dict)
@@ -532,11 +522,8 @@ class SupabaseClient:
             raise
 
     @retry_on_error()
-    def store_evidence(
-        self, evidence: Union[Evidence, Dict[str, Any]], claim_id: str
-    ) -> Dict[str, Any]:
-        """
-        Store evidence for a claim.
+    def store_evidence(self, evidence: Evidence | dict[str, Any], claim_id: str) -> dict[str, Any]:
+        """Store evidence for a claim.
 
         Args:
             evidence: The evidence to store (Pydantic model or dict)
@@ -596,9 +583,8 @@ class SupabaseClient:
             raise
 
     @retry_on_error()
-    def store_verdict(self, verdict: Union[Verdict, Dict[str, Any]]) -> Dict[str, Any]:
-        """
-        Store a verdict for a claim.
+    def store_verdict(self, verdict: Verdict | dict[str, Any]) -> dict[str, Any]:
+        """Store a verdict for a claim.
 
         Args:
             verdict: The verdict to store (Pydantic model or dict)
@@ -660,12 +646,11 @@ class SupabaseClient:
     @retry_on_error()
     def store_factcheck_result(
         self,
-        claim: Union[Claim, Dict[str, Any]],
-        evidence_list: List[Union[Evidence, Dict[str, Any]]],
-        verdict: Union[Verdict, Dict[str, Any]],
-    ) -> Dict[str, Any]:
-        """
-        Store a complete factcheck result (claim, evidence, and verdict).
+        claim: Claim | dict[str, Any],
+        evidence_list: list[Evidence | dict[str, Any]],
+        verdict: Verdict | dict[str, Any],
+    ) -> dict[str, Any]:
+        """Store a complete factcheck result (claim, evidence, and verdict).
 
         Args:
             claim: The claim to store
@@ -714,9 +699,8 @@ class SupabaseClient:
             raise
 
     @retry_on_error()
-    def get_factcheck_by_id(self, factcheck_id: str) -> Dict[str, Any]:
-        """
-        Retrieve a complete factcheck by ID.
+    def get_factcheck_by_id(self, factcheck_id: str) -> dict[str, Any]:
+        """Retrieve a complete factcheck by ID.
 
         Args:
             factcheck_id: ID of the factcheck to retrieve
@@ -775,11 +759,10 @@ class SupabaseClient:
         self,
         limit: int = 10,
         offset: int = 0,
-        domain: Optional[str] = None,
-        verdict_type: Optional[str] = None,
-    ) -> Dict[str, Any]:
-        """
-        Retrieve recent factcheck results with pagination and filtering.
+        domain: str | None = None,
+        verdict_type: str | None = None,
+    ) -> dict[str, Any]:
+        """Retrieve recent factcheck results with pagination and filtering.
 
         Args:
             limit: Maximum number of results to return
@@ -847,9 +830,8 @@ class SupabaseClient:
             raise
 
     @retry_on_error()
-    def batch_store_factchecks(self, factchecks: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """
-        Store multiple factchecks in batch.
+    def batch_store_factchecks(self, factchecks: list[dict[str, Any]]) -> dict[str, Any]:
+        """Store multiple factchecks in batch.
 
         Args:
             factchecks: List of factcheck data (each containing claim, evidence, verdict)
@@ -883,9 +865,8 @@ class SupabaseClient:
 
         return results
 
-    def check_database_health(self) -> Dict[str, Any]:
-        """
-        Check the health of the database connection.
+    def check_database_health(self) -> dict[str, Any]:
+        """Check the health of the database connection.
 
         Returns:
             Dict with health check results
@@ -939,9 +920,8 @@ class SupabaseClient:
 
         return results
 
-    def cleanup_old_data(self, days_to_keep: int = 90) -> Dict[str, Any]:
-        """
-        Clean up old data from the database.
+    def cleanup_old_data(self, days_to_keep: int = 90) -> dict[str, Any]:
+        """Clean up old data from the database.
 
         Args:
             days_to_keep: Number of days of data to keep
@@ -994,9 +974,8 @@ class SupabaseClient:
             logger.error(f"Failed to clean up old data: {str(e)}")
             return {"success": False, "error": str(e)}
 
-    def reindex_embeddings(self) -> Dict[str, Any]:
-        """
-        Reindex vector embeddings for improved performance.
+    def reindex_embeddings(self) -> dict[str, Any]:
+        """Reindex vector embeddings for improved performance.
 
         Returns:
             Dict with reindexing results
@@ -1019,9 +998,8 @@ class SupabaseClient:
             logger.error(f"Failed to reindex embeddings: {str(e)}")
             return {"success": False, "error": str(e)}
 
-    def optimize_database(self) -> Dict[str, Any]:
-        """
-        Perform database maintenance and optimization.
+    def optimize_database(self) -> dict[str, Any]:
+        """Perform database maintenance and optimization.
 
         Returns:
             Dict with optimization results
@@ -1040,9 +1018,8 @@ class SupabaseClient:
             return {"success": False, "error": str(e)}
 
     @retry_on_error()
-    def store_feedback(self, feedback: Union["Feedback", Dict[str, Any]]) -> Dict[str, Any]:
-        """
-        Store user feedback in the database.
+    def store_feedback(self, feedback: Union["Feedback", dict[str, Any]]) -> dict[str, Any]:
+        """Store user feedback in the database.
 
         Args:
             feedback: Feedback instance or dictionary with feedback data
@@ -1115,9 +1092,8 @@ class SupabaseClient:
     @retry_on_error()
     def get_feedback_for_claim(
         self, claim_id: str, limit: int = 50, offset: int = 0
-    ) -> List[Dict[str, Any]]:
-        """
-        Get all feedback for a specific claim.
+    ) -> list[dict[str, Any]]:
+        """Get all feedback for a specific claim.
 
         Args:
             claim_id: ID of the claim to get feedback for
@@ -1166,9 +1142,8 @@ class SupabaseClient:
             raise QueryError(f"Failed to get feedback for claim: {str(e)}")
 
     @retry_on_error()
-    def get_feedback_statistics(self, claim_id: Optional[str] = None) -> Dict[str, Any]:
-        """
-        Get aggregated feedback statistics.
+    def get_feedback_statistics(self, claim_id: str | None = None) -> dict[str, Any]:
+        """Get aggregated feedback statistics.
 
         Args:
             claim_id: Optional claim ID to filter statistics by
@@ -1239,9 +1214,8 @@ class SupabaseClient:
             raise QueryError(f"Failed to get feedback statistics: {str(e)}")
 
     @retry_on_error()
-    def _get_rating_distribution(self, claim_id: Optional[str] = None) -> Dict[str, Dict[int, int]]:
-        """
-        Get distribution of ratings.
+    def _get_rating_distribution(self, claim_id: str | None = None) -> dict[str, dict[int, int]]:
+        """Get distribution of ratings.
 
         Args:
             claim_id: Optional claim ID to filter by
@@ -1322,10 +1296,9 @@ class SupabaseClient:
 
     @retry_on_error()
     def _get_recent_comments(
-        self, claim_id: Optional[str] = None, limit: int = 5
-    ) -> List[Dict[str, Any]]:
-        """
-        Get recent comments from feedback.
+        self, claim_id: str | None = None, limit: int = 5
+    ) -> list[dict[str, Any]]:
+        """Get recent comments from feedback.
 
         Args:
             claim_id: Optional claim ID to filter by
@@ -1371,9 +1344,8 @@ class SupabaseClient:
             return []
 
     @retry_on_error()
-    def get_all_feedback(self, limit: int = 100, offset: int = 0) -> List[Dict[str, Any]]:
-        """
-        Get all feedback with pagination.
+    def get_all_feedback(self, limit: int = 100, offset: int = 0) -> list[dict[str, Any]]:
+        """Get all feedback with pagination.
 
         Args:
             limit: Maximum number of feedback items to return
@@ -1419,10 +1391,9 @@ class SupabaseClient:
             raise QueryError(f"Failed to get all feedback: {str(e)}")
 
     def _encrypt_sensitive_fields(
-        self, data: Dict[str, Any], sensitive_fields: List[str]
-    ) -> Dict[str, Any]:
-        """
-        Encrypt sensitive fields in a dictionary.
+        self, data: dict[str, Any], sensitive_fields: list[str]
+    ) -> dict[str, Any]:
+        """Encrypt sensitive fields in a dictionary.
 
         Args:
             data: The data dictionary
@@ -1443,10 +1414,9 @@ class SupabaseClient:
         return result
 
     def _decrypt_sensitive_fields(
-        self, data: Dict[str, Any], sensitive_fields: List[str]
-    ) -> Dict[str, Any]:
-        """
-        Decrypt sensitive fields in a dictionary.
+        self, data: dict[str, Any], sensitive_fields: list[str]
+    ) -> dict[str, Any]:
+        """Decrypt sensitive fields in a dictionary.
 
         Args:
             data: The data dictionary

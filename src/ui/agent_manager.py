@@ -1,5 +1,4 @@
-"""
-Agent initialization and management for the VeriFact UI.
+"""Agent initialization and management for the VeriFact UI.
 
 This module contains functions for initializing, configuring, and managing
 the VeriFact agents within the Chainlit UI.
@@ -7,7 +6,7 @@ the VeriFact agents within the Chainlit UI.
 
 import asyncio
 import datetime
-from typing import Any, Dict, List
+from typing import Any
 
 import chainlit as cl
 
@@ -18,8 +17,7 @@ from src.ui.components import create_evidence_display, create_verdict_display
 
 
 async def initialize_agents():
-    """
-    Initialize all VeriFact agents and store them in the user session.
+    """Initialize all VeriFact agents and store them in the user session.
 
     Returns:
         Tuple of (claim_detector, evidence_hunter, verdict_writer)
@@ -38,7 +36,7 @@ async def initialize_agents():
 
 
 async def process_claims(
-    claims: List[Any],
+    claims: list[Any],
     main_msg: cl.Message,
     show_detailed_evidence: bool = True,
     show_confidence: bool = True,
@@ -47,8 +45,7 @@ async def process_claims(
     concurrent_processing: bool = True,
     max_concurrent: int = 3,
 ):
-    """
-    Process a list of claims through the VeriFact pipeline.
+    """Process a list of claims through the VeriFact pipeline.
 
     Args:
         claims: List of claims to process
@@ -187,10 +184,14 @@ async def process_claims(
         rating_emoji = (
             "✅"
             if rating == "True"
-            else "❌" if rating == "False" else "⚠️" if rating == "Partially True" else "❓"
+            else "❌"
+            if rating == "False"
+            else "⚠️"
+            if rating == "Partially True"
+            else "❓"
         )
 
-        summary += f"## Claim {i+1}: {rating_emoji} {rating}\n\n"
+        summary += f"## Claim {i + 1}: {rating_emoji} {rating}\n\n"
         summary += f"{claim_text}\n\n"
 
         # Add a brief explanation if available
@@ -208,9 +209,8 @@ async def process_claims(
     await cl.Message(content=summary, actions=[export_button]).send()
 
 
-async def handle_selected_claims(settings: Dict[str, Any]) -> None:
-    """
-    Process claims that were selected by the user through the UI.
+async def handle_selected_claims(settings: dict[str, Any]) -> None:
+    """Process claims that were selected by the user through the UI.
 
     Args:
         settings: User settings dictionary

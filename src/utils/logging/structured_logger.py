@@ -6,13 +6,12 @@ import time
 import traceback
 import uuid
 from contextvars import ContextVar, Token
-from typing import List, Optional, Tuple
 
 # Context variables for tracking request and execution context
 request_id_var: ContextVar[str] = ContextVar("request_id", default="")
-user_id_var: ContextVar[Optional[str]] = ContextVar("user_id", default=None)
+user_id_var: ContextVar[str | None] = ContextVar("user_id", default=None)
 correlation_id_var: ContextVar[str] = ContextVar("correlation_id", default="")
-session_id_var: ContextVar[Optional[str]] = ContextVar("session_id", default=None)
+session_id_var: ContextVar[str | None] = ContextVar("session_id", default=None)
 component_var: ContextVar[str] = ContextVar("component", default="")
 operation_var: ContextVar[str] = ContextVar("operation", default="")
 
@@ -50,7 +49,7 @@ class StructuredLogger(logging.Logger):
     def makeRecord(self, *args, **kwargs):
         return StructuredLogRecord(*args, **kwargs)
 
-    def process_success(self, message: str, duration_ms: Optional[float] = None, **kwargs):
+    def process_success(self, message: str, duration_ms: float | None = None, **kwargs):
         """Log a successful operation with timing information."""
         extra = kwargs.pop("extra", {})
         extra.update({"event_type": "process_success", "duration_ms": duration_ms, **kwargs})
@@ -59,8 +58,8 @@ class StructuredLogger(logging.Logger):
     def process_failure(
         self,
         message: str,
-        error: Optional[Exception] = None,
-        duration_ms: Optional[float] = None,
+        error: Exception | None = None,
+        duration_ms: float | None = None,
         **kwargs,
     ):
         """Log a failed operation with error details and timing information."""
@@ -78,8 +77,8 @@ class StructuredLogger(logging.Logger):
         self,
         method: str,
         url: str,
-        status_code: Optional[int] = None,
-        duration_ms: Optional[float] = None,
+        status_code: int | None = None,
+        duration_ms: float | None = None,
         **kwargs,
     ):
         """Log API request information."""
@@ -111,7 +110,7 @@ class LoggingContext:
     def __init__(self, logger: StructuredLogger, **context):
         self.logger = logger
         self.context = context
-        self.tokens: List[Tuple[ContextVar, Token]] = []
+        self.tokens: list[tuple[ContextVar, Token]] = []
 
     def __enter__(self):
         # Set context variables and store tokens for later reset
@@ -237,10 +236,10 @@ def get_structured_logger(name: str) -> StructuredLogger:
 
 
 def set_request_context(
-    request_id: Optional[str] = None,
-    user_id: Optional[str] = None,
-    correlation_id: Optional[str] = None,
-    session_id: Optional[str] = None,
+    request_id: str | None = None,
+    user_id: str | None = None,
+    correlation_id: str | None = None,
+    session_id: str | None = None,
 ):
     """Set request context for the current async context."""
     if request_id:
@@ -258,7 +257,7 @@ def set_request_context(
         session_id_var.set(session_id)
 
 
-def set_component_context(component: str, operation: Optional[str] = None):
+def set_component_context(component: str, operation: str | None = None):
     """Set component and operation context for the current async context."""
     component_var.set(component)
 
@@ -283,9 +282,9 @@ def clear_component_context():
 def configure_logging(
     level: int = logging.INFO,
     json_output: bool = True,
-    log_file: Optional[str] = None,
+    log_file: str | None = None,
     include_traceback: bool = True,
-    log_handlers: Optional[List[logging.Handler]] = None,
+    log_handlers: list[logging.Handler] | None = None,
 ):
     """Configure structured logging for the application."""
     root_logger = logging.getLogger()

@@ -1,5 +1,4 @@
-"""
-UI module for VeriFact Chainlit interface.
+"""UI module for VeriFact Chainlit interface.
 
 This package contains the components for the VeriFact web interface.
 """

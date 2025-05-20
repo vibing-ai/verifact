@@ -1,5 +1,4 @@
-"""
-Utility modules for the VeriFact application.
+"""Utility modules for the VeriFact application.
 
 This package contains helper functions used across the project,
 including data processing, API integrations, and common operations.

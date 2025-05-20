@@ -1,5 +1,4 @@
-"""
-Validation utilities for VeriFact.
+"""Validation utilities for VeriFact.
 
 This module provides functions for validating inputs before processing.
 """
@@ -7,7 +6,7 @@ This module provides functions for validating inputs before processing.
 import json
 import re
 from datetime import datetime
-from typing import Any, Dict, Optional, Type, TypeVar, cast
+from typing import Any, TypeVar, cast
 
 from pydantic import BaseModel
 from pydantic import ValidationError as PydanticValidationError
@@ -18,9 +17,8 @@ from src.utils.validation.exceptions import InputTooLongError, ValidationError
 T = TypeVar("T", bound=BaseModel)
 
 
-def validate_model(data: Dict[str, Any], model_class: Type[T]) -> T:
-    """
-    Validate data against a Pydantic model and return the validated model instance.
+def validate_model(data: dict[str, Any], model_class: type[T]) -> T:
+    """Validate data against a Pydantic model and return the validated model instance.
 
     Args:
         data: The data to validate
@@ -50,8 +48,7 @@ def validate_model(data: Dict[str, Any], model_class: Type[T]) -> T:
 
 
 def sanitize_text(text: str) -> str:
-    """
-    Sanitize input text by removing control characters and excess whitespace.
+    """Sanitize input text by removing control characters and excess whitespace.
 
     Args:
         text: The text to sanitize
@@ -70,8 +67,7 @@ def sanitize_text(text: str) -> str:
 
 
 def validate_text_length(text: str, max_length: int = 50000) -> str:
-    """
-    Validate text length and raise an exception if it exceeds the maximum.
+    """Validate text length and raise an exception if it exceeds the maximum.
 
     Args:
         text: The text to validate
@@ -88,9 +84,8 @@ def validate_text_length(text: str, max_length: int = 50000) -> str:
     return text
 
 
-def parse_datetime(timestamp: Optional[str]) -> Optional[datetime]:
-    """
-    Parse a string timestamp into a datetime object.
+def parse_datetime(timestamp: str | None) -> datetime | None:
+    """Parse a string timestamp into a datetime object.
 
     Args:
         timestamp: String timestamp in various formats
@@ -117,9 +112,8 @@ def parse_datetime(timestamp: Optional[str]) -> Optional[datetime]:
     return None
 
 
-def convert_claim_for_response(claim: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Convert a claim dictionary to a standardized format for API responses.
+def convert_claim_for_response(claim: dict[str, Any]) -> dict[str, Any]:
+    """Convert a claim dictionary to a standardized format for API responses.
 
     Args:
         claim: Claim data dictionary
@@ -134,9 +128,8 @@ def convert_claim_for_response(claim: Dict[str, Any]) -> Dict[str, Any]:
     return {k: v for k, v in validated.dict().items() if v is not None}
 
 
-def convert_evidence_for_response(evidence: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Convert evidence dictionary to a standardized format for API responses.
+def convert_evidence_for_response(evidence: dict[str, Any]) -> dict[str, Any]:
+    """Convert evidence dictionary to a standardized format for API responses.
 
     Args:
         evidence: Evidence data dictionary
@@ -162,9 +155,8 @@ def convert_evidence_for_response(evidence: Dict[str, Any]) -> Dict[str, Any]:
     return {k: v for k, v in result.items() if v is not None}
 
 
-def convert_verdict_for_response(verdict: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Convert verdict dictionary to a standardized format for API responses.
+def convert_verdict_for_response(verdict: dict[str, Any]) -> dict[str, Any]:
+    """Convert verdict dictionary to a standardized format for API responses.
 
     Args:
         verdict: Verdict data dictionary
@@ -196,9 +188,8 @@ def convert_verdict_for_response(verdict: Dict[str, Any]) -> Dict[str, Any]:
     return {k: v for k, v in result.items() if v is not None}
 
 
-def get_json_serializable_error(exception: Exception) -> Dict[str, Any]:
-    """
-    Convert an exception to a JSON-serializable error dictionary.
+def get_json_serializable_error(exception: Exception) -> dict[str, Any]:
+    """Convert an exception to a JSON-serializable error dictionary.
 
     Args:
         exception: The exception to convert
@@ -218,9 +209,8 @@ def get_json_serializable_error(exception: Exception) -> Dict[str, Any]:
     }
 
 
-def try_parse_json(json_str: str) -> Dict[str, Any]:
-    """
-    Try to parse a JSON string into a dictionary.
+def try_parse_json(json_str: str) -> dict[str, Any]:
+    """Try to parse a JSON string into a dictionary.
 
     Args:
         json_str: JSON string to parse

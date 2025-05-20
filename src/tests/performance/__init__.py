@@ -1,5 +1,4 @@
-"""
-Performance and benchmark tests.
+"""Performance and benchmark tests.
 
 This package contains performance and benchmark tests.
 """

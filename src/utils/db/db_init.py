@@ -1,20 +1,18 @@
-"""
-Database initialization for Supabase.
+"""Database initialization for Supabase.
 
 This module provides functions to initialize and verify the Supabase database schema.
 """
 
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from .db import SupabaseClient
 
 logger = logging.getLogger(__name__)
 
 
-async def initialize_database() -> Dict[str, Any]:
-    """
-    Initialize the Supabase database with required schema.
+async def initialize_database() -> dict[str, Any]:
+    """Initialize the Supabase database with required schema.
 
     Returns:
         Dict with initialization status information
@@ -47,9 +45,8 @@ async def initialize_database() -> Dict[str, Any]:
         return {"status": "error", "message": f"Failed to initialize database schema: {str(e)}"}
 
 
-async def verify_pgvector_extension(client: SupabaseClient) -> Dict[str, Any]:
-    """
-    Verify if the pgvector extension is enabled in Supabase.
+async def verify_pgvector_extension(client: SupabaseClient) -> dict[str, Any]:
+    """Verify if the pgvector extension is enabled in Supabase.
 
     Args:
         client: SupabaseClient instance
@@ -104,8 +101,7 @@ async def verify_pgvector_extension(client: SupabaseClient) -> Dict[str, Any]:
 
 
 async def create_tables(client: SupabaseClient) -> None:
-    """
-    Create necessary tables in the Supabase database.
+    """Create necessary tables in the Supabase database.
 
     Args:
         client: SupabaseClient instance

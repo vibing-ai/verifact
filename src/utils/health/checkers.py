@@ -1,12 +1,11 @@
-"""
-Health check utilities for VeriFact.
+"""Health check utilities for VeriFact.
 
 This module provides functions for checking the health of various system dependencies.
 """
 
 import os
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
 import httpx
 import redis
@@ -14,7 +13,7 @@ import redis
 from src.utils.db.db import SupabaseClient
 
 
-async def check_database() -> Dict[str, Any]:
+async def check_database() -> dict[str, Any]:
     """Check Supabase database connection health."""
     start_time = time.time()
     result = {
@@ -79,7 +78,7 @@ async def check_database() -> Dict[str, Any]:
     return result
 
 
-async def check_redis() -> Optional[Dict[str, Any]]:
+async def check_redis() -> dict[str, Any] | None:
     """Check Redis connection health."""
     redis_url = os.getenv("REDIS_URL")
     if not redis_url:
@@ -113,7 +112,7 @@ async def check_redis() -> Optional[Dict[str, Any]]:
     return result
 
 
-async def check_openrouter_api() -> Dict[str, Any]:
+async def check_openrouter_api() -> dict[str, Any]:
     """Check OpenRouter API health."""
     start_time = time.time()
     result = {

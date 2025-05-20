@@ -1,5 +1,4 @@
-"""
-Database utilities for user management.
+"""Database utilities for user management.
 
 This module provides functions for:
 - Creating users
@@ -9,15 +8,13 @@ This module provides functions for:
 """
 
 from datetime import datetime
-from typing import List, Optional
 
 from src.models.user import User
 from src.utils.db.db import QueryError
 
 
 async def create_user(user: User) -> str:
-    """
-    Create a new user with encrypted sensitive fields.
+    """Create a new user with encrypted sensitive fields.
 
     Args:
         user: The user to create
@@ -51,9 +48,8 @@ async def create_user(user: User) -> str:
         raise QueryError(f"Failed to create user: {str(e)}")
 
 
-async def get_user_by_id(user_id: str) -> Optional[User]:
-    """
-    Get a user by ID, automatically decrypting sensitive fields.
+async def get_user_by_id(user_id: str) -> User | None:
+    """Get a user by ID, automatically decrypting sensitive fields.
 
     Args:
         user_id: The user ID
@@ -97,8 +93,7 @@ async def get_user_by_id(user_id: str) -> Optional[User]:
 
 
 async def update_user(user: User) -> bool:
-    """
-    Update a user, encrypting sensitive fields.
+    """Update a user, encrypting sensitive fields.
 
     Args:
         user: The user to update
@@ -133,8 +128,7 @@ async def update_user(user: User) -> bool:
 
 
 async def delete_user(user_id: str) -> bool:
-    """
-    Delete a user.
+    """Delete a user.
 
     Args:
         user_id: The user ID
@@ -157,9 +151,8 @@ async def delete_user(user_id: str) -> bool:
         raise QueryError(f"Failed to delete user: {str(e)}")
 
 
-async def get_users(limit: int = 100, offset: int = 0) -> List[User]:
-    """
-    Get a list of users.
+async def get_users(limit: int = 100, offset: int = 0) -> list[User]:
+    """Get a list of users.
 
     Args:
         limit: Maximum number of users to return
@@ -187,9 +180,8 @@ async def get_users(limit: int = 100, offset: int = 0) -> List[User]:
         raise QueryError(f"Failed to get users: {str(e)}")
 
 
-async def find_user_by_email(email: str) -> Optional[User]:
-    """
-    Find a user by email.
+async def find_user_by_email(email: str) -> User | None:
+    """Find a user by email.
 
     Args:
         email: The email to search for

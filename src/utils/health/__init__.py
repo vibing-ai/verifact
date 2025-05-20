@@ -1,5 +1,4 @@
-"""
-Health check utilities for VeriFact.
+"""Health check utilities for VeriFact.
 
 This module provides utilities for system health monitoring.
 """

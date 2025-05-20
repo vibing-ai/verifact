@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-VeriFact End-to-End Testing Script
+"""VeriFact End-to-End Testing Script
 
 This script executes a comprehensive testing plan for the VeriFact factchecking platform,
 verifying all components are correctly implemented and functioning together.
@@ -226,7 +225,7 @@ class VerifactTester:
 
             print(f"    Detected {len(claims)} claims in {duration:.2f} seconds")
             for i, claim in enumerate(claims):
-                print(f"    Claim {i+1}: {claim.text} (Checkworthy: {claim.checkworthy})")
+                print(f"    Claim {i + 1}: {claim.text} (Checkworthy: {claim.checkworthy})")
 
         except Exception as e:
             self.results["component_tests"]["claim_detector"] = {"error": str(e), "status": "FAIL"}
@@ -256,7 +255,7 @@ class VerifactTester:
 
             print(f"    Found {len(evidence)} pieces of evidence in {duration:.2f} seconds")
             for i, e in enumerate(evidence[:3]):  # Show first 3 pieces
-                print(f"    Evidence {i+1}: {e.source}")
+                print(f"    Evidence {i + 1}: {e.source}")
                 print(f"      Stance: {e.stance}, Relevance: {e.relevance}")
                 print(f"      Content: {e.content[:100]}...")
 
@@ -329,7 +328,6 @@ class VerifactTester:
 
         try:
             from src.pipeline.factcheck_pipeline import (
-                FactcheckPipeline,
                 PipelineConfig,
             )
 
@@ -352,7 +350,7 @@ class VerifactTester:
 
             print(f"  Processed {len(results)} claims in {duration:.2f} seconds")
             for i, result in enumerate(results):
-                print(f"  Result {i+1}:")
+                print(f"  Result {i + 1}:")
                 print(f"    Claim: {result['claim']['text']}")
                 print(f"    Verdict: {result['verdict']}, Confidence: {result['confidence']}")
                 print(f"    Evidence pieces: {len(result['evidence'])}")
@@ -496,7 +494,6 @@ class VerifactTester:
 
         try:
             from src.pipeline.factcheck_pipeline import (
-                FactcheckPipeline,
                 PipelineConfig,
             )
 
@@ -506,7 +503,7 @@ class VerifactTester:
             pipeline = create_default_pipeline(config=config)
 
             for claim in claim_types:
-                print(f"  Testing {claim['name']}: \"{claim['text']}\"")
+                print(f'  Testing {claim["name"]}: "{claim["text"]}"')
 
                 start_time = time.time()
                 results = await pipeline.process_text(claim["text"])

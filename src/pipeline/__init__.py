@@ -21,6 +21,7 @@ Example:
 
     # Or asynchronously
     import asyncio
+
     verdicts = asyncio.run(pipeline.process_text("Earth is the third planet from the sun."))
     ```
 """

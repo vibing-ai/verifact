@@ -1,5 +1,4 @@
-"""
-Database connection pooling for VeriFact.
+"""Database connection pooling for VeriFact.
 
 This module provides a database connection pool manager for efficient database access.
 """
@@ -8,7 +7,7 @@ import logging
 import os
 from contextlib import asynccontextmanager
 from functools import lru_cache
-from typing import Any, Dict
+from typing import Any
 
 import asyncpg
 
@@ -18,10 +17,9 @@ logger = logging.getLogger(__name__)
 _pool = None
 
 
-@lru_cache()
-def get_pool_config() -> Dict[str, Any]:
-    """
-    Get database pool configuration from environment variables.
+@lru_cache
+def get_pool_config() -> dict[str, Any]:
+    """Get database pool configuration from environment variables.
 
     Returns:
         Dictionary with pool configuration
@@ -35,8 +33,7 @@ def get_pool_config() -> Dict[str, Any]:
 
 
 async def init_db_pool():
-    """
-    Initialize the database connection pool.
+    """Initialize the database connection pool.
     Should be called during application startup.
     """
     global _pool
@@ -75,8 +72,7 @@ async def init_db_pool():
 
 
 async def close_db_pool():
-    """
-    Close the database connection pool.
+    """Close the database connection pool.
     Should be called during application shutdown.
     """
     global _pool
@@ -90,8 +86,7 @@ async def close_db_pool():
 
 
 def get_db_pool():
-    """
-    Get the database connection pool.
+    """Get the database connection pool.
 
     Returns:
         The database connection pool
@@ -107,8 +102,7 @@ def get_db_pool():
 
 @asynccontextmanager
 async def get_db_connection():
-    """
-    Context manager to get a database connection from the pool.
+    """Context manager to get a database connection from the pool.
 
     Yields:
         A database connection
@@ -124,9 +118,8 @@ async def get_db_connection():
         yield connection
 
 
-async def get_db_metrics() -> Dict[str, Any]:
-    """
-    Get metrics about the database connection pool.
+async def get_db_metrics() -> dict[str, Any]:
+    """Get metrics about the database connection pool.
 
     Returns:
         Dictionary with pool metrics

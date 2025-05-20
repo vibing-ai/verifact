@@ -1,5 +1,4 @@
-"""
-Performance benchmarking for VeriFact.
+"""Performance benchmarking for VeriFact.
 
 This script runs performance benchmarks for the VeriFact factchecking components
 and pipeline, measuring processing times and token usage.
@@ -21,7 +20,7 @@ import os
 import sys
 import time
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any
 
 import matplotlib.pyplot as plt
 from tabulate import tabulate
@@ -29,7 +28,7 @@ from tabulate import tabulate
 from src.agents.claim_detector import ClaimDetector
 from src.agents.evidence_hunter import EvidenceHunter
 from src.agents.verdict_writer import VerdictWriter
-from src.pipeline.factcheck_pipeline import FactcheckPipeline, PipelineConfig
+from src.pipeline.factcheck_pipeline import PipelineConfig
 
 
 class BenchmarkResults:
@@ -51,21 +50,21 @@ class BenchmarkResults:
             "configuration": {},
         }
 
-    def add_claim_detection(self, detection_time: float, claim_count: int, tokens: Dict[str, int]):
+    def add_claim_detection(self, detection_time: float, claim_count: int, tokens: dict[str, int]):
         """Add claim detection benchmark result."""
         self.claim_detection_times.append(detection_time)
         self.claim_counts.append(claim_count)
         self.token_usage.append(tokens)
 
     def add_evidence_gathering(
-        self, gathering_time: float, evidence_count: int, tokens: Dict[str, int]
+        self, gathering_time: float, evidence_count: int, tokens: dict[str, int]
     ):
         """Add evidence gathering benchmark result."""
         self.evidence_gathering_times.append(gathering_time)
         self.evidence_counts.append(evidence_count)
         self.token_usage.append(tokens)
 
-    def add_verdict_generation(self, generation_time: float, tokens: Dict[str, int]):
+    def add_verdict_generation(self, generation_time: float, tokens: dict[str, int]):
         """Add verdict generation benchmark result."""
         self.verdict_generation_times.append(generation_time)
         self.token_usage.append(tokens)
@@ -76,7 +75,7 @@ class BenchmarkResults:
         claim_count: int,
         evidence_count: int,
         verdict_count: int,
-        tokens: Dict[str, int],
+        tokens: dict[str, int],
     ):
         """Add full pipeline benchmark result."""
         self.pipeline_times.append(pipeline_time)
@@ -89,7 +88,7 @@ class BenchmarkResults:
         """Set metadata for the benchmark run."""
         self.metadata[key] = value
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert results to dictionary."""
         return {
             "claim_detection": {
@@ -259,7 +258,7 @@ class BenchmarkResults:
             else:
                 print(f"  {key}: {value}")
 
-    def plot_results(self, output_file: Optional[str] = None):
+    def plot_results(self, output_file: str | None = None):
         """Plot benchmark results as charts."""
         results = self.to_dict()
 
@@ -390,7 +389,7 @@ class Benchmarker:
             duration = end_time - start_time
             token_usage = detector.get_token_usage()
 
-            print(f"  Iteration {i+1}: {duration:.2f}s, {len(claims)} claims detected")
+            print(f"  Iteration {i + 1}: {duration:.2f}s, {len(claims)} claims detected")
             self.results.add_claim_detection(duration, len(claims), token_usage)
 
     async def benchmark_evidence_hunter(self):
@@ -414,7 +413,7 @@ class Benchmarker:
             token_usage = hunter.get_token_usage()
 
             print(
-                f"  Iteration {i+1}: {duration:.2f}s, {len(evidence)} pieces of evidence gathered"
+                f"  Iteration {i + 1}: {duration:.2f}s, {len(evidence)} pieces of evidence gathered"
             )
             self.results.add_evidence_gathering(duration, len(evidence), token_usage)
 
@@ -455,7 +454,7 @@ class Benchmarker:
             duration = end_time - start_time
             token_usage = writer.get_token_usage()
 
-            print(f"  Iteration {i+1}: {duration:.2f}s, verdict: {verdict.verdict}")
+            print(f"  Iteration {i + 1}: {duration:.2f}s, verdict: {verdict.verdict}")
             self.results.add_verdict_generation(duration, token_usage)
 
     async def benchmark_pipeline(self):
@@ -496,7 +495,7 @@ class Benchmarker:
                 "total": pipeline.stats.get("total_tokens", 0),
             }
 
-            print(f"  Iteration {i+1}: {duration:.2f}s, {len(verdicts)} verdicts generated")
+            print(f"  Iteration {i + 1}: {duration:.2f}s, {len(verdicts)} verdicts generated")
             self.results.add_pipeline(
                 duration, claim_count, evidence_count, len(verdicts), token_usage
             )

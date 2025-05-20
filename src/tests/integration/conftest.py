@@ -1,5 +1,4 @@
-"""
-Pytest configuration for integration tests.
+"""Pytest configuration for integration tests.
 
 This module contains fixtures specific to integration tests.
 """

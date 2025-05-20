@@ -1,5 +1,4 @@
-"""
-Shared fixtures for API tests.
+"""Shared fixtures for API tests.
 
 This module provides fixtures for testing API endpoints,
 including mocks for authentication and database dependencies.

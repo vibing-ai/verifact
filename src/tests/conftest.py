@@ -1,5 +1,4 @@
-"""
-Global pytest configuration for VeriFact tests.
+"""Global pytest configuration for VeriFact tests.
 
 This module contains global fixtures and configuration for pytest
 that are used across multiple test domains.

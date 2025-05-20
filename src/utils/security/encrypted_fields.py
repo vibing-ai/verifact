@@ -1,11 +1,11 @@
-from typing import Any, ClassVar, Dict, List
+import builtins
+from typing import Any, ClassVar
 
 from src.utils.security.encryption import decrypt_value, encrypt_value
 
 
 class EncryptedStr(str):
-    """
-    A string type that is automatically encrypted when stored and decrypted when retrieved.
+    """A string type that is automatically encrypted when stored and decrypted when retrieved.
 
     Usage:
         class User(BaseModel):
@@ -33,7 +33,7 @@ class EncryptedModel:
     """Mixin for models with encrypted fields."""
 
     # This will be populated by each model with fields that need encryption
-    encrypted_fields: ClassVar[List[str]] = []
+    encrypted_fields: ClassVar[list[str]] = []
 
     def dict(self, *args, **kwargs):
         """Override dict to encrypt sensitive fields."""
@@ -54,7 +54,7 @@ class EncryptedModel:
         return data
 
     @classmethod
-    def from_encrypted(cls, data: Dict[str, Any]) -> "EncryptedModel":
+    def from_encrypted(cls, data: builtins.dict[str, Any]) -> "EncryptedModel":
         """Create a model instance from encrypted data."""
         # Copy the data so we don't modify the original
         data_copy = data.copy()

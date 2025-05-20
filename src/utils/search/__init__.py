@@ -1,5 +1,4 @@
-"""
-Search utilities for VeriFact.
+"""Search utilities for VeriFact.
 
 This module provides search tools for retrieving information from various sources.
 """

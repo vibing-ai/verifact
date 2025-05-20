@@ -1,11 +1,9 @@
-"""
-Entity extraction for the ClaimDetector agent.
+"""Entity extraction for the ClaimDetector agent.
 
 This module handles the extraction and classification of named entities from claims.
 """
 
 import re
-from typing import List, Optional
 
 from openai.agents import Agent
 
@@ -17,9 +15,8 @@ from src.utils.logger import get_component_logger, log_performance
 class EntityExtractor:
     """Entity extraction functionality for the ClaimDetector."""
 
-    def __init__(self, model_name: Optional[str] = None):
-        """
-        Initialize the EntityExtractor.
+    def __init__(self, model_name: str | None = None):
+        """Initialize the EntityExtractor.
 
         Args:
             model_name: Optional name of the model to use
@@ -38,8 +35,7 @@ class EntityExtractor:
         self.agent = None
 
     def set_agent(self, agent: Agent):
-        """
-        Set the entity extraction agent.
+        """Set the entity extraction agent.
 
         Args:
             agent: The Agent instance to use for entity extraction
@@ -47,9 +43,8 @@ class EntityExtractor:
         self.agent = agent
 
     @log_performance(operation="extract_entities", level="debug")
-    def extract_entities(self, text: str) -> List[Entity]:
-        """
-        Extract named entities from text using pattern matching and NLP.
+    def extract_entities(self, text: str) -> list[Entity]:
+        """Extract named entities from text using pattern matching and NLP.
 
         Args:
             text: The text to extract entities from
@@ -147,8 +142,7 @@ class EntityExtractor:
         return entities
 
     def normalize_entity(self, entity: Entity) -> Entity:
-        """
-        Normalize an entity to its canonical form.
+        """Normalize an entity to its canonical form.
 
         Args:
             entity: The entity to normalize

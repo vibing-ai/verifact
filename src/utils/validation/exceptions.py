@@ -1,11 +1,10 @@
-"""
-VeriFact Exception Classes
+"""VeriFact Exception Classes
 
 This module defines a hierarchy of custom exceptions for the VeriFact system
 to ensure consistent error handling across all interfaces (API, CLI, UI).
 """
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 class VerifactError(Exception):
@@ -16,7 +15,7 @@ class VerifactError(Exception):
         message: str = "An error occurred in the VeriFact system",
         code: str = "VERIFACT_ERROR",
         status_code: int = 500,
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         self.message = message
         self.code = code
@@ -24,7 +23,7 @@ class VerifactError(Exception):
         self.details = details or {}
         super().__init__(self.message)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert exception to a standardized dictionary format."""
         return {"error": {"code": self.code, "message": self.message, "details": self.details}}
 
@@ -38,8 +37,8 @@ class ValidationError(VerifactError):
     def __init__(
         self,
         message: str = "Invalid data format or values",
-        details: Optional[Dict[str, Any]] = None,
-        field: Optional[str] = None,
+        details: dict[str, Any] | None = None,
+        field: str | None = None,
     ):
         code = "VALIDATION_ERROR"
         if field:
@@ -71,8 +70,8 @@ class PipelineError(VerifactError):
         self,
         message: str = "Error in factchecking pipeline",
         code: str = "PIPELINE_ERROR",
-        stage: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        stage: str | None = None,
+        details: dict[str, Any] | None = None,
     ):
         details = details or {}
         if stage:
@@ -87,9 +86,9 @@ class ModelError(PipelineError):
     def __init__(
         self,
         message: str = "AI model processing failed",
-        model_name: Optional[str] = None,
-        stage: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        model_name: str | None = None,
+        stage: str | None = None,
+        details: dict[str, Any] | None = None,
     ):
         details = details or {}
         if model_name:
@@ -104,8 +103,8 @@ class EvidenceGatheringError(PipelineError):
     def __init__(
         self,
         message: str = "Failed to gather evidence",
-        source: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        source: str | None = None,
+        details: dict[str, Any] | None = None,
     ):
         details = details or {}
         if source:
@@ -122,9 +121,9 @@ class RateLimitError(PipelineError):
     def __init__(
         self,
         message: str = "Rate limit exceeded",
-        service: Optional[str] = None,
-        retry_after: Optional[int] = None,
-        details: Optional[Dict[str, Any]] = None,
+        service: str | None = None,
+        retry_after: int | None = None,
+        details: dict[str, Any] | None = None,
     ):
         details = details or {}
         if service:
@@ -144,8 +143,8 @@ class ResourceUnavailableError(VerifactError):
     def __init__(
         self,
         message: str = "Required resource is unavailable",
-        resource_type: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        resource_type: str | None = None,
+        details: dict[str, Any] | None = None,
     ):
         details = details or {}
         if resource_type:
@@ -162,8 +161,8 @@ class DatabaseError(ResourceUnavailableError):
     def __init__(
         self,
         message: str = "Database operation failed",
-        operation: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        operation: str | None = None,
+        details: dict[str, Any] | None = None,
     ):
         details = details or {}
         if operation:
@@ -178,8 +177,8 @@ class ExternalServiceError(ResourceUnavailableError):
     def __init__(
         self,
         message: str = "External service error",
-        service_name: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        service_name: str | None = None,
+        details: dict[str, Any] | None = None,
     ):
         details = details or {}
         if service_name:
@@ -198,7 +197,7 @@ class AuthError(VerifactError):
         self,
         message: str = "Authentication error",
         code: str = "AUTH_ERROR",
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(message=message, code=code, status_code=401, details=details)
 
@@ -209,7 +208,7 @@ class UnauthorizedError(AuthError):
     def __init__(
         self,
         message: str = "Not authorized to perform this action",
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(message=message, code="UNAUTHORIZED", details=details)
 
@@ -223,8 +222,8 @@ class APIError(VerifactError):
     def __init__(
         self,
         message: str = "API operation failed",
-        endpoint: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        endpoint: str | None = None,
+        details: dict[str, Any] | None = None,
     ):
         details = details or {}
         if endpoint:
@@ -239,9 +238,9 @@ class RequestTimeoutError(APIError):
     def __init__(
         self,
         message: str = "Request timed out",
-        endpoint: Optional[str] = None,
-        timeout: Optional[float] = None,
-        details: Optional[Dict[str, Any]] = None,
+        endpoint: str | None = None,
+        timeout: float | None = None,
+        details: dict[str, Any] | None = None,
     ):
         details = details or {}
         if timeout:
@@ -257,9 +256,9 @@ class TooManyRequestsError(APIError):
     def __init__(
         self,
         message: str = "Too many requests",
-        endpoint: Optional[str] = None,
-        retry_after: Optional[int] = None,
-        details: Optional[Dict[str, Any]] = None,
+        endpoint: str | None = None,
+        retry_after: int | None = None,
+        details: dict[str, Any] | None = None,
     ):
         details = details or {}
         if retry_after:
@@ -273,7 +272,7 @@ class APIAuthenticationError(AuthError):
     """Exception raised when API authentication fails."""
 
     def __init__(
-        self, message: str = "API authentication failed", details: Optional[Dict[str, Any]] = None
+        self, message: str = "API authentication failed", details: dict[str, Any] | None = None
     ):
         super().__init__(message=message, code="API_AUTH_ERROR", details=details)
         self.status_code = 401
@@ -282,7 +281,7 @@ class APIAuthenticationError(AuthError):
 class InvalidAPIKeyError(APIAuthenticationError):
     """Exception raised when an invalid API key is provided."""
 
-    def __init__(self, message: str = "Invalid API key", details: Optional[Dict[str, Any]] = None):
+    def __init__(self, message: str = "Invalid API key", details: dict[str, Any] | None = None):
         super().__init__(message=message, details=details)
 
 
@@ -292,8 +291,8 @@ class ExpiredAPIKeyError(APIAuthenticationError):
     def __init__(
         self,
         message: str = "API key has expired",
-        expiry_date: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        expiry_date: str | None = None,
+        details: dict[str, Any] | None = None,
     ):
         details = details or {}
         if expiry_date:
@@ -308,9 +307,9 @@ class InsufficientQuotaError(APIError):
     def __init__(
         self,
         message: str = "Insufficient API quota",
-        current_usage: Optional[int] = None,
-        quota_limit: Optional[int] = None,
-        details: Optional[Dict[str, Any]] = None,
+        current_usage: int | None = None,
+        quota_limit: int | None = None,
+        details: dict[str, Any] | None = None,
     ):
         details = details or {}
         if current_usage is not None:

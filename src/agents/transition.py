@@ -1,5 +1,4 @@
-"""
-Transition utilities for migrating from the old agent architecture to the new one.
+"""Transition utilities for migrating from the old agent architecture to the new one.
 
 This module provides adapter functions and utilities to ease the transition from
 the old agent implementation to the new, more modular architecture with proper
@@ -7,7 +6,6 @@ separation of concerns.
 """
 
 import warnings
-from typing import List, Optional, Union
 
 # Import from old implementation
 from src.agents.claim_detector.models import Claim as LegacyClaim
@@ -26,9 +24,8 @@ from src.agents.interfaces import (
 from src.agents.verdict_writer.writer import Verdict as LegacyVerdict
 
 
-def adapt_claim_detector(detector: Union[ClaimDetector, IClaimDetector]) -> ClaimDetector:
-    """
-    Adapt any claim detector implementation to the new ClaimDetector interface.
+def adapt_claim_detector(detector: ClaimDetector | IClaimDetector) -> ClaimDetector:
+    """Adapt any claim detector implementation to the new ClaimDetector interface.
 
     Args:
         detector: A claim detector implementation (either new or legacy)
@@ -50,10 +47,10 @@ def adapt_claim_detector(detector: Union[ClaimDetector, IClaimDetector]) -> Clai
         async def detect_claims(
             self,
             text: str,
-            min_check_worthiness: Optional[float] = None,
-            expected_claims: Optional[List[dict]] = None,
-            max_claims: Optional[int] = None,
-        ) -> List[Claim]:
+            min_check_worthiness: float | None = None,
+            expected_claims: list[dict] | None = None,
+            max_claims: int | None = None,
+        ) -> list[Claim]:
             # Call the legacy implementation
             legacy_claims = await detector.detect_claims(
                 text, min_check_worthiness, expected_claims, max_claims
@@ -62,15 +59,14 @@ def adapt_claim_detector(detector: Union[ClaimDetector, IClaimDetector]) -> Clai
             # Convert legacy claims to new DTOs
             return [DTOFactory.claim_from_legacy(claim) for claim in legacy_claims]
 
-        async def process(self, input_data: str) -> List[Claim]:
+        async def process(self, input_data: str) -> list[Claim]:
             return await self.detect_claims(input_data)
 
     return ClaimDetectorAdapter()
 
 
-def adapt_evidence_hunter(hunter: Union[EvidenceHunter, IEvidenceHunter]) -> EvidenceHunter:
-    """
-    Adapt any evidence hunter implementation to the new EvidenceHunter interface.
+def adapt_evidence_hunter(hunter: EvidenceHunter | IEvidenceHunter) -> EvidenceHunter:
+    """Adapt any evidence hunter implementation to the new EvidenceHunter interface.
 
     Args:
         hunter: An evidence hunter implementation (either new or legacy)
@@ -89,7 +85,7 @@ def adapt_evidence_hunter(hunter: Union[EvidenceHunter, IEvidenceHunter]) -> Evi
     )
 
     class EvidenceHunterAdapter(EvidenceHunter):
-        async def gather_evidence(self, claim: Claim) -> List[Evidence]:
+        async def gather_evidence(self, claim: Claim) -> list[Evidence]:
             # Convert new DTO to legacy claim for backward compatibility
             legacy_claim = convert_to_legacy_claim(claim)
 
@@ -99,15 +95,14 @@ def adapt_evidence_hunter(hunter: Union[EvidenceHunter, IEvidenceHunter]) -> Evi
             # Convert legacy evidence to new DTOs
             return [DTOFactory.evidence_from_legacy(ev) for ev in legacy_evidence]
 
-        async def process(self, input_data: Claim) -> List[Evidence]:
+        async def process(self, input_data: Claim) -> list[Evidence]:
             return await self.gather_evidence(input_data)
 
     return EvidenceHunterAdapter()
 
 
-def adapt_verdict_writer(writer: Union[VerdictWriter, IVerdictWriter]) -> VerdictWriter:
-    """
-    Adapt any verdict writer implementation to the new VerdictWriter interface.
+def adapt_verdict_writer(writer: VerdictWriter | IVerdictWriter) -> VerdictWriter:
+    """Adapt any verdict writer implementation to the new VerdictWriter interface.
 
     Args:
         writer: A verdict writer implementation (either new or legacy)
@@ -129,10 +124,10 @@ def adapt_verdict_writer(writer: Union[VerdictWriter, IVerdictWriter]) -> Verdic
         async def generate_verdict(
             self,
             claim: Claim,
-            evidence: List[Evidence],
-            explanation_detail: Optional[str] = None,
-            citation_style: Optional[str] = None,
-            include_alternative_perspectives: Optional[bool] = None,
+            evidence: list[Evidence],
+            explanation_detail: str | None = None,
+            citation_style: str | None = None,
+            include_alternative_perspectives: bool | None = None,
         ) -> Verdict:
             # Convert new DTOs to legacy models for backward compatibility
             legacy_claim = convert_to_legacy_claim(claim)
@@ -150,7 +145,7 @@ def adapt_verdict_writer(writer: Union[VerdictWriter, IVerdictWriter]) -> Verdic
             # Convert legacy verdict to new DTO
             return DTOFactory.verdict_from_legacy(legacy_verdict)
 
-        async def process(self, input_data: tuple[Claim, List[Evidence]]) -> Verdict:
+        async def process(self, input_data: tuple[Claim, list[Evidence]]) -> Verdict:
             claim, evidence = input_data
             return await self.generate_verdict(claim, evidence)
 

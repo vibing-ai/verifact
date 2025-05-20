@@ -1,5 +1,4 @@
-"""
-Unit tests for database utility functions.
+"""Unit tests for database utility functions.
 
 These tests verify that database utility functions work correctly.
 """

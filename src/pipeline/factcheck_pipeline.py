@@ -1,5 +1,4 @@
-"""
-VeriFact Factcheck Pipeline
+"""VeriFact Factcheck Pipeline
 
 This module provides a unified pipeline that orchestrates the three agents:
 1. ClaimDetector: Identifies factual claims in text
@@ -12,9 +11,10 @@ and provides both synchronous and asynchronous operation modes.
 
 import asyncio
 import time
+from collections.abc import AsyncIterator, Callable
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, AsyncIterator, Callable, Dict, List, Optional, TypeVar
+from typing import Any, TypeVar
 
 from pydantic import BaseModel, Field
 
@@ -29,7 +29,7 @@ from src.utils.logger import (
 
 # Type definitions for progress callbacks
 T = TypeVar("T")
-ProgressCallback = Callable[[str, float, Optional[T]], None]
+ProgressCallback = Callable[[str, float, T | None], None]
 
 
 class PipelineStage(str, Enum):
@@ -62,17 +62,17 @@ class PipelineProgress:
     stage: PipelineStage
     progress: float  # 0.0 to 1.0
     message: str
-    data: Optional[Any] = None
+    data: Any | None = None
 
 
 class PipelineConfig(BaseModel):
     """Configuration options for the factcheck pipeline."""
 
-    claim_detector_model: Optional[str] = None
-    evidence_hunter_model: Optional[str] = None
-    verdict_writer_model: Optional[str] = None
+    claim_detector_model: str | None = None
+    evidence_hunter_model: str | None = None
+    verdict_writer_model: str | None = None
     min_checkworthiness: float = Field(0.5, ge=0.0, le=1.0)
-    max_claims: Optional[int] = None
+    max_claims: int | None = None
     evidence_per_claim: int = Field(5, ge=1)
     timeout_seconds: float = 120.0
     enable_fallbacks: bool = True
@@ -82,8 +82,7 @@ class PipelineConfig(BaseModel):
 
 
 class FactcheckPipeline:
-    """
-    Unified pipeline for factchecking that orchestrates all three agents.
+    """Unified pipeline for factchecking that orchestrates all three agents.
 
     This pipeline:
     1. Accepts input text and processes it through all agents sequentially
@@ -100,10 +99,9 @@ class FactcheckPipeline:
         claim_detector: IClaimDetector,
         evidence_hunter: IEvidenceHunter,
         verdict_writer: IVerdictWriter,
-        config: Optional[PipelineConfig] = None,
+        config: PipelineConfig | None = None,
     ):
-        """
-        Initialize the factcheck pipeline with specific agent implementations.
+        """Initialize the factcheck pipeline with specific agent implementations.
 
         Args:
             claim_detector: Agent for detecting claims
@@ -116,7 +114,7 @@ class FactcheckPipeline:
         self.logger.info("Initializing FactcheckPipeline")
 
         # Initialize event handlers
-        self._event_handlers: Dict[PipelineEvent, List[Callable]] = {
+        self._event_handlers: dict[PipelineEvent, list[Callable]] = {
             event: [] for event in PipelineEvent
         }
 
@@ -126,7 +124,7 @@ class FactcheckPipeline:
         self.verdict_writer = verdict_writer
 
         # Stats/metrics tracking
-        self.stats: Dict[str, Any] = {
+        self.stats: dict[str, Any] = {
             "started_at": None,
             "completed_at": None,
             "total_processing_time": None,
@@ -141,8 +139,7 @@ class FactcheckPipeline:
         }
 
     def register_event_handler(self, event: PipelineEvent, handler: Callable):
-        """
-        Register a handler for a pipeline event.
+        """Register a handler for a pipeline event.
 
         Args:
             event: The event to handle
@@ -151,8 +148,7 @@ class FactcheckPipeline:
         self._event_handlers[event].append(handler)
 
     def unregister_event_handler(self, event: PipelineEvent, handler: Callable) -> bool:
-        """
-        Unregister a handler for a pipeline event.
+        """Unregister a handler for a pipeline event.
 
         Args:
             event: The event to unregister from
@@ -167,8 +163,7 @@ class FactcheckPipeline:
         return False
 
     def _emit_event(self, event: PipelineEvent, data: Any = None):
-        """
-        Emit an event to all registered handlers.
+        """Emit an event to all registered handlers.
 
         Args:
             event: The event to emit
@@ -187,8 +182,7 @@ class FactcheckPipeline:
                 self.logger.error(f"Error in event handler: {str(e)}", exc_info=True)
 
     def _emit_progress(self, stage: PipelineStage, progress: float, message: str, data: Any = None):
-        """
-        Emit progress updates for the pipeline.
+        """Emit progress updates for the pipeline.
 
         Args:
             stage: Current pipeline stage
@@ -199,9 +193,8 @@ class FactcheckPipeline:
         progress_data = PipelineProgress(stage=stage, progress=progress, message=message, data=data)
         self._emit_event(PipelineEvent.STAGE_STARTED, progress_data)
 
-    async def _detect_claims(self, text: str) -> List[Claim]:
-        """
-        Detect claims in text with error handling and retries.
+    async def _detect_claims(self, text: str) -> list[Claim]:
+        """Detect claims in text with error handling and retries.
 
         Args:
             text: Input text to analyze
@@ -270,9 +263,8 @@ class FactcheckPipeline:
                 # Wait before retrying
                 await asyncio.sleep(1.0)
 
-    async def _gather_evidence(self, claim: Claim) -> List[Evidence]:
-        """
-        Gather evidence for a claim with error handling and retries.
+    async def _gather_evidence(self, claim: Claim) -> list[Evidence]:
+        """Gather evidence for a claim with error handling and retries.
 
         Args:
             claim: Claim to gather evidence for
@@ -316,9 +308,8 @@ class FactcheckPipeline:
                 # Wait before retrying
                 await asyncio.sleep(1.0)
 
-    async def _generate_verdict(self, claim: Claim, evidence: List[Evidence]) -> Optional[Verdict]:
-        """
-        Generate a verdict for a claim with error handling and retries.
+    async def _generate_verdict(self, claim: Claim, evidence: list[Evidence]) -> Verdict | None:
+        """Generate a verdict for a claim with error handling and retries.
 
         Args:
             claim: The claim to evaluate
@@ -364,9 +355,8 @@ class FactcheckPipeline:
                 # Wait before retrying
                 await asyncio.sleep(1.0)
 
-    async def process_text(self, text: str) -> List[Verdict]:
-        """
-        Process text through the complete pipeline.
+    async def process_text(self, text: str) -> list[Verdict]:
+        """Process text through the complete pipeline.
 
         Args:
             text: Input text to factcheck
@@ -398,7 +388,7 @@ class FactcheckPipeline:
                 self._emit_progress(
                     PipelineStage.EVIDENCE_GATHERING,
                     i / total_claims,
-                    f"Gathering evidence for claim {i+1}/{total_claims}",
+                    f"Gathering evidence for claim {i + 1}/{total_claims}",
                 )
 
                 # Get evidence for this claim
@@ -420,7 +410,7 @@ class FactcheckPipeline:
                 self._emit_progress(
                     PipelineStage.VERDICT_GENERATION,
                     i / total_claims,
-                    f"Generating verdict for claim {i+1}/{total_claims}",
+                    f"Generating verdict for claim {i + 1}/{total_claims}",
                 )
 
                 verdict = await self._generate_verdict(claim, evidence)
@@ -458,9 +448,8 @@ class FactcheckPipeline:
 
             return []
 
-    def process_text_sync(self, text: str) -> List[Verdict]:
-        """
-        Synchronous version of the pipeline for non-async code.
+    def process_text_sync(self, text: str) -> list[Verdict]:
+        """Synchronous version of the pipeline for non-async code.
 
         Args:
             text: Input text to factcheck
@@ -475,8 +464,7 @@ class FactcheckPipeline:
             loop.close()
 
     async def process_text_streaming(self, text: str) -> AsyncIterator[Verdict]:
-        """
-        Streaming version of the pipeline that yields verdicts as they're generated.
+        """Streaming version of the pipeline that yields verdicts as they're generated.
 
         Args:
             text: Input text to factcheck
@@ -506,7 +494,7 @@ class FactcheckPipeline:
                 self._emit_progress(
                     PipelineStage.EVIDENCE_GATHERING,
                     i / total_claims,
-                    f"Gathering evidence for claim {i+1}/{total_claims}",
+                    f"Gathering evidence for claim {i + 1}/{total_claims}",
                 )
 
                 # Get evidence for this claim
@@ -528,7 +516,7 @@ class FactcheckPipeline:
                 self._emit_progress(
                     PipelineStage.VERDICT_GENERATION,
                     i / total_claims,
-                    f"Generating verdict for claim {i+1}/{total_claims}",
+                    f"Generating verdict for claim {i + 1}/{total_claims}",
                 )
 
                 verdict = await self._generate_verdict(claim, evidence)
@@ -559,9 +547,8 @@ class FactcheckPipeline:
                 raise
 
 
-def create_default_pipeline(config: Optional[PipelineConfig] = None) -> FactcheckPipeline:
-    """
-    Create a pipeline with default agent implementations.
+def create_default_pipeline(config: PipelineConfig | None = None) -> FactcheckPipeline:
+    """Create a pipeline with default agent implementations.
 
     Args:
         config: Optional configuration for the pipeline

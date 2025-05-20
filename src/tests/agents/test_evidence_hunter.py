@@ -1,5 +1,4 @@
-"""
-Tests for the EvidenceHunter agent.
+"""Tests for the EvidenceHunter agent.
 
 Combines both unit tests and standalone testing script functionality.
 """
@@ -187,7 +186,7 @@ async def test_evidence_hunter_standalone():
     # Test each claim
     for test in test_claims:
         print(f"\nTesting: {test['name']}")
-        print(f"Claim: \"{test['claim'].text}\"")
+        print(f'Claim: "{test["claim"].text}"')
         print(f"Context: {test['claim'].context}")
 
         try:
@@ -204,7 +203,7 @@ async def test_evidence_hunter_standalone():
             if evidence:
                 print(f"Found {len(evidence)} pieces of evidence:")
                 for i, e in enumerate(evidence):
-                    print(f"\n  Evidence {i+1}:")
+                    print(f"\n  Evidence {i + 1}:")
                     print(
                         f"    Content: {e.content[:200]}..."
                         if len(e.content) > 200

@@ -1,12 +1,11 @@
-"""
-Data models for the ClaimDetector agent.
+"""Data models for the ClaimDetector agent.
 
 This module contains the data models and types used by the ClaimDetector.
 """
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field, validator
 
@@ -52,9 +51,7 @@ class Entity(BaseModel):
 
     text: str = Field(..., description="The entity text as it appears in the claim")
     type: EntityType = Field(..., description="Type of entity")
-    normalized_text: Optional[str] = Field(
-        None, description="Normalized/canonical form of the entity"
-    )
+    normalized_text: str | None = Field(None, description="Normalized/canonical form of the entity")
     relevance: float = Field(
         1.0, ge=0.0, le=1.0, description="Relevance of entity to the claim (0-1)"
     )
@@ -83,21 +80,21 @@ class Claim(BaseModel):
     domain: ClaimDomain = Field(
         ClaimDomain.OTHER, description="Primary domain/category of the claim"
     )
-    sub_domains: List[str] = Field(
+    sub_domains: list[str] = Field(
         default_factory=list, description="Additional domains/categories"
     )
-    entities: List[Entity] = Field(
+    entities: list[Entity] = Field(
         default_factory=list, description="Named entities extracted from the claim"
     )
-    source_location: Optional[Dict[str, Any]] = Field(
+    source_location: dict[str, Any] | None = Field(
         None, description="Location of claim in source text"
     )
-    normalized_text: Optional[str] = Field(None, description="Standardized form of the claim")
-    compound_parts: List[str] = Field(default_factory=list, description="Parts of a compound claim")
+    normalized_text: str | None = Field(None, description="Standardized form of the claim")
+    compound_parts: list[str] = Field(default_factory=list, description="Parts of a compound claim")
     extracted_at: datetime = Field(
         default_factory=datetime.now, description="When the claim was extracted"
     )
-    rank: Optional[int] = Field(None, description="Ranking of claim relative to other claims")
+    rank: int | None = Field(None, description="Ranking of claim relative to other claims")
     specificity_score: float = Field(
         0.0, ge=0.0, le=1.0, description="How specific the claim is (0-1)"
     )

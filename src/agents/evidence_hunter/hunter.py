@@ -1,13 +1,10 @@
-"""
-EvidenceHunter agent for gathering evidence for claims.
-"""
+"""EvidenceHunter agent for gathering evidence for claims."""
 
 import hashlib
 import json
 import os
 import re
 import time
-from typing import List, Optional
 
 from openai.agents import Agent, Runner
 from pydantic import BaseModel
@@ -38,9 +35,8 @@ class Evidence(BaseModel):
 class EvidenceHunter(IEvidenceHunter):
     """Agent for gathering evidence for claims."""
 
-    def __init__(self, model_name: Optional[str] = None):
-        """
-        Initialize the EvidenceHunter agent.
+    def __init__(self, model_name: str | None = None):
+        """Initialize the EvidenceHunter agent.
 
         Args:
             model_name: Optional name of the model to use
@@ -104,15 +100,14 @@ class EvidenceHunter(IEvidenceHunter):
             - relevance: A score from 0.0 to 1.0 indicating how relevant this evidence is to the claim
             - stance: "supporting", "contradicting", or "neutral" based on how the evidence relates to the claim
             """,
-            output_type=List[Evidence],
+            output_type=list[Evidence],
             tools=[search_tool],
             model=self.model_manager.model_name,
             **self.model_manager.parameters,
         )
 
-    async def gather_evidence(self, claim: Claim) -> List[Evidence]:
-        """
-        Gather evidence for the provided claim.
+    async def gather_evidence(self, claim: Claim) -> list[Evidence]:
+        """Gather evidence for the provided claim.
 
         Args:
             claim: The claim to gather evidence for
@@ -135,7 +130,7 @@ class EvidenceHunter(IEvidenceHunter):
         query = f"""
         Claim to investigate: {claim.text}
         
-        Context of the claim: {claim.context if hasattr(claim, 'context') and claim.context else 'No additional context provided'}
+        Context of the claim: {claim.context if hasattr(claim, "context") and claim.context else "No additional context provided"}
         
         Your task:
         1. Find evidence from credible sources that either supports or contradicts this claim
@@ -172,8 +167,7 @@ class EvidenceHunter(IEvidenceHunter):
         return result.output
 
     def _generate_cache_key(self, claim: Claim) -> str:
-        """
-        Generate a deterministic cache key from a claim.
+        """Generate a deterministic cache key from a claim.
         Normalize text by lowercasing, removing punctuation, and stemming.
 
         Args:
@@ -193,9 +187,8 @@ class EvidenceHunter(IEvidenceHunter):
         # Create a hash of the normalized text
         return f"evidence:{hashlib.md5(normalized_text.encode('utf-8')).hexdigest()}"
 
-    def _get_from_cache(self, key: str) -> Optional[List[Evidence]]:
-        """
-        Retrieve evidence from Redis cache if available.
+    def _get_from_cache(self, key: str) -> list[Evidence] | None:
+        """Retrieve evidence from Redis cache if available.
         Returns None if cache miss.
 
         Args:
@@ -226,10 +219,9 @@ class EvidenceHunter(IEvidenceHunter):
         return None
 
     def _store_in_cache(
-        self, key: str, evidence: List[Evidence], ttl: int = DEFAULT_CACHE_TTL
+        self, key: str, evidence: list[Evidence], ttl: int = DEFAULT_CACHE_TTL
     ) -> None:
-        """
-        Store evidence in Redis cache with the given TTL.
+        """Store evidence in Redis cache with the given TTL.
 
         Args:
             key: The cache key

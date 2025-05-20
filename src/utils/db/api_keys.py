@@ -1,20 +1,17 @@
-"""
-API Key Management Utilities
+"""API Key Management Utilities
 
 This module provides functions for managing API keys in the database.
 It includes functions for creating, validating, and revoking API keys.
 """
 
+import base64
 import hashlib
 import hmac
 import logging
 import os
 import secrets
-import time
-import uuid
-import base64
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple, Union
+from datetime import datetime
+from typing import Any
 
 import asyncpg
 from asyncpg.pool import Pool
@@ -34,7 +31,7 @@ API_KEY_LENGTH = 32  # Length of the key not including prefix
 
 
 # Database connection pool
-_pool: Optional[Pool] = None
+_pool: Pool | None = None
 
 # In-memory cache for dev/testing
 # In production, use Redis or a similar distributed cache
@@ -42,8 +39,7 @@ _api_key_cache = {}
 
 
 async def get_pool() -> Pool:
-    """
-    Get or create the database connection pool.
+    """Get or create the database connection pool.
 
     Returns:
         Pool: A connection pool for the database
@@ -70,8 +66,7 @@ async def get_pool() -> Pool:
 
 
 async def _ensure_api_keys_table() -> None:
-    """
-    Ensure the api_keys table exists in the database.
+    """Ensure the api_keys table exists in the database.
     This creates the table if it doesn't exist.
     """
     pool = await get_pool()
@@ -104,8 +99,7 @@ async def _ensure_api_keys_table() -> None:
 
 
 def _hash_api_key(api_key: str) -> str:
-    """
-    Create a secure hash of the API key.
+    """Create a secure hash of the API key.
 
     Args:
         api_key: The API key to hash
@@ -117,8 +111,7 @@ def _hash_api_key(api_key: str) -> str:
 
 
 def _generate_api_key() -> str:
-    """
-    Generate a new random API key.
+    """Generate a new random API key.
 
     Returns:
         str: A new API key in the format "vf_<32 alphanumeric chars>"
@@ -139,10 +132,9 @@ def _generate_api_key() -> str:
 
 
 async def create_api_key(
-    name: str, owner_id: str, scopes: List[ApiKeyScope], expires_at: Optional[datetime] = None
+    name: str, owner_id: str, scopes: list[ApiKeyScope], expires_at: datetime | None = None
 ) -> tuple[ApiKey, str]:
-    """
-    Create a new API key and store it in the database.
+    """Create a new API key and store it in the database.
 
     Args:
         name: Name for the API key
@@ -169,9 +161,8 @@ async def create_api_key(
         raise QueryError(f"Failed to create API key: {str(e)}")
 
 
-async def get_api_key_by_id(key_id: str) -> Optional[ApiKey]:
-    """
-    Get an API key by its ID.
+async def get_api_key_by_id(key_id: str) -> ApiKey | None:
+    """Get an API key by its ID.
 
     Args:
         key_id: The API key ID
@@ -183,9 +174,8 @@ async def get_api_key_by_id(key_id: str) -> Optional[ApiKey]:
     return _api_key_cache.get(key_id)
 
 
-async def get_api_key_by_prefix(prefix: str) -> Optional[ApiKey]:
-    """
-    Get an API key by its prefix.
+async def get_api_key_by_prefix(prefix: str) -> ApiKey | None:
+    """Get an API key by its prefix.
 
     Args:
         prefix: The API key prefix
@@ -197,9 +187,8 @@ async def get_api_key_by_prefix(prefix: str) -> Optional[ApiKey]:
     return _api_key_cache.get(f"prefix:{prefix}")
 
 
-async def validate_api_key(api_key: str) -> Optional[Dict[str, Any]]:
-    """
-    Validate an API key and return its metadata.
+async def validate_api_key(api_key: str) -> dict[str, Any] | None:
+    """Validate an API key and return its metadata.
 
     Args:
         api_key: The API key to validate
@@ -243,9 +232,8 @@ async def validate_api_key(api_key: str) -> Optional[Dict[str, Any]]:
         return None
 
 
-async def list_api_keys(owner_id: str) -> List[ApiKey]:
-    """
-    List all API keys for an owner.
+async def list_api_keys(owner_id: str) -> list[ApiKey]:
+    """List all API keys for an owner.
 
     Args:
         owner_id: The owner ID
@@ -263,8 +251,7 @@ async def list_api_keys(owner_id: str) -> List[ApiKey]:
 
 
 async def revoke_api_key(key_id: str, owner_id: str) -> bool:
-    """
-    Revoke an API key.
+    """Revoke an API key.
 
     Args:
         key_id: The API key ID
@@ -288,8 +275,7 @@ async def revoke_api_key(key_id: str, owner_id: str) -> bool:
 
 
 async def update_api_key_last_used(key_id: str) -> None:
-    """
-    Update the last used timestamp for an API key.
+    """Update the last used timestamp for an API key.
 
     Args:
         key_id: The API key ID
@@ -303,9 +289,8 @@ async def update_api_key_last_used(key_id: str) -> None:
         _api_key_cache[f"prefix:{api_key.key_prefix}"] = api_key
 
 
-async def rotate_api_key(api_key: str) -> Tuple[str, Dict[str, Any]]:
-    """
-    Rotate an API key by revoking the old key and creating a new one.
+async def rotate_api_key(api_key: str) -> tuple[str, dict[str, Any]]:
+    """Rotate an API key by revoking the old key and creating a new one.
 
     Args:
         api_key: The API key to rotate
@@ -334,9 +319,8 @@ async def rotate_api_key(api_key: str) -> Tuple[str, Dict[str, Any]]:
     return new_key, new_key_data
 
 
-async def list_user_api_keys(user_id: str) -> List[Dict[str, Any]]:
-    """
-    List all active API keys for a user.
+async def list_user_api_keys(user_id: str) -> list[dict[str, Any]]:
+    """List all active API keys for a user.
 
     Args:
         user_id: The user ID to list keys for

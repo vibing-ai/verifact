@@ -1,5 +1,4 @@
-"""
-Caching utilities for VeriFact.
+"""Caching utilities for VeriFact.
 
 This module provides a simple in-memory caching mechanism with TTL support.
 """
@@ -8,7 +7,7 @@ import hashlib
 import json
 import os
 import pickle
-from typing import Any, Optional
+from typing import Any
 
 import redis
 
@@ -48,8 +47,7 @@ class Cache:
     """Redis-backed cache with fallback to in-memory cache when Redis is unavailable."""
 
     def __init__(self, namespace: str = "default"):
-        """
-        Initialize a cache instance.
+        """Initialize a cache instance.
 
         Args:
             namespace: A namespace to prefix all cache keys with
@@ -79,8 +77,7 @@ class Cache:
         return hashlib.md5(key_str.encode()).hexdigest()
 
     def get(self, key: Any, default: Any = None) -> Any:
-        """
-        Get a value from the cache.
+        """Get a value from the cache.
 
         Args:
             key: The cache key (string or hashable object)
@@ -104,9 +101,8 @@ class Cache:
         # Fall back to in-memory cache
         return self._local_cache.get(namespaced_key, default)
 
-    def set(self, key: Any, value: Any, ttl: Optional[int] = None) -> bool:
-        """
-        Set a value in the cache.
+    def set(self, key: Any, value: Any, ttl: int | None = None) -> bool:
+        """Set a value in the cache.
 
         Args:
             key: The cache key (string or hashable object)
@@ -133,8 +129,7 @@ class Cache:
         return True
 
     def delete(self, key: Any) -> bool:
-        """
-        Delete a value from the cache.
+        """Delete a value from the cache.
 
         Args:
             key: The cache key to delete
@@ -161,8 +156,7 @@ class Cache:
         return redis_success
 
     def clear_namespace(self) -> bool:
-        """
-        Clear all keys in this cache namespace.
+        """Clear all keys in this cache namespace.
 
         Returns:
             bool: True if successful, False otherwise
@@ -193,8 +187,7 @@ class Cache:
         return True
 
     def exists(self, key: Any) -> bool:
-        """
-        Check if a key exists in the cache.
+        """Check if a key exists in the cache.
 
         Args:
             key: The cache key to check

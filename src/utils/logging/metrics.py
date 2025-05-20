@@ -1,5 +1,4 @@
-"""
-Metrics tracking utilities for VeriFact.
+"""Metrics tracking utilities for VeriFact.
 
 This module provides tools for tracking various metrics about the application's performance.
 """
@@ -8,7 +7,7 @@ import os
 import statistics
 from collections import defaultdict
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 from src.utils.cache.cache import Cache
 from src.utils.logging.logger import get_component_logger
@@ -24,8 +23,7 @@ class MetricsTracker:
     """Tracks performance metrics for VeriFact components."""
 
     def __init__(self, component: str):
-        """
-        Initialize a metrics tracker for a specific component.
+        """Initialize a metrics tracker for a specific component.
 
         Args:
             component: The name of the component being tracked
@@ -39,10 +37,9 @@ class MetricsTracker:
         )  # 90 days
 
     def track_accuracy(
-        self, prediction: str, ground_truth: str, metadata: Optional[Dict[str, Any]] = None
+        self, prediction: str, ground_truth: str, metadata: dict[str, Any] | None = None
     ) -> None:
-        """
-        Track an accuracy measurement.
+        """Track an accuracy measurement.
 
         Args:
             prediction: The predicted value
@@ -56,12 +53,11 @@ class MetricsTracker:
 
     def track_claim_detection(
         self,
-        detected_claims: List[Dict[str, Any]],
-        expected_claims: List[Dict[str, Any]],
-        text: Optional[str] = None,
-    ) -> Dict[str, float]:
-        """
-        Track claim detection performance.
+        detected_claims: list[dict[str, Any]],
+        expected_claims: list[dict[str, Any]],
+        text: str | None = None,
+    ) -> dict[str, float]:
+        """Track claim detection performance.
 
         Args:
             detected_claims: List of detected claims
@@ -109,10 +105,9 @@ class MetricsTracker:
         return metrics
 
     def track_check_worthiness(
-        self, predictions: List[float], ground_truths: List[float]
-    ) -> Dict[str, float]:
-        """
-        Track check-worthiness scoring performance.
+        self, predictions: list[float], ground_truths: list[float]
+    ) -> dict[str, float]:
+        """Track check-worthiness scoring performance.
 
         Args:
             predictions: List of predicted check-worthiness scores (0-1)
@@ -153,10 +148,9 @@ class MetricsTracker:
         return metrics
 
     def track_domain_classification(
-        self, predictions: List[str], ground_truths: List[str]
-    ) -> Dict[str, float]:
-        """
-        Track domain classification performance.
+        self, predictions: list[str], ground_truths: list[str]
+    ) -> dict[str, float]:
+        """Track domain classification performance.
 
         Args:
             predictions: List of predicted domains
@@ -184,10 +178,9 @@ class MetricsTracker:
         return metrics
 
     def _track_metric(
-        self, name: str, value: float, metadata: Optional[Dict[str, Any]] = None
+        self, name: str, value: float, metadata: dict[str, Any] | None = None
     ) -> None:
-        """
-        Track a single metric value.
+        """Track a single metric value.
 
         Args:
             name: Metric name
@@ -249,12 +242,11 @@ class MetricsTracker:
     def get_metrics(
         self,
         metric_name: str,
-        start_time: Optional[str] = None,
-        end_time: Optional[str] = None,
+        start_time: str | None = None,
+        end_time: str | None = None,
         aggregate: bool = True,
-    ) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
-        """
-        Get metrics for analysis.
+    ) -> list[dict[str, Any]] | dict[str, Any]:
+        """Get metrics for analysis.
 
         Args:
             metric_name: Name of the metric to retrieve

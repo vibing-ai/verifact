@@ -1,6 +1,4 @@
-"""
-Tests for the EvidenceHunter's Redis caching functionality.
-"""
+"""Tests for the EvidenceHunter's Redis caching functionality."""
 
 import os
 from unittest.mock import MagicMock, patch

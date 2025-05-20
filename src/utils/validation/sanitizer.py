@@ -1,5 +1,4 @@
-"""
-Input Sanitization Utilities
+"""Input Sanitization Utilities
 
 This module provides functions for sanitizing input data to prevent
 security vulnerabilities like XSS, SQL injection, etc.
@@ -8,12 +7,11 @@ security vulnerabilities like XSS, SQL injection, etc.
 import html
 import re
 import unicodedata
-from typing import Any, Dict, List
+from typing import Any
 
 
 def sanitize_text(text: str) -> str:
-    """
-    Sanitize text input to prevent XSS attacks.
+    """Sanitize text input to prevent XSS attacks.
 
     Args:
         text: Text to sanitize
@@ -34,8 +32,7 @@ def sanitize_text(text: str) -> str:
 
 
 def sanitize_html(html_content: str) -> str:
-    """
-    Sanitize HTML content to remove potentially dangerous tags and attributes.
+    """Sanitize HTML content to remove potentially dangerous tags and attributes.
     For VeriFact, we don't need to allow any HTML, so we just escape everything.
 
     Args:
@@ -48,8 +45,7 @@ def sanitize_html(html_content: str) -> str:
 
 
 def sanitize_url(url: str) -> str:
-    """
-    Sanitize a URL to prevent XSS attacks.
+    """Sanitize a URL to prevent XSS attacks.
 
     Args:
         url: URL to sanitize
@@ -75,8 +71,7 @@ def sanitize_url(url: str) -> str:
 
 
 def sanitize_sql(sql_input: str) -> str:
-    """
-    Sanitize SQL input to prevent injection attacks.
+    """Sanitize SQL input to prevent injection attacks.
 
     This is a basic sanitization only - proper SQL safety should use
     parameterized queries with database drivers, not string concatenation.
@@ -118,9 +113,8 @@ def sanitize_sql(sql_input: str) -> str:
     return sanitized
 
 
-def sanitize_dict(data: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Recursively sanitize all string values in a dictionary.
+def sanitize_dict(data: dict[str, Any]) -> dict[str, Any]:
+    """Recursively sanitize all string values in a dictionary.
 
     Args:
         data: Dictionary to sanitize
@@ -147,9 +141,8 @@ def sanitize_dict(data: Dict[str, Any]) -> Dict[str, Any]:
     return sanitized
 
 
-def sanitize_list(data: List[Any]) -> List[Any]:
-    """
-    Recursively sanitize all string values in a list.
+def sanitize_list(data: list[Any]) -> list[Any]:
+    """Recursively sanitize all string values in a list.
 
     Args:
         data: List to sanitize
@@ -177,8 +170,7 @@ def sanitize_list(data: List[Any]) -> List[Any]:
 
 
 def validate_text_length(text: str, min_length: int = 1, max_length: int = 10000) -> bool:
-    """
-    Validate text length within specified bounds.
+    """Validate text length within specified bounds.
 
     Args:
         text: Text to validate
@@ -196,8 +188,7 @@ def validate_text_length(text: str, min_length: int = 1, max_length: int = 10000
 
 
 def validate_url_format(url: str) -> bool:
-    """
-    Validate URL format.
+    """Validate URL format.
 
     Args:
         url: URL to validate
@@ -224,8 +215,7 @@ def validate_url_format(url: str) -> bool:
 
 
 def validate_email_format(email: str) -> bool:
-    """
-    Validate email format.
+    """Validate email format.
 
     Args:
         email: Email to validate

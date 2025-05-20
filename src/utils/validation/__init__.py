@@ -1,5 +1,4 @@
-"""
-Validation utilities for VeriFact.
+"""Validation utilities for VeriFact.
 
 This module provides validation tools and custom exceptions for data validation and error handling.
 """

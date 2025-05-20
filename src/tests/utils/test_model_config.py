@@ -1,6 +1,4 @@
-"""
-Tests for model configuration utilities.
-"""
+"""Tests for model configuration utilities."""
 
 from unittest.mock import MagicMock, patch
 

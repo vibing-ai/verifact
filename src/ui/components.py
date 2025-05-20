@@ -1,18 +1,16 @@
-"""
-UI components for the VeriFact web interface.
+"""UI components for the VeriFact web interface.
 
 This module contains functions for rendering UI components in the Chainlit interface.
 """
 
 import datetime
-from typing import Any, Dict, List
+from typing import Any
 
 import chainlit as cl
 
 
 async def create_feedback_form(fact_check_id: str, claim_text: str) -> None:
-    """
-    Create a feedback form for a fact-checked claim.
+    """Create a feedback form for a fact-checked claim.
 
     Args:
         fact_check_id: Unique ID for the fact-check
@@ -70,9 +68,8 @@ async def create_feedback_form(fact_check_id: str, claim_text: str) -> None:
     ).send()
 
 
-async def create_claim_cards(claims: List[Dict[str, Any]], show_confidence: bool = True) -> None:
-    """
-    Create cards displaying claim information.
+async def create_claim_cards(claims: list[dict[str, Any]], show_confidence: bool = True) -> None:
+    """Create cards displaying claim information.
 
     Args:
         claims: List of claims with their properties
@@ -80,7 +77,7 @@ async def create_claim_cards(claims: List[Dict[str, Any]], show_confidence: bool
     """
     for i, claim in enumerate(claims):
         # Format the claim card content
-        claim_content = f"### Claim {i+1}\n\n**Text:** {claim['text']}\n\n"
+        claim_content = f"### Claim {i + 1}\n\n**Text:** {claim['text']}\n\n"
 
         if show_confidence and "check_worthiness" in claim:
             confidence_str = (
@@ -103,10 +100,9 @@ async def create_claim_cards(claims: List[Dict[str, Any]], show_confidence: bool
 
 
 async def create_evidence_display(
-    evidence_list: List[Dict[str, Any]], detailed: bool = True, show_confidence: bool = True
+    evidence_list: list[dict[str, Any]], detailed: bool = True, show_confidence: bool = True
 ) -> str:
-    """
-    Create markdown content displaying evidence for a claim.
+    """Create markdown content displaying evidence for a claim.
 
     Args:
         evidence_list: List of evidence items
@@ -153,7 +149,7 @@ async def create_evidence_display(
 
         # Evidence content
         if detailed:
-            evidence_content += f"### Evidence {i+1} {relevance_icon}\n\n"
+            evidence_content += f"### Evidence {i + 1} {relevance_icon}\n\n"
             evidence_content += f"{source_line}\n\n"
 
             if show_confidence and "relevance" in evidence:
@@ -173,9 +169,8 @@ async def create_evidence_display(
     return evidence_content
 
 
-async def create_verdict_display(verdict: Dict[str, Any], show_confidence: bool = True) -> str:
-    """
-    Create markdown content displaying a verdict for a claim.
+async def create_verdict_display(verdict: dict[str, Any], show_confidence: bool = True) -> str:
+    """Create markdown content displaying a verdict for a claim.
 
     Args:
         verdict: The verdict data
@@ -189,7 +184,11 @@ async def create_verdict_display(verdict: Dict[str, Any], show_confidence: bool 
     rating_emoji = (
         "✅"
         if rating == "True"
-        else "❌" if rating == "False" else "⚠️" if rating == "Partially True" else "❓"
+        else "❌"
+        if rating == "False"
+        else "⚠️"
+        if rating == "Partially True"
+        else "❓"
     )
 
     verdict_content = f"## Verdict: {rating_emoji} {rating}\n\n"

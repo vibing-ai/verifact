@@ -1,12 +1,11 @@
-"""
-Example of migrating from the old agent architecture to the new one.
+"""Example of migrating from the old agent architecture to the new one.
 
 This script demonstrates how to transition from the legacy implementation
 to the new architecture with proper separation of concerns.
 """
 
 import asyncio
-from typing import Any, Dict
+from typing import Any
 
 # Import from legacy implementations
 from src.agents.claim_detector.models import Claim as LegacyClaim
@@ -143,7 +142,7 @@ async def fully_migrated_workflow():
     print("\n=== Fully Migrated Workflow ===")
 
     # Define configuration for the pipeline and its agents
-    config: Dict[str, Any] = {
+    config: dict[str, Any] = {
         "parallelism": 3,
         "min_check_worthiness": 0.6,
         "max_claims": 2,

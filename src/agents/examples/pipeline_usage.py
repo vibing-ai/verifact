@@ -1,20 +1,18 @@
-"""
-Example usage of the factchecking pipeline with the new agent architecture.
+"""Example usage of the factchecking pipeline with the new agent architecture.
 
 This script demonstrates how to set up and use the new agent architecture with
 proper separation of concerns and dependency injection.
 """
 
 import asyncio
-from typing import Any, Dict
+from typing import Any
 
 from src.agents.factory import AgentFactory
 from src.agents.orchestrator import FactcheckPipelineFactory
 
 
 async def process_with_full_pipeline() -> None:
-    """
-    Example showing how to use the factory to create a complete pipeline.
+    """Example showing how to use the factory to create a complete pipeline.
 
     This approach is recommended for most use cases where you want to run
     the full factchecking process on a text.
@@ -22,7 +20,7 @@ async def process_with_full_pipeline() -> None:
     print("=== Using Factory-Created Pipeline ===")
 
     # Define configuration for the pipeline and its agents
-    config: Dict[str, Any] = {
+    config: dict[str, Any] = {
         "parallelism": 3,
         "min_check_worthiness": 0.6,
         "max_claims": 5,
@@ -59,8 +57,7 @@ async def process_with_full_pipeline() -> None:
 
 
 async def process_with_explicit_agents() -> None:
-    """
-    Example showing how to use the agents individually with explicit control.
+    """Example showing how to use the agents individually with explicit control.
 
     This approach gives you more control over the workflow and allows you to
     customize the processing of each step.
@@ -103,8 +100,7 @@ async def process_with_explicit_agents() -> None:
 
 
 async def process_with_base_protocol() -> None:
-    """
-    Example showing how to use the base Agent protocol for processing.
+    """Example showing how to use the base Agent protocol for processing.
 
     This approach demonstrates the use of the generic process() method
     defined in the base Agent protocol, which allows for more flexible

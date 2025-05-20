@@ -1,17 +1,12 @@
-"""
-Search tools for VeriFact.
+"""Search tools for VeriFact.
 
 This module provides utilities for searching the web for information.
 """
 
 import os
-import json
-import time
-import logging
-import hashlib
-import aiohttp
-from typing import Any, Dict, List, Optional, Union, Callable
+from typing import Any
 
+import aiohttp
 from openai.agents.tools import Tool
 
 from src.utils.logging.logger import get_component_logger
@@ -72,9 +67,8 @@ class SerperSearchTool(Tool):
         # Set up API parameters
         self.api_url = "https://google.serper.dev"
 
-    async def call(self, params: Dict[str, Any], **kwargs) -> List[Dict[str, Any]]:
-        """
-        Call the Serper.dev API to search for information.
+    async def call(self, params: dict[str, Any], **kwargs) -> list[dict[str, Any]]:
+        """Call the Serper.dev API to search for information.
 
         Args:
             params: Dictionary containing search parameters
@@ -163,8 +157,7 @@ class SerperSearchTool(Tool):
 
 # Factory function to get the configured search tool
 def get_search_tool():
-    """
-    Get the configured search tool based on environment variables.
+    """Get the configured search tool based on environment variables.
 
     Returns:
         An instance of a search tool (WebSearchTool or SerperSearchTool)

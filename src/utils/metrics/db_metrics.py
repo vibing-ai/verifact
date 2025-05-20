@@ -1,10 +1,9 @@
-"""
-Database connection pool metrics for VeriFact.
+"""Database connection pool metrics for VeriFact.
 
 This module provides utilities for monitoring database connection pool usage.
 """
 
-from typing import Any, Dict
+from typing import Any
 
 from src.utils.db.pool import get_db_metrics
 
@@ -13,9 +12,8 @@ class ConnectionPoolMetrics:
     """Metrics collector for database connection pool."""
 
     @staticmethod
-    async def collect() -> Dict[str, Any]:
-        """
-        Collect current connection pool metrics.
+    async def collect() -> dict[str, Any]:
+        """Collect current connection pool metrics.
 
         Returns:
             Dictionary with pool metrics

@@ -1,8 +1,6 @@
-"""
-VerdictWriter agent for generating verdicts based on evidence.
-"""
+"""VerdictWriter agent for generating verdicts based on evidence."""
 
-from typing import Dict, List, Literal, Optional
+from typing import Literal
 
 from openai.agents import Agent, Runner
 from pydantic import BaseModel, Field
@@ -26,17 +24,17 @@ class Verdict(BaseModel):
     )
     confidence: float = Field(description="Confidence in the verdict (0-1)", ge=0.0, le=1.0)
     explanation: str = Field(description="Detailed explanation of the verdict with reasoning")
-    sources: List[str] = Field(description="List of sources used to reach the verdict", min_items=1)
-    evidence_summary: Optional[str] = Field(
+    sources: list[str] = Field(description="List of sources used to reach the verdict", min_items=1)
+    evidence_summary: str | None = Field(
         default=None, description="Summary of the key evidence considered in the verdict"
     )
-    alternative_perspectives: Optional[str] = Field(
+    alternative_perspectives: str | None = Field(
         default=None, description="Alternative viewpoints or interpretations when evidence is mixed"
     )
-    key_evidence: Optional[List[Dict]] = Field(
+    key_evidence: list[dict] | None = Field(
         default=None, description="List of key evidence pieces with their relevance to the verdict"
     )
-    citation_metadata: Optional[Dict] = Field(
+    citation_metadata: dict | None = Field(
         default=None, description="Metadata about citations including source quality and recency"
     )
 
@@ -46,13 +44,12 @@ class VerdictWriter(IVerdictWriter):
 
     def __init__(
         self,
-        model_name: Optional[str] = None,
+        model_name: str | None = None,
         explanation_detail: Literal["brief", "standard", "detailed"] = "standard",
         citation_style: Literal["inline", "footnote", "academic"] = "inline",
         include_alternative_perspectives: bool = True,
     ):
-        """
-        Initialize the VerdictWriter agent.
+        """Initialize the VerdictWriter agent.
 
         Args:
             model_name: Optional name of the model to use
@@ -142,8 +139,7 @@ class VerdictWriter(IVerdictWriter):
         )
 
     def _assess_evidence_quality(self, evidence: Evidence) -> float:
-        """
-        Calculate an evidence quality score based on credibility, relevance, and other factors.
+        """Calculate an evidence quality score based on credibility, relevance, and other factors.
 
         Args:
             evidence: The evidence to assess
@@ -171,9 +167,8 @@ class VerdictWriter(IVerdictWriter):
         combined_score = (quality_score * 0.6) + (source_credibility * 0.3) + (stance_factor * 0.1)
         return min(max(combined_score, 0.0), 1.0)
 
-    def _rank_evidence(self, evidence_list: List[Evidence]) -> List[Dict]:
-        """
-        Rank evidence by quality and return with quality scores.
+    def _rank_evidence(self, evidence_list: list[Evidence]) -> list[dict]:
+        """Rank evidence by quality and return with quality scores.
 
         Args:
             evidence_list: List of evidence to rank
@@ -190,9 +185,8 @@ class VerdictWriter(IVerdictWriter):
         ranked_evidence.sort(key=lambda x: x["quality_score"], reverse=True)
         return ranked_evidence
 
-    def _calculate_confidence_score(self, claim: str, evidence_list: List[Evidence]) -> float:
-        """
-        Calculate a confidence score (0-1) based on evidence quality, quantity, and consistency.
+    def _calculate_confidence_score(self, claim: str, evidence_list: list[Evidence]) -> float:
+        """Calculate a confidence score (0-1) based on evidence quality, quantity, and consistency.
 
         Args:
             claim: The claim text
@@ -252,9 +246,8 @@ class VerdictWriter(IVerdictWriter):
         # Ensure final score is between 0.1 and 1.0
         return min(max(combined_score, 0.1), 1.0)
 
-    def _format_citations(self, evidence_list: List[Evidence], style: str) -> List[str]:
-        """
-        Format citations according to the specified style.
+    def _format_citations(self, evidence_list: list[Evidence], style: str) -> list[str]:
+        """Format citations according to the specified style.
 
         Args:
             evidence_list: List of evidence to cite
@@ -281,7 +274,7 @@ class VerdictWriter(IVerdictWriter):
                 citation = f"{domain}"
             elif style == "footnote":
                 # Numbered reference
-                citation = f"[{i+1}] {source}"
+                citation = f"[{i + 1}] {source}"
             elif style == "academic":
                 # More formal citation with date if available
                 import datetime
@@ -296,9 +289,8 @@ class VerdictWriter(IVerdictWriter):
 
         return citations
 
-    def _format_evidence_for_prompt(self, evidence_list: List[Evidence], detail_level: str) -> str:
-        """
-        Format evidence for inclusion in the prompt, with different detail levels.
+    def _format_evidence_for_prompt(self, evidence_list: list[Evidence], detail_level: str) -> str:
+        """Format evidence for inclusion in the prompt, with different detail levels.
 
         Args:
             evidence_list: List of evidence to format
@@ -329,7 +321,7 @@ class VerdictWriter(IVerdictWriter):
             quality = item["quality_score"]
 
             # Create an evidence entry
-            entry = f"EVIDENCE {i+1} (Relevance: {evidence.relevance:.2f}, Quality: {quality:.2f}, Stance: {evidence.stance}):\n"
+            entry = f"EVIDENCE {i + 1} (Relevance: {evidence.relevance:.2f}, Quality: {quality:.2f}, Stance: {evidence.stance}):\n"
             entry += f"Source: {evidence.source}\n"
 
             # Adjust content length based on detail level
@@ -359,13 +351,12 @@ class VerdictWriter(IVerdictWriter):
     async def generate_verdict(
         self,
         claim: Claim,
-        evidence: List[Evidence],
-        explanation_detail: Optional[Literal["brief", "standard", "detailed"]] = None,
-        citation_style: Optional[Literal["inline", "footnote", "academic"]] = None,
-        include_alternative_perspectives: Optional[bool] = None,
+        evidence: list[Evidence],
+        explanation_detail: Literal["brief", "standard", "detailed"] | None = None,
+        citation_style: Literal["inline", "footnote", "academic"] | None = None,
+        include_alternative_perspectives: bool | None = None,
     ) -> Verdict:
-        """
-        Generate a verdict for the claim based on evidence.
+        """Generate a verdict for the claim based on evidence.
 
         Args:
             claim: The claim to generate a verdict for
@@ -406,7 +397,7 @@ class VerdictWriter(IVerdictWriter):
         - Assign a confidence score around {confidence_score:.2f} unless you have strong reasons to change it
         
         Based on the evidence above, determine if the claim is true, false, partially true, or unverifiable.
-        Provide a {'brief' if explanation_detail == 'brief' else 'detailed'} explanation with appropriate citations.
+        Provide a {"brief" if explanation_detail == "brief" else "detailed"} explanation with appropriate citations.
         """
 
         logger.info(f"Generating verdict for claim: {claim.text[:50]}...")

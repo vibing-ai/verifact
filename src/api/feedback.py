@@ -1,5 +1,4 @@
-"""
-VeriFact Feedback API
+"""VeriFact Feedback API
 
 This module provides API endpoints for handling user feedback on factchecking results.
 """
@@ -8,7 +7,7 @@ import logging
 import time
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query, Request, Security, status
 from fastapi.security.api_key import APIKey, APIKeyHeader
@@ -55,8 +54,7 @@ router = APIRouter(
 async def get_api_key(
     api_key_header: str = Security(api_key_header),
 ) -> APIKey:
-    """
-    Validate API key for protected endpoints.
+    """Validate API key for protected endpoints.
 
     Args:
         api_key_header: API key from request header
@@ -81,8 +79,7 @@ async def get_api_key(
 
 
 def check_feedback_rate_limit(request: Request, limit: int = 5, window: int = 3600):
-    """
-    Check if the request exceeds rate limits for feedback submission.
+    """Check if the request exceeds rate limits for feedback submission.
 
     Args:
         request: FastAPI request object
@@ -137,7 +134,7 @@ def check_feedback_rate_limit(request: Request, limit: int = 5, window: int = 36
     """,
 )
 async def submit_feedback(
-    feedback_request: FeedbackRequest, request: Request, api_key: Optional[APIKey] = None
+    feedback_request: FeedbackRequest, request: Request, api_key: APIKey | None = None
 ):
     """Handle submission of user feedback."""
     # Check rate limit (only for non-API submissions)
@@ -239,7 +236,7 @@ async def get_feedback_stats(api_key: APIKey = Security(get_api_key)):
 
 @router.get(
     "/{claim_id}",
-    response_model=List[Dict[str, Any]],
+    response_model=list[dict[str, Any]],
     summary="Get feedback for a specific claim",
     description="""
     Get all feedback for a specific factcheck claim.

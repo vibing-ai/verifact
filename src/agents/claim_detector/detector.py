@@ -1,5 +1,4 @@
-"""
-Core claim detection functionality.
+"""Core claim detection functionality.
 
 This module contains the main ClaimDetector class that coordinates
 the claim detection process.
@@ -7,7 +6,7 @@ the claim detection process.
 
 import hashlib
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from openai.agents import Agent, Runner
 from openai.agents.tools import WebSearchTool
@@ -30,12 +29,11 @@ class ClaimDetector(IClaimDetector):
 
     def __init__(
         self,
-        model_name: Optional[str] = None,
+        model_name: str | None = None,
         min_check_worthiness: float = 0.7,
         max_claims: int = 10,
     ):
-        """
-        Initialize the ClaimDetector agent.
+        """Initialize the ClaimDetector agent.
 
         Args:
             model_name: Optional name of the model to use
@@ -188,7 +186,7 @@ class ClaimDetector(IClaimDetector):
             10. Parts of compound claims (if applicable)
             11. Rank (relative to other claims)
             """,
-            output_type=List[Claim],
+            output_type=list[Claim],
             tools=[WebSearchTool()],
             model=self.model_manager.model_name,
             **self.model_manager.parameters,
@@ -238,7 +236,7 @@ class ClaimDetector(IClaimDetector):
             When extracting entities, look for:
             - Proper nouns with capital letters
             """,
-            output_type=List[Entity],
+            output_type=list[Entity],
             model=self.model_manager.model_name,
             **self.model_manager.parameters,
         )
@@ -257,12 +255,11 @@ class ClaimDetector(IClaimDetector):
     async def detect_claims(
         self,
         text: str,
-        min_check_worthiness: Optional[float] = None,
-        expected_claims: Optional[List[Dict[str, Any]]] = None,
-        max_claims: Optional[int] = None,
-    ) -> List[Claim]:
-        """
-        Detect claims in the given text.
+        min_check_worthiness: float | None = None,
+        expected_claims: list[dict[str, Any]] | None = None,
+        max_claims: int | None = None,
+    ) -> list[Claim]:
+        """Detect claims in the given text.
 
         Args:
             text: The text to analyze for claims
@@ -462,9 +459,8 @@ class ClaimDetector(IClaimDetector):
             # Return original claim if enhancement fails
             return claim
 
-    def rank_claims(self, claims: List[Claim]) -> List[Claim]:
-        """
-        Rank claims by importance for fact-checking.
+    def rank_claims(self, claims: list[Claim]) -> list[Claim]:
+        """Rank claims by importance for fact-checking.
 
         Args:
             claims: List of claims to rank
@@ -511,12 +507,11 @@ class ClaimDetector(IClaimDetector):
 
     def get_performance_metrics(
         self,
-        metric_name: Optional[str] = None,
-        start_time: Optional[str] = None,
-        end_time: Optional[str] = None,
-    ) -> Dict[str, Any]:
-        """
-        Get performance metrics for the claim detector.
+        metric_name: str | None = None,
+        start_time: str | None = None,
+        end_time: str | None = None,
+    ) -> dict[str, Any]:
+        """Get performance metrics for the claim detector.
 
         Args:
             metric_name: Optional name of specific metric to retrieve

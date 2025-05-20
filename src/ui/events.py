@@ -1,5 +1,4 @@
-"""
-Chainlit event handlers for the VeriFact UI.
+"""Chainlit event handlers for the VeriFact UI.
 
 This module contains the event handlers for Chainlit events such as
 on_chat_start, on_message, etc.
@@ -22,8 +21,7 @@ db_client = SupabaseClient()
 # Configuration for authentication
 @cl.password_auth_callback
 def auth_callback(username: str, password: str):
-    """
-    Handle password-based authentication.
+    """Handle password-based authentication.
     This is a simple implementation for demonstration.
     In production, you should use secure password storage and verification.
     """
@@ -44,9 +42,7 @@ def auth_callback(username: str, password: str):
 
 @cl.on_chat_start
 async def on_chat_start():
-    """
-    Initialize the VeriFact system when a new chat session starts.
-    """
+    """Initialize the VeriFact system when a new chat session starts."""
     # Get the authenticated user
     user = cl.user_session.get("user")
 
@@ -100,9 +96,7 @@ async def on_chat_start():
 
 @cl.on_chat_resume
 async def on_chat_resume():
-    """
-    Handle restoration of a previous chat session.
-    """
+    """Handle restoration of a previous chat session."""
     # Get the user information
     user = cl.user_session.get("user")
 
@@ -131,9 +125,7 @@ async def on_chat_resume():
 
 @cl.on_element_change
 async def on_element_change(element, input_value):
-    """
-    Handle changes to UI elements like sliders and switches.
-    """
+    """Handle changes to UI elements like sliders and switches."""
     settings = cl.user_session.get("settings")
     if settings:
         settings[element.id] = input_value

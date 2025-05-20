@@ -1,5 +1,4 @@
-"""
-Utility functions for the VeriFact UI.
+"""Utility functions for the VeriFact UI.
 
 This module contains utility functions used by the Chainlit UI components.
 """
@@ -8,16 +7,15 @@ import datetime
 import json
 import os
 import uuid
-from typing import Any, Dict, List
+from typing import Any
 
 import chainlit as cl
 
 from src.models.feedback import Feedback, FeedbackStats
 
 
-async def export_results_to_json(results: List[Dict[str, Any]]) -> str:
-    """
-    Export fact-check results to a JSON string.
+async def export_results_to_json(results: list[dict[str, Any]]) -> str:
+    """Export fact-check results to a JSON string.
 
     Args:
         results: List of fact-check results
@@ -52,9 +50,8 @@ async def export_results_to_json(results: List[Dict[str, Any]]) -> str:
     return results_json
 
 
-async def save_feedback(fact_check_id: str, feedback_data: Dict[str, Any]) -> None:
-    """
-    Save user feedback to the database.
+async def save_feedback(fact_check_id: str, feedback_data: dict[str, Any]) -> None:
+    """Save user feedback to the database.
 
     Args:
         fact_check_id: ID of the fact-check
@@ -101,7 +98,7 @@ async def save_feedback(fact_check_id: str, feedback_data: Dict[str, Any]) -> No
         existing_feedback = []
         if os.path.exists(feedback_file):
             try:
-                with open(feedback_file, "r") as f:
+                with open(feedback_file) as f:
                     existing_feedback = json.load(f)
             except Exception:
                 existing_feedback = []
@@ -117,8 +114,7 @@ async def save_feedback(fact_check_id: str, feedback_data: Dict[str, Any]) -> No
 
 
 async def get_feedback_stats() -> FeedbackStats:
-    """
-    Get statistics about collected feedback.
+    """Get statistics about collected feedback.
 
     Returns:
         FeedbackStats object with feedback statistics
@@ -143,7 +139,7 @@ async def get_feedback_stats() -> FeedbackStats:
         )
 
     # Read feedback from file
-    with open(feedback_file, "r") as f:
+    with open(feedback_file) as f:
         feedback_list = json.load(f)
 
     # Compile statistics

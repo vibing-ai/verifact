@@ -16,8 +16,7 @@ class EncryptionError(Exception):
 
 @lru_cache(maxsize=1)
 def get_encryption_key() -> bytes:
-    """
-    Get or generate the encryption key.
+    """Get or generate the encryption key.
 
     Returns:
         The encryption key as bytes
@@ -59,8 +58,7 @@ def get_fernet() -> Fernet:
 
 
 def encrypt_value(value: str) -> str:
-    """
-    Encrypt a string value.
+    """Encrypt a string value.
 
     Args:
         value: The value to encrypt
@@ -80,8 +78,7 @@ def encrypt_value(value: str) -> str:
 
 
 def decrypt_value(encrypted_value: str) -> str:
-    """
-    Decrypt an encrypted value.
+    """Decrypt an encrypted value.
 
     Args:
         encrypted_value: The encrypted value as a base64 string

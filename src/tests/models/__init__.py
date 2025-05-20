@@ -1,5 +1,4 @@
-"""
-Tests for model components.
+"""Tests for model components.
 
 This package contains tests for model-related functionality.
 """

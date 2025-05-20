@@ -1,5 +1,4 @@
-"""
-Pytest configuration for utility tests.
+"""Pytest configuration for utility tests.
 
 This module contains fixtures specific to utility tests.
 """

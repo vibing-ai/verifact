@@ -1,11 +1,10 @@
-"""
-Agent factory for creating and configuring agent instances.
+"""Agent factory for creating and configuring agent instances.
 
 This module provides a centralized factory for creating configured agent instances,
 ensuring proper dependency injection and encapsulation.
 """
 
-from typing import Any, Dict, Optional, TypeVar, cast
+from typing import Any, TypeVar, cast
 
 # Import concrete implementations (will be replaced with actual implementations)
 # These imports should be updated to point to your actual implementations
@@ -26,8 +25,7 @@ T = TypeVar("T")
 
 
 class AgentFactory:
-    """
-    Factory for creating agent instances with proper dependency injection.
+    """Factory for creating agent instances with proper dependency injection.
 
     This factory provides a centralized place for agent creation, configuration,
     and dependency injection. It ensures that agent implementations are properly
@@ -35,9 +33,8 @@ class AgentFactory:
     """
 
     @staticmethod
-    def create_claim_detector(config: Optional[Dict[str, Any]] = None) -> ClaimDetector:
-        """
-        Create a configured ClaimDetector instance.
+    def create_claim_detector(config: dict[str, Any] | None = None) -> ClaimDetector:
+        """Create a configured ClaimDetector instance.
 
         Args:
             config: Optional configuration dictionary for the claim detector
@@ -50,9 +47,8 @@ class AgentFactory:
         return cast(ClaimDetector, ClaimDetectorImpl(model_name=model_name))
 
     @staticmethod
-    def create_evidence_hunter(config: Optional[Dict[str, Any]] = None) -> EvidenceHunter:
-        """
-        Create a configured EvidenceHunter instance.
+    def create_evidence_hunter(config: dict[str, Any] | None = None) -> EvidenceHunter:
+        """Create a configured EvidenceHunter instance.
 
         Args:
             config: Optional configuration dictionary for the evidence hunter
@@ -65,9 +61,8 @@ class AgentFactory:
         return cast(EvidenceHunter, EvidenceHunterImpl(model_name=model_name))
 
     @staticmethod
-    def create_verdict_writer(config: Optional[Dict[str, Any]] = None) -> VerdictWriter:
-        """
-        Create a configured VerdictWriter instance.
+    def create_verdict_writer(config: dict[str, Any] | None = None) -> VerdictWriter:
+        """Create a configured VerdictWriter instance.
 
         Args:
             config: Optional configuration dictionary for the verdict writer
@@ -92,9 +87,8 @@ class AgentFactory:
         )
 
     @staticmethod
-    def create_agent(agent_type: str, config: Optional[Dict[str, Any]] = None) -> Any:
-        """
-        Create an agent of the specified type with the given configuration.
+    def create_agent(agent_type: str, config: dict[str, Any] | None = None) -> Any:
+        """Create an agent of the specified type with the given configuration.
 
         Args:
             agent_type: The type of agent to create ("claim_detector", "evidence_hunter", "verdict_writer")
@@ -120,16 +114,16 @@ class AgentFactory:
     # Legacy factory methods for backward compatibility
 
     @staticmethod
-    def create_legacy_claim_detector(config: Optional[Dict[str, Any]] = None) -> IClaimDetector:
+    def create_legacy_claim_detector(config: dict[str, Any] | None = None) -> IClaimDetector:
         """Create a legacy IClaimDetector instance."""
         return cast(IClaimDetector, AgentFactory.create_claim_detector(config))
 
     @staticmethod
-    def create_legacy_evidence_hunter(config: Optional[Dict[str, Any]] = None) -> IEvidenceHunter:
+    def create_legacy_evidence_hunter(config: dict[str, Any] | None = None) -> IEvidenceHunter:
         """Create a legacy IEvidenceHunter instance."""
         return cast(IEvidenceHunter, AgentFactory.create_evidence_hunter(config))
 
     @staticmethod
-    def create_legacy_verdict_writer(config: Optional[Dict[str, Any]] = None) -> IVerdictWriter:
+    def create_legacy_verdict_writer(config: dict[str, Any] | None = None) -> IVerdictWriter:
         """Create a legacy IVerdictWriter instance."""
         return cast(IVerdictWriter, AgentFactory.create_verdict_writer(config))

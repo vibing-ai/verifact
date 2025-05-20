@@ -1,5 +1,4 @@
-"""
-Pytest configuration for agent tests.
+"""Pytest configuration for agent tests.
 
 This module contains fixtures specific to agent component tests.
 """

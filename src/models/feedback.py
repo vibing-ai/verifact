@@ -1,5 +1,4 @@
-"""
-Pydantic models for the VeriFact user feedback system.
+"""Pydantic models for the VeriFact user feedback system.
 
 This module contains the data models used for collecting and managing user feedback
 on factchecking results.
@@ -7,7 +6,7 @@ on factchecking results.
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field, constr, root_validator
 
@@ -33,23 +32,19 @@ class Rating(int, Enum):
 class Feedback(BaseModel):
     """User feedback on a factcheck result."""
 
-    feedback_id: Optional[str] = Field(None, description="Unique identifier for the feedback")
+    feedback_id: str | None = Field(None, description="Unique identifier for the feedback")
     claim_id: str = Field(..., description="ID of the factcheck claim this feedback relates to")
-    user_id: Optional[str] = Field(
-        None, description="ID of the authenticated user providing feedback"
-    )
-    session_id: Optional[str] = Field(None, description="Session ID for anonymous users")
-    accuracy_rating: Optional[Rating] = Field(
-        None, description="Rating for factcheck accuracy (1-5)"
-    )
-    helpfulness_rating: Optional[Rating] = Field(
+    user_id: str | None = Field(None, description="ID of the authenticated user providing feedback")
+    session_id: str | None = Field(None, description="Session ID for anonymous users")
+    accuracy_rating: Rating | None = Field(None, description="Rating for factcheck accuracy (1-5)")
+    helpfulness_rating: Rating | None = Field(
         None, description="Rating for factcheck helpfulness (1-5)"
     )
-    comment: Optional[constr(max_length=1000)] = Field(None, description="Optional user comment")
+    comment: constr(max_length=1000) | None = Field(None, description="Optional user comment")
     created_at: datetime = Field(
         default_factory=datetime.now, description="When the feedback was submitted"
     )
-    metadata: Dict[str, Any] = Field(
+    metadata: dict[str, Any] = Field(
         default_factory=dict, description="Additional metadata (browser, device, etc.)"
     )
 
@@ -81,13 +76,13 @@ class FeedbackRequest(BaseModel):
     """API request model for submitting feedback."""
 
     claim_id: str = Field(..., description="ID of the factcheck claim")
-    accuracy_rating: Optional[int] = Field(
+    accuracy_rating: int | None = Field(
         None, ge=1, le=5, description="Rating for factcheck accuracy (1-5)"
     )
-    helpfulness_rating: Optional[int] = Field(
+    helpfulness_rating: int | None = Field(
         None, ge=1, le=5, description="Rating for factcheck helpfulness (1-5)"
     )
-    comment: Optional[constr(max_length=1000)] = Field(None, description="Optional user comment")
+    comment: constr(max_length=1000) | None = Field(None, description="Optional user comment")
 
     @root_validator(skip_on_failure=True)
     def check_at_least_one_field(cls, values):
@@ -103,7 +98,7 @@ class FeedbackResponse(BaseModel):
     """API response model for feedback submission."""
 
     success: bool = Field(..., description="Whether the feedback was successfully stored")
-    feedback_id: Optional[str] = Field(None, description="ID of the stored feedback")
+    feedback_id: str | None = Field(None, description="ID of the stored feedback")
     message: str = Field(..., description="Status message")
 
 
@@ -111,11 +106,11 @@ class FeedbackStats(BaseModel):
     """Statistics about feedback for a claim or overall."""
 
     total_feedback: int = Field(..., description="Total number of feedback submissions")
-    average_accuracy: Optional[float] = Field(None, description="Average accuracy rating")
-    average_helpfulness: Optional[float] = Field(None, description="Average helpfulness rating")
-    feedback_count_by_rating: Dict[str, Dict[int, int]] = Field(
+    average_accuracy: float | None = Field(None, description="Average accuracy rating")
+    average_helpfulness: float | None = Field(None, description="Average helpfulness rating")
+    feedback_count_by_rating: dict[str, dict[int, int]] = Field(
         default_factory=dict, description="Count of feedback by rating type and value"
     )
-    recent_comments: Optional[List[Dict[str, Any]]] = Field(
+    recent_comments: list[dict[str, Any]] | None = Field(
         None, description="Recent comments (limited to 5)"
     )

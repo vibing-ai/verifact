@@ -1,5 +1,4 @@
-"""
-VeriFact Admin API
+"""VeriFact Admin API
 
 This module contains admin endpoints for the VeriFact API,
 including API key management and system configuration.
@@ -7,7 +6,7 @@ including API key management and system configuration.
 
 import datetime
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
@@ -49,9 +48,9 @@ router = APIRouter(
 class ApiKeyRequest(BaseModel):
     """Request for creating a new API key."""
 
-    user_id: Optional[str] = None
-    permissions: Optional[List[str]] = None
-    expiry_days: Optional[int] = None
+    user_id: str | None = None
+    permissions: list[str] | None = None
+    expiry_days: int | None = None
 
 
 class ApiKeyResponse(BaseModel):
@@ -60,8 +59,8 @@ class ApiKeyResponse(BaseModel):
     key: str
     prefix: str
     expires_at: str
-    permissions: List[str]
-    user_id: Optional[str] = None
+    permissions: list[str]
+    user_id: str | None = None
 
 
 class ApiKeyInfo(BaseModel):
@@ -70,7 +69,7 @@ class ApiKeyInfo(BaseModel):
     id: str
     prefix: str
     expires_at: str
-    permissions: List[str]
+    permissions: list[str]
     created_at: str
 
 
@@ -82,10 +81,8 @@ class InvalidateCacheRequest(BaseModel):
         ...,
         description="The cache namespace to invalidate: 'evidence', 'claims', 'search_results', etc.",
     )
-    pattern: Optional[str] = Field(
-        None, description="Optional pattern to match specific cache keys"
-    )
-    reason: Optional[str] = Field(None, description="Optional reason for cache invalidation")
+    pattern: str | None = Field(None, description="Optional pattern to match specific cache keys")
+    reason: str | None = Field(None, description="Optional reason for cache invalidation")
 
 
 class InvalidateCacheResponse(BaseModel):
@@ -94,12 +91,11 @@ class InvalidateCacheResponse(BaseModel):
     success: bool
     message: str
     invalidated_namespace: str
-    invalidated_count: Optional[int] = None
+    invalidated_count: int | None = None
 
 
-async def require_admin(request: Request) -> Dict[str, Any]:
-    """
-    Dependency to check if the requester has admin permissions.
+async def require_admin(request: Request) -> dict[str, Any]:
+    """Dependency to check if the requester has admin permissions.
 
     Args:
         request: The request object
@@ -141,7 +137,7 @@ async def require_admin(request: Request) -> Dict[str, Any]:
     """,
 )
 async def create_key(
-    request: ApiKeyRequest = Body(...), admin: Dict[str, Any] = Depends(require_admin)
+    request: ApiKeyRequest = Body(...), admin: dict[str, Any] = Depends(require_admin)
 ):
     """Create a new API key."""
     try:
@@ -184,7 +180,7 @@ async def create_key(
     Once revoked, the API key can no longer be used.
     """,
 )
-async def revoke_key(key: str, admin: Dict[str, Any] = Depends(require_admin)):
+async def revoke_key(key: str, admin: dict[str, Any] = Depends(require_admin)):
     """Revoke an API key."""
     try:
         # Revoke the API key
@@ -215,7 +211,7 @@ async def revoke_key(key: str, admin: Dict[str, Any] = Depends(require_admin)):
     The new API key will be returned only once, so make sure to store it securely.
     """,
 )
-async def rotate_key(key: str, admin: Dict[str, Any] = Depends(require_admin)):
+async def rotate_key(key: str, admin: dict[str, Any] = Depends(require_admin)):
     """Rotate an API key."""
     try:
         # Rotate the API key
@@ -242,7 +238,7 @@ async def rotate_key(key: str, admin: Dict[str, Any] = Depends(require_admin)):
 
 @router.get(
     "/users/{user_id}/keys",
-    response_model=List[ApiKeyInfo],
+    response_model=list[ApiKeyInfo],
     summary="List API keys for a user",
     description="""
     List all active API keys for a user.
@@ -252,7 +248,7 @@ async def rotate_key(key: str, admin: Dict[str, Any] = Depends(require_admin)):
     Returns only metadata about the keys, not the actual keys.
     """,
 )
-async def list_keys(user_id: str, admin: Dict[str, Any] = Depends(require_admin)):
+async def list_keys(user_id: str, admin: dict[str, Any] = Depends(require_admin)):
     """List API keys for a user."""
     try:
         # List API keys
@@ -280,10 +276,9 @@ async def list_keys(user_id: str, admin: Dict[str, Any] = Depends(require_admin)
     """,
 )
 async def invalidate_cache(
-    request: InvalidateCacheRequest, admin: Dict[str, Any] = Depends(require_admin)
-) -> Dict[str, Any]:
-    """
-    Invalidate cache entries based on patterns or selectively.
+    request: InvalidateCacheRequest, admin: dict[str, Any] = Depends(require_admin)
+) -> dict[str, Any]:
+    """Invalidate cache entries based on patterns or selectively.
     Requires admin privileges.
     """
     # Map namespace to cache instance
@@ -340,7 +335,7 @@ async def invalidate_cache(
     Returns information about the Redis connection and configured TTLs.
     """,
 )
-async def cache_status(admin: Dict[str, Any] = Depends(require_admin)) -> Dict[str, Any]:
+async def cache_status(admin: dict[str, Any] = Depends(require_admin)) -> dict[str, Any]:
     """Get cache status information."""
     import os
 
@@ -375,8 +370,8 @@ async def cache_status(admin: Dict[str, Any] = Depends(require_admin)) -> Dict[s
     """,
 )
 async def cache_metrics(
-    namespace: Optional[str] = None, admin: Dict[str, Any] = Depends(require_admin)
-) -> Dict[str, Any]:
+    namespace: str | None = None, admin: dict[str, Any] = Depends(require_admin)
+) -> dict[str, Any]:
     """Get cache performance metrics."""
     # Map namespace to metrics instance
     metrics_map = {
@@ -415,7 +410,7 @@ async def cache_metrics(
     Returns information about connection usage, pool size, and status.
     """,
 )
-async def database_metrics(admin: Dict[str, Any] = Depends(require_admin)) -> Dict[str, Any]:
+async def database_metrics(admin: dict[str, Any] = Depends(require_admin)) -> dict[str, Any]:
     """Get database connection pool metrics."""
     try:
         metrics = await ConnectionPoolMetrics.collect()
@@ -434,7 +429,7 @@ async def database_metrics(admin: Dict[str, Any] = Depends(require_admin)) -> Di
 @router.post("/api-keys", response_model=dict)
 async def create_new_api_key(
     name: str,
-    scopes: List[ApiKeyScope],
+    scopes: list[ApiKeyScope],
     expires_days: int = 365,
     owner_id: str = Depends(lambda: verify_api_key(required_scopes=[ApiKeyScope.ADMIN])),
 ):
@@ -455,7 +450,7 @@ async def create_new_api_key(
     }
 
 
-@router.get("/api-keys", response_model=List[ApiKey])
+@router.get("/api-keys", response_model=list[ApiKey])
 async def get_api_keys(
     owner_id: str = Depends(lambda: verify_api_key(required_scopes=[ApiKeyScope.ADMIN])),
 ):

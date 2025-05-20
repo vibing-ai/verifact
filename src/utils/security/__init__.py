@@ -1,5 +1,4 @@
-"""
-Security utilities for VeriFact.
+"""Security utilities for VeriFact.
 
 This package contains modules for:
 - Secure credential management
