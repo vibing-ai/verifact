@@ -1,0 +1,107 @@
+version: "3.8"
+
+# Production configuration override
+services:
+  verifact-ui:
+    <<: *app-prod
+    volumes:
+      - ./configs:/app/configs
+    environment:
+      - CHAINLIT_HOST=0.0.0.0
+      - CHAINLIT_PORT=8501
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-}@verifact-redis:6379/0
+      - REDIS_ENABLED=true
+      - DB_POOL_MIN_SIZE=5
+      - DB_POOL_MAX_SIZE=10
+      - DB_POOL_MAX_IDLE_TIME=300
+      - ENVIRONMENT=production
+      - CHAINLIT_AUTH_ENABLED=true
+    restart: always
+    networks:
+      - verifact-network
+      - nginx-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  verifact-api:
+    <<: *app-prod
+    volumes:
+      - ./configs:/app/configs
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-}@verifact-redis:6379/0
+      - REDIS_ENABLED=true
+      - EVIDENCE_CACHE_TTL=86400
+      - DB_POOL_MIN_SIZE=5
+      - DB_POOL_MAX_SIZE=20
+      - DB_POOL_MAX_IDLE_TIME=300
+      - DB_COMMAND_TIMEOUT=60.0
+      - ENVIRONMENT=production
+      - RATE_LIMIT_ENABLED=true
+      - API_KEY_ENABLED=true
+    restart: always
+    networks:
+      - verifact-network
+      - nginx-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  verifact-redis:
+    restart: always
+    command: redis-server --requirepass ${REDIS_PASSWORD:-} --maxmemory 512mb --maxmemory-policy allkeys-lru --appendonly yes
+    volumes:
+      - redis-data-prod:/data
+    networks:
+      - verifact-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 768M
+
+  # Nginx for SSL termination and load balancing
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./configs/nginx:/etc/nginx/conf.d
+      - ./configs/certbot/conf:/etc/letsencrypt
+      - ./configs/certbot/www:/var/www/certbot
+    networks:
+      - nginx-network
+    depends_on:
+      - verifact-ui
+      - verifact-api
+    restart: always
+    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+
+  # Certbot for SSL certificate management
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./configs/certbot/conf:/etc/letsencrypt
+      - ./configs/certbot/www:/var/www/certbot
+    depends_on:
+      - nginx
+    restart: always
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+networks:
+  verifact-network:
+    driver: bridge
+  nginx-network:
+    driver: bridge
+
+volumes:
+  redis-data-prod: 

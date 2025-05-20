@@ -1,10 +1,63 @@
-# Python-generated files
+# Environment variables
+.env
+
+# Chainlit data persistence
+.chatlit/
+
+# Python
 __pycache__/
-*.py[oc]
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+.env/
+env/
+env.bak/
+venv.bak/
+.venv/
 build/
+develop-eggs/
 dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
 wheels/
-*.egg-info
+*.egg-info/
+verifact.egg-info/
+.installed.cfg
+*.egg
+
+# Testing and coverage
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+htmlcov/
+.pytest_cache/
+.tox/
+reports/coverage_html/
+nosetests.xml
+coverage/
+
+# Logs
+logs/
+*.log
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+.project
+.pydevproject
+.settings/
 
 # Virtual environments
 .venv
@@ -14,3 +67,13 @@ wheels/
 
 # Machine specific files
 .DS_Store
+Thumbs.db
+
+# Local development
+local_settings.py
+
+# MyPy
+.mypy_cache/
+
+# Jupyter Notebooks
+.ipynb_checkpoints

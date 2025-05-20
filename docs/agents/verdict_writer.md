@@ -4,6 +4,20 @@
 
 The VerdictWriter agent is responsible for synthesizing evidence gathered by the EvidenceHunter to generate verdicts about claims identified by the ClaimDetector. It analyzes evidence, evaluates contradictions, produces a final verdict, and provides a clear, well-reasoned explanation with source citations.
 
+## Default Model
+
+The VerdictWriter uses **DeepSeek Chat:free** as its default model, chosen for:
+
+- Superior reasoning capabilities for evidence synthesis
+- Excellent handling of contradictory information
+- Strong logical analysis for verdict determination
+- Clear explanation generation with proper attribution
+
+Alternative models include:
+
+- nousresearch/deephermes-3-mistral-24b-preview:free (toggle reasoning mode, lower resources)
+- google/gemma-3-27b-it:free (strong reasoning with shorter queue times)
+
 ## Key Capabilities
 
 - Evidence synthesis and weighting

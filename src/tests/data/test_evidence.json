@@ -1,0 +1,242 @@
+[
+  {
+    "id": "science-earth-1",
+    "claim_id": "science-easy-1",
+    "content": "The Earth revolves around the Sun at an average distance of 93 million miles, completing a full orbit every 365.25 days.",
+    "source": "https://example.edu/astronomy/solar-system",
+    "source_name": "University Astronomy Department",
+    "relevance": 0.98,
+    "stance": "supporting",
+    "credibility": 0.95,
+    "metadata": {
+      "publication_date": "2022-05-15",
+      "author": "Dr. Jane Smith",
+      "citation_count": 42
+    }
+  },
+  {
+    "id": "science-earth-2",
+    "claim_id": "science-easy-1",
+    "content": "The heliocentric model, where planets revolve around the Sun, has been scientifically confirmed through countless observations, including spacecraft imagery and orbital mechanics calculations.",
+    "source": "https://example.org/space/solar-system-facts",
+    "source_name": "Space Research Institute",
+    "relevance": 0.95,
+    "stance": "supporting",
+    "credibility": 0.92,
+    "metadata": {
+      "publication_date": "2023-01-10",
+      "author": "Dr. Robert Johnson",
+      "citation_count": 18
+    }
+  },
+  {
+    "id": "science-antibiotics-1",
+    "claim_id": "science-medium-1",
+    "content": "Antibiotics are medications that fight infections caused by bacteria, but they do not work against viral infections like the common cold, flu, most sore throats, bronchitis, and many sinus and ear infections.",
+    "source": "https://example.gov/health/antibiotics-use",
+    "source_name": "National Health Institute",
+    "relevance": 0.99,
+    "stance": "contradicting",
+    "credibility": 0.98,
+    "metadata": {
+      "publication_date": "2023-03-22",
+      "author": "Medical Research Team",
+      "citation_count": 75
+    }
+  },
+  {
+    "id": "science-antibiotics-2",
+    "claim_id": "science-medium-1",
+    "content": "Taking antibiotics when you have a viral infection won't make you feel better, and the misuse of antibiotics contributes to the serious and growing problem of antibiotic resistance.",
+    "source": "https://example.org/medicine/antibiotics-misuse",
+    "source_name": "Global Medical Association",
+    "relevance": 0.94,
+    "stance": "contradicting",
+    "credibility": 0.96,
+    "metadata": {
+      "publication_date": "2022-11-05",
+      "author": "Dr. Sarah Wilson",
+      "citation_count": 61
+    }
+  },
+  {
+    "id": "science-jwst-1",
+    "claim_id": "science-hard-1",
+    "content": "The James Webb Space Telescope has made significant discoveries about exoplanet atmospheres and distant galaxies, but has not detected any definitive signs of life on exoplanets as of 2023.",
+    "source": "https://example.nasa.gov/jwst/discoveries",
+    "source_name": "Space Agency Official Website",
+    "relevance": 0.97,
+    "stance": "contradicting",
+    "credibility": 0.99,
+    "metadata": {
+      "publication_date": "2023-06-30",
+      "author": "JWST Science Team",
+      "citation_count": 84
+    }
+  },
+  {
+    "id": "history-independence-1",
+    "claim_id": "history-easy-1",
+    "content": "The Declaration of Independence was adopted by the Continental Congress on July 4, 1776, announcing that the thirteen American colonies regarded themselves as independent sovereign states.",
+    "source": "https://example.edu/history/american-revolution",
+    "source_name": "University History Department",
+    "relevance": 0.99,
+    "stance": "supporting",
+    "credibility": 0.97,
+    "metadata": {
+      "publication_date": "2021-07-04",
+      "author": "Dr. Michael Brown",
+      "citation_count": 56
+    }
+  },
+  {
+    "id": "history-berlin-wall-1",
+    "claim_id": "history-medium-1",
+    "content": "The Berlin Wall fell on November 9, 1989, when the East German government announced that citizens could visit West Berlin and West Germany freely.",
+    "source": "https://example.org/history/cold-war-end",
+    "source_name": "European History Archive",
+    "relevance": 0.98,
+    "stance": "contradicting",
+    "credibility": 0.96,
+    "metadata": {
+      "publication_date": "2019-11-09",
+      "author": "Dr. Helga Müller",
+      "citation_count": 47
+    }
+  },
+  {
+    "id": "politics-eu-1",
+    "claim_id": "politics-medium-1",
+    "content": "The European Union consists of 27 member states as of 2023, following the departure of the United Kingdom on January 31, 2020.",
+    "source": "https://example.eu/about/member-countries",
+    "source_name": "European Union Official Website",
+    "relevance": 0.99,
+    "stance": "contradicting",
+    "credibility": 0.99,
+    "metadata": {
+      "publication_date": "2023-01-15",
+      "author": "EU Information Office",
+      "citation_count": 92
+    }
+  },
+  {
+    "id": "health-smoking-1",
+    "claim_id": "health-easy-1",
+    "content": "Smoking causes approximately 480,000 deaths in the United States annually, including more than 41,000 deaths from secondhand smoke exposure.",
+    "source": "https://example.gov/health/tobacco/data",
+    "source_name": "National Health Statistics",
+    "relevance": 0.97,
+    "stance": "supporting",
+    "credibility": 0.98,
+    "metadata": {
+      "publication_date": "2023-02-18",
+      "author": "Public Health Research Team",
+      "citation_count": 73
+    }
+  },
+  {
+    "id": "health-mrna-1",
+    "claim_id": "health-hard-1",
+    "content": "mRNA vaccines work by instructing cells to produce a protein that triggers an immune response, but the mRNA never enters the cell nucleus where DNA is kept, making it impossible for the vaccine to alter human DNA.",
+    "source": "https://example.gov/vaccines/mrna-explained",
+    "source_name": "Center for Disease Control",
+    "relevance": 0.99,
+    "stance": "contradicting",
+    "credibility": 0.99,
+    "metadata": {
+      "publication_date": "2023-05-12",
+      "author": "Vaccine Research Team",
+      "citation_count": 128
+    }
+  },
+  {
+    "id": "climate-ozone-1",
+    "claim_id": "climate-medium-1",
+    "content": "The ozone hole has substantially recovered since the implementation of the Montreal Protocol in 1987, but it has not completely disappeared and continues to form seasonally over Antarctica.",
+    "source": "https://example.gov/climate/ozone-monitoring",
+    "source_name": "Environmental Protection Agency",
+    "relevance": 0.96,
+    "stance": "contradicting",
+    "credibility": 0.97,
+    "metadata": {
+      "publication_date": "2023-04-22",
+      "author": "Atmospheric Science Division",
+      "citation_count": 84
+    }
+  },
+  {
+    "id": "tech-www-1",
+    "claim_id": "tech-easy-1",
+    "content": "Sir Tim Berners-Lee invented the World Wide Web in 1989 while working at CERN. He wrote the first web browser and server, establishing the foundation of the modern web.",
+    "source": "https://example.org/computer-history/web-origins",
+    "source_name": "Computer History Museum",
+    "relevance": 0.99,
+    "stance": "supporting",
+    "credibility": 0.96,
+    "metadata": {
+      "publication_date": "2022-08-06",
+      "author": "Dr. Alan Rogers",
+      "citation_count": 63
+    }
+  },
+  {
+    "id": "tech-5g-1",
+    "claim_id": "tech-medium-1",
+    "content": "5G networks use radio waves to transmit data and operate at frequencies that cannot create or transmit viruses. There is no scientific evidence linking 5G technology to the spread of any virus, including COVID-19.",
+    "source": "https://example.who.int/factsheets/5g-health",
+    "source_name": "World Health Organization",
+    "relevance": 0.98,
+    "stance": "contradicting",
+    "credibility": 0.97,
+    "metadata": {
+      "publication_date": "2022-06-15",
+      "author": "WHO Research Team",
+      "citation_count": 57
+    }
+  },
+  {
+    "id": "mixed-wall-1",
+    "claim_id": "mixed-1",
+    "content": "The Great Wall of China is not visible to the naked eye from the Moon or even from low Earth orbit. This myth has been debunked by multiple astronauts who have reported being unable to see the wall from space.",
+    "source": "https://example.nasa.gov/astronaut-observations/earth-from-space",
+    "source_name": "Space Agency",
+    "relevance": 0.95,
+    "stance": "contradicting",
+    "credibility": 0.98,
+    "metadata": {
+      "publication_date": "2022-03-11",
+      "author": "Astronaut Corps",
+      "citation_count": 42
+    }
+  },
+  {
+    "id": "unverifiable-aliens-1",
+    "claim_id": "unverifiable-1",
+    "content": "While there have been numerous reports of unidentified aerial phenomena, there is currently no conclusive scientific evidence proving extraterrestrial visitation to Earth.",
+    "source": "https://example.gov/science/uap-report",
+    "source_name": "Government Science Division",
+    "relevance": 0.92,
+    "stance": "neutral",
+    "credibility": 0.85,
+    "metadata": {
+      "publication_date": "2023-01-30",
+      "author": "Scientific Assessment Team",
+      "citation_count": 21
+    }
+  },
+  {
+    "id": "outdated-pluto-1",
+    "claim_id": "outdated-1",
+    "content": "Pluto was reclassified from a planet to a dwarf planet by the International Astronomical Union in 2006, reducing the number of recognized planets in our solar system to eight.",
+    "source": "https://example.edu/astronomy/planets-definition",
+    "source_name": "International Astronomical Union",
+    "relevance": 0.99,
+    "stance": "contradicting",
+    "credibility": 0.99,
+    "metadata": {
+      "publication_date": "2022-02-18",
+      "author": "IAU Committee",
+      "citation_count": 89
+    }
+  }
+] 

@@ -1,0 +1,42 @@
+# VeriFact Input Validation Configuration
+
+# General text validation
+text:
+  min_length: 10
+  max_length: 50000
+  # Minimum length considered for factchecking
+  min_factcheck_length: 50
+
+# Claim validation
+claim:
+  min_length: 5
+  max_length: 1000
+  # Minimum check-worthiness score to consider a claim for factchecking
+  min_check_worthiness: 0.5
+
+# API request validation
+api:
+  # Maximum number of claims to process per request
+  max_claims_per_request: 20
+  # Maximum number of batch claims to process per request
+  max_batch_claims: 100
+  # Rate limit for API requests (requests per hour)
+  rate_limit: 100
+  # Rate limit for authenticated API requests (requests per hour)
+  authenticated_rate_limit: 1000
+
+# URL validation
+url:
+  # Maximum URL length
+  max_length: 2048
+  # Allowed URL schemes
+  allowed_schemes:
+    - http
+    - https
+
+# Feedback validation
+feedback:
+  # Minimum length for feedback comment
+  min_comment_length: 5
+  # Maximum length for feedback comment
+  max_comment_length: 1000

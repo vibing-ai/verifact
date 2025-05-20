@@ -33,13 +33,16 @@ There are many ways to contribute to VeriFact:
 
 - Python 3.10 or higher
 - pip or uv for package management
+- OpenRouter API key for model access (register at [openrouter.ai](https://openrouter.ai))
+- Git for version control
+- Docker & Docker Compose (optional, for containerized development)
 
 ### Setting up the development environment
 
 1. Fork the repository on GitHub
 2. Clone your fork locally:
    ```
-   git clone https://github.com/vibing-ai/verifact.git
+   git clone https://github.com/yourusername/verifact.git
    cd verifact
    ```
 3. Set up the upstream remote:
@@ -47,11 +50,26 @@ There are many ways to contribute to VeriFact:
    git remote add upstream https://github.com/vibing-ai/verifact.git
    ```
 4. Create a virtual environment and install dependencies:
+
    ```
    python -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
    pip install -e ".[dev]"   # Installs the package in development mode with dev dependencies
    ```
+
+5. Copy the environment template and configure it with your API keys:
+
+   ```
+   cp configs/env.template .env
+   ```
+
+   At minimum, add your OpenRouter API key to the `.env` file:
+
+   ```
+   OPENROUTER_API_KEY=your_openrouter_api_key_here
+   ```
+
+   Note: VeriFact uses pyproject.toml for dependency management. All dependencies should be added to this file rather than creating separate requirements.txt files.
 
 ## Contribution Workflow
 
@@ -101,12 +119,16 @@ There are many ways to contribute to VeriFact:
 - Keep functions focused on a single responsibility
 - Use type hints to improve code readability and tooling support
 - Format code with `black` and run `flake8` before committing
+- Use `isort` to organize imports (compatible with black settings)
+- Use `mypy` for static type checking where applicable
 
 ## Testing Guidelines
 
 - Write unit tests for all new functionality
-- Tests should be located in the `tests/` directory
+- Tests should be located in the `src/tests/` directory
 - Aim for at least 80% code coverage
+- Set up at minimum an OpenRouter API key in your `.env` file for tests that require model access
+- Use mocks for external services (web search, etc.) when appropriate
 - Run the full test suite before submitting a PR:
   ```
   pytest
@@ -122,12 +144,36 @@ When creating a new issue:
 4. Include steps to reproduce, expected behavior, and actual behavior
 5. Add relevant information like OS, Python version, and screenshots if applicable
 
+## Running the Application
+
+### Using Docker (Recommended for Full Stack)
+
+```bash
+docker-compose up
+```
+
+This will start all necessary services including the Chainlit UI, FastAPI backend, and database.
+
+### Running Components Separately (Local Development)
+
+For the Chainlit UI:
+
+```bash
+chainlit run app.py
+```
+
+For the API server:
+
+```bash
+uvicorn src.main:app --reload
+```
+
 ## Communication
 
 - **GitHub Issues**: Use for bug reports, feature requests, and substantial discussions
 - **Pull Requests**: Use for code review and related discussions
 - **Project boards**: Track progress of feature development
-- **Discord/Slack** (Coming soon): For real-time communication and quick questions
+- **GitHub Discussions**: For general questions and community discussions
 
 ---
 

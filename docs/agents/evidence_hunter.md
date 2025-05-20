@@ -4,6 +4,20 @@
 
 The EvidenceHunter agent is responsible for retrieving and evaluating evidence related to claims identified by the ClaimDetector. It searches for relevant information from multiple sources, evaluates source credibility, and aggregates evidence that either supports or contradicts the claim.
 
+## Default Model
+
+The EvidenceHunter uses **Google Gemma 3-27b-it:free** as its default model, which provides:
+
+- 128k context window for processing large amounts of evidence
+- Optimized for RAG (Retrieval-Augmented Generation) applications
+- Strong reasoning capabilities for evidence analysis
+- Moderate VRAM requirements compared to larger models
+
+Alternative models include:
+
+- deepseek/deepseek-chat:free (stronger reasoning but higher VRAM & queue times)
+- mistralai/mixtral-8x22b:free (good balance of performance and availability)
+
 ## Key Capabilities
 
 - Multi-source evidence retrieval
@@ -12,6 +26,27 @@ The EvidenceHunter agent is responsible for retrieving and evaluating evidence r
 - Evidence relevance ranking
 - Contradiction detection and resolution
 - Evidence filtering and deduplication
+- Web search through either OpenAI WebSearchTool or Serper.dev API
+
+## Search Capabilities
+
+### Default Search
+
+By default, the EvidenceHunter uses the built-in search capabilities of the OpenAI functions framework.
+
+### Serper.dev Integration (Optional)
+
+For enhanced search capabilities, the EvidenceHunter can use the Serper.dev API:
+
+1. Enable in `.env` file: `USE_SERPER=true`
+2. Provide API key: `SERPER_API_KEY=your_serper_api_key_here`
+
+Benefits of Serper.dev integration:
+
+- Higher search volume limits
+- More structured search results
+- Additional search verticals (news, images)
+- Better international search coverage
 
 ## Input/Output Specification
 

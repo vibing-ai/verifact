@@ -28,13 +28,31 @@ jobs:
       - name: Lint with flake8
         run: |
           pip install flake8
-          flake8 src tests
+          flake8 src
 
       - name: Check formatting with black
         run: |
           pip install black
-          black --check src tests
+          black --check src
 
-      - name: Run tests
+      - name: Run unit tests
         run: |
-          pytest tests/
+          pytest src/tests/ -v
+
+      - name: Run integration tests
+        run: |
+          pytest src/tests/test_pipeline_integration.py -v
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY_TEST }}
+          SEARCH_API_KEY: ${{ secrets.SEARCH_API_KEY_TEST }}
+          DEBUG: "True"
+
+      - name: Generate coverage report
+        run: |
+          pytest --cov=src --cov-report=xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false

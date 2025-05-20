@@ -4,6 +4,20 @@
 
 The ClaimDetector agent is responsible for identifying factual claims in text that warrant verification. It analyzes input text to extract check-worthy factual statements, distinguishing them from opinions, questions, or other non-verifiable content.
 
+## Default Model
+
+The ClaimDetector uses **Qwen 3-8b:free** as its default model, selected for:
+
+- Superior structured JSON output capabilities
+- Strong entity extraction and classification
+- Excellent performance for identifying factual statements
+- Efficient balance of performance and resource usage
+
+Alternative models include:
+
+- meta-llama/llama-3.3-8b-instruct:free (good general performance)
+- microsoft/phi-4-reasoning:free (strong reasoning with lower VRAM needs)
+
 ## Key Capabilities
 
 - Identifies explicit and implicit factual claims

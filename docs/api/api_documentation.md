@@ -2,6 +2,23 @@
 
 This document provides detailed documentation for the VeriFact API endpoints.
 
+## Model Provider
+
+VeriFact uses OpenRouter to access various AI models through a unified API. All API requests are processed using models configured in the environment settings.
+
+### OpenRouter Integration
+
+- Requests are processed using free tier models from OpenRouter
+- Each agent type uses a specialized model optimized for its task
+- API response times may vary based on model queue times
+- Rate limits apply based on OpenRouter's free tier restrictions
+
+### Free Tier Considerations
+
+- Limited requests per minute/hour may apply
+- Fallback mechanisms are in place if a model is unavailable
+- Processing time may be longer during high-demand periods
+
 ## OpenAPI/Swagger Documentation
 
 VeriFact now provides interactive API documentation using OpenAPI/Swagger. You can access it at:
@@ -290,3 +307,86 @@ Content-Type: application/json
 ## OpenAPI Specification
 
 A complete OpenAPI specification file is available at `/openapi.json`.
+
+## Health Check Endpoint
+
+VeriFact provides a health check endpoint for monitoring and operational status.
+
+### GET /health
+
+Returns the health status of the application and its dependencies.
+
+**Parameters**
+
+| Name | Type    | Required | Description                                  |
+| ---- | ------- | -------- | -------------------------------------------- |
+| full | boolean | No       | If true, includes detailed dependency checks |
+
+**Response**
+
+```json
+{
+  "status": "ok", // "ok", "degraded", or "error"
+  "version": {
+    // Version information
+    "version": "1.0.0",
+    "build_date": "2023-06-15",
+    "git_hash": "a1b2c3d",
+    "git_branch": "main"
+  },
+  "timestamp": 1621234567, // Current timestamp
+  "uptime": 3600, // Seconds since system boot
+  "request_time_ms": 15, // Time to process this request
+  "dependencies": [
+    // Only included if full=true
+    {
+      "name": "database",
+      "type": "postgres",
+      "status": "ok",
+      "latency_ms": 5,
+      "details": {
+        "size": 5,
+        "free_connections": 3,
+        "used_connections": 2,
+        "max_size": 10
+      }
+    },
+    {
+      "name": "redis",
+      "type": "redis",
+      "status": "ok",
+      "latency_ms": 2,
+      "details": {
+        "version": "7.0.5",
+        "used_memory_mb": 45.2,
+        "clients_connected": 3
+      }
+    },
+    {
+      "name": "openrouter",
+      "type": "api",
+      "status": "ok",
+      "latency_ms": 85,
+      "details": {
+        "status_code": 200
+      }
+    }
+  ],
+  "system": {
+    // Only included if full=true
+    "os": "Linux",
+    "python_version": "3.10.4",
+    "cpu_count": 4,
+    "memory_total_mb": 8192,
+    "memory_available_mb": 4096,
+    "disk_free_mb": 20480
+  }
+}
+```
+
+**Use Cases**
+
+- Kubernetes/container liveness and readiness probes
+- Monitoring and alerting systems
+- Load balancer health checks
+- Debugging and operational visibility

@@ -1,50 +1,75 @@
-FROM python:3.10-slim
+FROM python:3.10-slim AS base
 
-WORKDIR /app
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app \
+    PORT=8000 \
+    HOST=0.0.0.0 \
+    CHAINLIT_HOST=0.0.0.0 \
+    CHAINLIT_PORT=8501
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     python3-dev \
+    curl \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy project files required for installation
-COPY pyproject.toml .
-# requirements.txt is kept for backward compatibility
-COPY requirements.txt .
+# Create a non-root user
+RUN groupadd -r verifact && useradd -r -g verifact verifact \
+    && mkdir -p /app \
+    && chown -R verifact:verifact /app
 
-# Install the package
-RUN pip install --no-cache-dir -e .
+# Set working directory
+WORKDIR /app
 
-# Copy the rest of the application
+# Python dependencies installation stage
+FROM base AS dependencies
+
+# Copy only requirements needed for installing dependencies
+COPY pyproject.toml ./
+
+# Install dependencies
 COPY . .
+RUN mkdir -p /app/src 
+RUN touch /app/src/__init__.py
+RUN pip install --no-cache-dir -e . && pip install --no-cache-dir psutil chainlit==0.7.700 openai~=1.30.0
 
-# Set Python path to include the src directory
-ENV PYTHONPATH=/app
+# Final stage
+FROM base
 
-# Set default environment variables
-ENV PORT=8000
-ENV HOST=0.0.0.0
-ENV CHAINLIT_HOST=0.0.0.0
-ENV CHAINLIT_PORT=8501
+# Copy installed dependencies from the dependencies stage
+COPY --from=dependencies /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
+COPY --from=dependencies /usr/local/bin /usr/local/bin
 
-# Expose ports for FastAPI and Chainlit
-EXPOSE ${PORT}
-EXPOSE 8501
+# Copy application code
+COPY --chown=verifact:verifact . .
+RUN mkdir -p /app/src && touch /app/src/__init__.py
 
-# Create a script to choose between running API or UI
-RUN echo '#!/bin/bash\n\
-if [ "$1" = "api" ]; then\n\
-    exec uvicorn src.main:app --host ${HOST} --port ${PORT}\n\
-elif [ "$1" = "ui" ]; then\n\
-    exec chainlit run app.py --host ${CHAINLIT_HOST} --port ${CHAINLIT_PORT}\n\
-else\n\
-    echo "Please specify either 'api' or 'ui' as the first argument"\n\
-    exit 1\n\
-fi' > /app/entrypoint.sh
+# Ensure entrypoint script exists and is executable
+RUN echo '#!/bin/bash' > /app/entrypoint.sh && \
+    echo 'if [ "$1" = "api" ]; then' >> /app/entrypoint.sh && \
+    echo '    exec uvicorn src.main:app --host ${HOST:-0.0.0.0} --port ${PORT:-8000}' >> /app/entrypoint.sh && \
+    echo 'elif [ "$1" = "ui" ]; then' >> /app/entrypoint.sh && \
+    echo '    exec chainlit run app.py --host ${CHAINLIT_HOST:-0.0.0.0} --port ${CHAINLIT_PORT:-8501}' >> /app/entrypoint.sh && \
+    echo 'else' >> /app/entrypoint.sh && \
+    echo '    echo "Please specify either \"api\" or \"ui\" as the first argument"' >> /app/entrypoint.sh && \
+    echo '    exit 1' >> /app/entrypoint.sh && \
+    echo 'fi' >> /app/entrypoint.sh && \
+    chmod +x /app/entrypoint.sh && \
+    ls -la /app/
 
-RUN chmod +x /app/entrypoint.sh
+# Set up healthcheck
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:$PORT/health || exit 1
+
+# Expose ports
+EXPOSE ${PORT} ${CHAINLIT_PORT}
+
+# Switch to non-root user
+USER verifact
 
 ENTRYPOINT ["/app/entrypoint.sh"]
 

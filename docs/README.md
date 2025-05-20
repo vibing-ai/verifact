@@ -11,6 +11,16 @@ This directory contains documentation for the VeriFact project.
 - `SETUP.md`: Comprehensive setup guide for development environments
 - `DEVELOPMENT.md`: Development guidelines and workflows
 
+## Model Selection
+
+Each agent in VeriFact uses a specialized model from OpenRouter's free tier:
+
+- ClaimDetector: Qwen 3-8b (optimized for structured output)
+- EvidenceHunter: Google Gemma 3-27b-it (optimized for RAG with 128k context)
+- VerdictWriter: DeepSeek Chat (best reasoning for evidence synthesis)
+
+For more details, see the individual agent documentation files in the `agents/` directory and the OpenRouter model usage guidelines in `DEVELOPMENT.md`.
+
 ## Documentation vs Examples
 
 The project maintains several directories for examples and documentation:

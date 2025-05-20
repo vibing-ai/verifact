@@ -5,6 +5,22 @@ This module is responsible for extracting check-worthy factual claims
 from user-submitted text.
 """
 
-from src.agents.claim_detector.detector import ClaimDetector, Claim
+from src.agents.claim_detector.models import (
+    Claim,
+    Entity,
+    EntityType,
+    ClaimDomain
+)
+from src.agents.claim_detector.detector import ClaimDetector
+from src.agents.claim_detector.domain_classifier import DomainClassifier
+from src.agents.claim_detector.entity_extractor import EntityExtractor
 
-__all__ = ["ClaimDetector", "Claim"] 
+__all__ = [
+    "ClaimDetector",
+    "Claim",
+    "Entity",
+    "EntityType",
+    "ClaimDomain",
+    "DomainClassifier",
+    "EntityExtractor"
+] 

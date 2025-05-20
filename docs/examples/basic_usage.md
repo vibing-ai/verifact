@@ -135,9 +135,9 @@ result = factchecker.check_claim(
 ```python
 # Configure with specific models for each agent
 factchecker = VeriFact(
-    claim_detector_model="gpt-4o",
-    evidence_hunter_model="gpt-4o",
-    verdict_writer_model="gpt-4o-mini",
+    claim_detector_model="qwen/qwen3-8b:free",             # Best for structured JSON output
+    evidence_hunter_model="google/gemma-3-27b-it:free",    # Optimized for RAG with 128k context
+    verdict_writer_model="deepseek/deepseek-chat:free",    # Best reasoning for evidence synthesis
     temperature=0.1  # Lower temperature for more consistent results
 )
 ```
