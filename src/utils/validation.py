@@ -22,5 +22,4 @@ def validate_required_credentials():
 
     if missing:
         raise RuntimeError(
-            f"Missing required credentials: {
-                ', '.join(missing)}")
+            f"Missing required credentials: {', '.join(missing)}")

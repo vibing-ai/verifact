@@ -44,8 +44,7 @@ def validate_model(data: Dict[str, Any], model_class: Type[T]) -> T:
         message = "Data validation failed"
         if len(field_errors) == 1:
             field = next(iter(field_errors.keys()))
-            message = f"Validation error for field '{field}': {
-                field_errors[field]}"
+            message = f"Validation error for field '{field}': {field_errors[field]}"
 
         raise ValidationError(
             message=message,

@@ -77,8 +77,7 @@ def with_retry(
                     if attempt < max_attempts:
                         service_info = ""
                         if hasattr(e, 'details') and e.details.get('service'):
-                            service_info = f" for service '{
-                                e.details['service']}'"
+                            service_info = f" for service '{e.details['service']}'"
 
                         logger.warning(
                             f"Attempt {attempt}/{max_attempts} failed{service_info}: {str(e)}. "
@@ -154,8 +153,7 @@ def with_async_retry(
                     if attempt < max_attempts:
                         service_info = ""
                         if hasattr(e, 'details') and e.details.get('service'):
-                            service_info = f" for service '{
-                                e.details['service']}'"
+                            service_info = f" for service '{e.details['service']}'"
 
                         logger.warning(
                             f"Attempt {attempt}/{max_attempts} failed{service_info}: {str(e)}. "
@@ -236,8 +234,12 @@ async def async_retry_context(
 
             # Log retry attempt
             if attempt < max_attempts:
+                service_info = ""
+                if hasattr(e, 'details') and e.details.get('service'):
+                    service_info = f" for service '{e.details['service']}'"
+
                 logger.warning(
-                    f"Attempt {attempt}/{max_attempts} failed: {str(e)}. "
+                    f"Attempt {attempt}/{max_attempts} failed{service_info}: {str(e)}. "
                     f"Retrying in {actual_delay:.2f}s..."
                 )
                 await asyncio.sleep(actual_delay)

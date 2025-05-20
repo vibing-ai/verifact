@@ -112,12 +112,10 @@ def retry_on_error(max_retries=MAX_RETRIES, delay=RETRY_DELAY):
                     attempts += 1
                     if attempts == max_retries:
                         logger.error(
-                            f"Failed after {max_retries} attempts: {
-                                str(e)}")
+                            f"Failed after {max_retries} attempts: {str(e)}")
                         raise
                     logger.warning(
-                        f"Attempt {attempts} failed: {
-                            str(e)}. Retrying in {delay} seconds...")
+                        f"Attempt {attempts} failed: {str(e)}. Retrying in {delay} seconds...")
                     time.sleep(delay)
         return wrapper
     return decorator
@@ -190,9 +188,7 @@ class SupabaseClient:
                 self.pg_connection_string
             )
             logger.info(
-                f"Created PostgreSQL connection pool (min={
-                    self.min_conn}, max={
-                    self.max_conn})")
+                f"Created PostgreSQL connection pool (min={self.min_conn}, max={self.max_conn})")
         except Exception as e:
             logger.error(f"Failed to create connection pool: {str(e)}")
 
@@ -220,8 +216,7 @@ class SupabaseClient:
         except Exception as e:
             logger.error(f"Connection error: {str(e)}")
             raise ConnectionError(
-                f"Failed to get database connection: {
-                    str(e)}")
+                f"Failed to get database connection: {str(e)}")
         finally:
             if conn and self.connection_pool:
                 self.connection_pool.putconn(conn)
@@ -1086,8 +1081,7 @@ class SupabaseClient:
 
                 if 'data' in result and result['data']:
                     logger.info(
-                        f"Stored feedback: {
-                            feedback_dict['feedback_id']}")
+                        f"Stored feedback: {feedback_dict['feedback_id']}")
                     return result['data'][0]
                 else:
                     logger.error(f"Failed to store feedback: {result}")

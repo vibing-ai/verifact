@@ -185,15 +185,13 @@ class Cache:
                         break
             except Exception as e:
                 logger.warning(
-                    f"Redis error in clear_namespace operation: {
-                        str(e)}")
+                    f"Redis error in clear_namespace operation: {str(e)}")
                 return False
 
         # Clear in-memory cache keys in this namespace
         keys_to_delete = [
             k for k in self._local_cache.keys() if k.startswith(
-                f"verifact:{
-                    self.namespace}:")]
+                f"verifact:{self.namespace}:")]
         for k in keys_to_delete:
             del self._local_cache[k]
 

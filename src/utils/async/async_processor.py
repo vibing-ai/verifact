@@ -205,9 +205,7 @@ class AsyncProcessor(Generic[T, R]):
         """Process all items in the queue until empty."""
         self._status = ProcessingStatus.PROCESSING
         self.logger.info(
-            f"Starting processing of {
-                self._progress.total_items} items with concurrency {
-                self.max_concurrency}")
+            f"Starting processing of {self._progress.total_items} items with concurrency {self.max_concurrency}")
 
         try:
             while not self._queue.is_empty() and not self._cancel_requested:
@@ -240,9 +238,7 @@ class AsyncProcessor(Generic[T, R]):
             else:
                 self._status = ProcessingStatus.COMPLETED
                 self.logger.info(
-                    f"Processing completed: {
-                        self._progress.processed_items} items processed, " f"{
-                        self._progress.failed_items} failed")
+                    f"Processing completed: {self._progress.processed_items} items processed, {self._progress.failed_items} failed")
 
         except Exception as e:
             self._status = ProcessingStatus.FAILED
@@ -316,14 +312,12 @@ class AsyncProcessor(Generic[T, R]):
 
                 # Log success
                 self.logger.debug(
-                    f"Item {item_id} processed successfully in {
-                        processing_time:.2f}s")
+                    f"Item {item_id} processed successfully in {processing_time:.2f}s")
 
                 break
 
             except asyncio.TimeoutError:
-                error_msg = f"Processing timed out after {
-                    self.timeout_seconds}s"
+                error_msg = f"Processing timed out after {self.timeout_seconds}s"
                 result.error = error_msg
 
                 if attempts > self.retry_attempts:
@@ -587,10 +581,7 @@ class AsyncClaimProcessor(AsyncProcessor[T, R]):
 
         # Log relationship info
         self.logger.info(
-            f"Found {
-                len(relationship_pairs)} relationships between {
-                len(
-                    self._claim_relationships)} claims")
+            f"Found {len(relationship_pairs)} relationships between {len(self._claim_relationships)} claims")
 
     def get_claim_relationships(
             self, item_id: str) -> List[Tuple[str, T, Optional[R]]]:

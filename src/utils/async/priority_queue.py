@@ -109,8 +109,7 @@ class PriorityQueue(Generic[T]):
         # Check if item meets the priority threshold
         if priority < self._min_priority_threshold:
             raise ValueError(
-                f"Item priority {priority} is below the minimum threshold {
-                    self._min_priority_threshold}")
+                f"Item priority {priority} is below the minimum threshold {self._min_priority_threshold}")
 
         # Create prioritized item
         prioritized_item = PrioritizedItem(

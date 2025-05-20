@@ -114,8 +114,7 @@ class SerperSearchTool(Tool):
                     if response.status != 200:
                         error_text = await response.text()
                         logger.error(
-                            f"Serper API error: {
-                                response.status} - {error_text}")
+                            f"Serper API error: {response.status} - {error_text}")
                         return [
                             {"error": f"API returned status code {response.status}"}]
 
@@ -159,8 +158,7 @@ class SerperSearchTool(Tool):
                     })
 
             logger.info(
-                f"Serper search for '{query}' returned {
-                    len(results)} results")
+                f"Serper search for '{query}' returned {len(results)} results")
             return results
 
         except Exception as e:
