@@ -1,4 +1,4 @@
-"""VeriFact Configuration Module
+"""VeriFact Configuration Module.
 
 This module provides centralized configuration management using Pydantic for
 validation of environment variables.
@@ -61,6 +61,14 @@ class DatabaseConfig(BaseModel):
 
     @validator("url", pre=True)
     def build_db_url(cls, v: str | None) -> str:
+        """Build database URL from environment variables if not directly provided.
+
+        Args:
+            v: The URL value from settings or None
+
+        Returns:
+            str: Complete PostgreSQL connection URL
+        """
         if v:
             return v
 
@@ -85,6 +93,15 @@ class RedisConfig(BaseModel):
 
     @validator("url", pre=True)
     def build_redis_url(cls, v: str | None, values: dict[str, Any]) -> str | None:
+        """Build Redis URL from environment variables if not directly provided.
+
+        Args:
+            v: The URL value from settings or None
+            values: Other configuration values
+
+        Returns:
+            str or None: Complete Redis connection URL or None if Redis is disabled
+        """
         if not values.get("enabled", True):
             return None
 
@@ -115,6 +132,14 @@ class APIConfig(BaseModel):
 
     @validator("api_keys", pre=True)
     def parse_api_keys(cls, v: str | list[str]) -> list[str]:
+        """Parse API keys from string to list.
+
+        Args:
+            v: API keys as comma-separated string or lis
+
+        Returns:
+            list[str]: List of API keys
+        """
         if isinstance(v, str):
             return [key.strip() for key in v.split(",") if key.strip()]
         return v
@@ -175,6 +200,18 @@ class SearchConfig(BaseModel):
 
     @validator("serper_api_key")
     def validate_serper_api_key(cls, v: str | None, values: dict[str, Any]) -> str | None:
+        """Validate that Serper API key is provided when Serper is enabled.
+
+        Args:
+            v: The Serper API key or None
+            values: Other configuration values
+
+        Returns:
+            str or None: The validated API key
+
+        Raises:
+            ValueError: If Serper is enabled but no API key is provided
+        """
         if values.get("use_serper", False) and not v:
             raise ValueError("Serper API key is required when use_serper is True")
         return v
@@ -189,18 +226,18 @@ class Settings(BaseSettings):
     app_version: str = Field("0.1.0", description="Application version")
 
     # Component configurations
-    database: DatabaseConfig = Field(default_factory=DatabaseConfig)
-    redis: RedisConfig = Field(default_factory=RedisConfig)
-    api: APIConfig = Field(default_factory=APIConfig)
-    ui: UIConfig = Field(default_factory=UIConfig)
+    database: DatabaseConfig = Field(default_factory=lambda: DatabaseConfig())
+    redis: RedisConfig = Field(default_factory=lambda: RedisConfig())
+    api: APIConfig = Field(default_factory=lambda: APIConfig())
+    ui: UIConfig = Field(default_factory=lambda: UIConfig())
     openrouter: OpenRouterConfig
-    models: ModelSelectionConfig = Field(default_factory=ModelSelectionConfig)
-    model_params: ModelConfig = Field(default_factory=ModelConfig)
-    logging: LoggingConfig = Field(default_factory=LoggingConfig)
-    search: SearchConfig = Field(default_factory=SearchConfig)
+    models: ModelSelectionConfig = Field(default_factory=lambda: ModelSelectionConfig())
+    model_params: ModelConfig = Field(default_factory=lambda: ModelConfig())
+    logging: LoggingConfig = Field(default_factory=lambda: LoggingConfig())
+    search: SearchConfig = Field(default_factory=lambda: SearchConfig())
 
     class Config:
-        """Pydantic config"""
+        """Pydantic config."""
 
         env_nested_delimiter = "__"
         env_file = ".env"
@@ -211,7 +248,14 @@ class Settings(BaseSettings):
 
     @root_validator(pre=True, skip_on_failure=True)
     def build_config(cls, values: dict[str, Any]) -> dict[str, Any]:
-        """Pre-process raw values to inject nested configuration."""
+        """Pre-process raw values to inject nested configuration.
+
+        Args:
+            values: Raw configuration values to process
+
+        Returns:
+            dict: Processed configuration with nested values
+        """
         result = dict(values)
 
         # Construct database config from components

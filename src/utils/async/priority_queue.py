@@ -1,4 +1,4 @@
-"""Priority Queue Implementation for VeriFact
+"""Priority Queue Implementation for VeriFact.
 
 This module provides a priority queue implementation for processing claims
 in order of their importance. It supports:

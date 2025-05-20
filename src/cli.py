@@ -1,7 +1,8 @@
 #!/usr/bin/env python
-"""VeriFact CLI
+"""Command-line interface for Verifact factchecking.
 
-Command-line interface for factchecking text using the VeriFact pipeline.
+This module provides a command-line interface for accessing
+Verifact factchecking capabilities without using the API.
 """
 
 import argparse
@@ -18,12 +19,10 @@ from urllib.parse import urlparse
 
 import colorama
 from colorama import Fore, Style
+from rich.console import Console
+from rich.panel import Panel
 from tqdm import tqdm
 
-from src.models.factcheck import (
-    FactcheckRequest,
-    PipelineConfig,
-)
 from src.pipeline import PipelineConfig, PipelineEvent
 from src.utils.exceptions import InputTooLongError, ValidationError, VerifactError
 from src.utils.logger import configure_logging
@@ -145,7 +144,7 @@ def parse_args():
     test_parser.add_argument("--verbose", action="store_true", help="Show verbose test progress")
 
     # Version command
-    version_parser = subparsers.add_parser("version", help="Show version information")
+    subparsers.add_parser("version", help="Show version information")
 
     return parser.parse_args()
 
@@ -249,71 +248,69 @@ def truncate_text(text: str, max_length: int = MAX_TEXT_DISPLAY_LENGTH) -> str:
 
 
 def format_results_as_text(verdicts, stats, use_color: bool = True):
-    """Format results as human-readable text.
+    """Format factchecking results as text for display.
 
     Args:
         verdicts: List of verdict objects
-        stats: Statistics dictionary
-        use_color: Whether to use color in the output
+        stats: Processing statistics
+        use_color: Whether to use colored output
 
     Returns:
-        Formatted text string
+        Formatted text output
     """
-    header_style = f"{Fore.CYAN}{Style.BRIGHT}" if use_color else ""
-    reset_style = Style.RESET_ALL if use_color else ""
+    Console(color_system="auto" if use_color else None)
 
-    lines = [
-        f"{header_style}VeriFact Results{reset_style}",
-        f"{header_style}================={reset_style}",
-    ]
-
+    # Check if we have any results
     if not verdicts:
-        lines.append("No verifiable claims were found.")
-    else:
-        lines.append(f"Found {len(verdicts)} claim(s):\n")
+        return "No claims were found that met the check-worthiness threshold."
 
-        for i, verdict in enumerate(verdicts, 1):
-            # Choose color based on verdict type
-            verdict_color = VERDICT_COLORS.get(verdict.verdict.lower(), "") if use_color else ""
+    # Format results
+    output = []
 
-            lines.append(f"{Style.BRIGHT}Claim {i}:{Style.NORMAL} {verdict.claim}")
-            lines.append(
-                f"Verdict: {verdict_color}{verdict.verdict.upper()}{reset_style} (Confidence: {verdict.confidence:.0%})"
-            )
-            lines.append(f"Explanation: {verdict.explanation}")
+    # Add header
+    output.append("\n=== VeriFact Results ===\n")
 
-            if hasattr(verdict, "key_evidence") and verdict.key_evidence:
-                lines.append("Key Evidence:")
-                for ev_idx, evidence in enumerate(verdict.key_evidence, 1):
-                    stance_color = ""
-                    if use_color:
-                        if evidence.stance == "supporting":
-                            stance_color = Fore.GREEN
-                        elif evidence.stance == "contradicting":
-                            stance_color = Fore.RED
-                        else:
-                            stance_color = Fore.BLUE
+    # Add summary
+    output.append(f"Found {len(verdicts)} claim(s) to verify")
 
-                    lines.append(f"  {ev_idx}. {stance_color}{evidence.text}{reset_style}")
-                    lines.append(f"     Source: {evidence.source}")
-                    if hasattr(evidence, "relevance"):
-                        lines.append(f"     Relevance: {evidence.relevance:.0%}")
+    if stats and "processing_time" in stats:
+        output.append(f"Processing time: {stats['processing_time']:.2f} seconds")
 
-            lines.append("Sources:")
-            for source in verdict.sources:
-                lines.append(f"  - {source}")
-            lines.append("")
+    # Add claims and verdicts
+    for i, verdict in enumerate(verdicts, 1):
+        # Create heading
+        claim_text = truncate_text(verdict.claim)
 
-    # Add stats
-    lines.append(f"{header_style}Stats:{reset_style}")
-    lines.append(
-        f"  Processing time: {stats.get('processing_time_seconds', stats.get('total_processing_time', 0)):.2f}s"
-    )
-    lines.append(f"  Claims detected: {stats.get('claims_detected', 0)}")
-    lines.append(f"  Evidence gathered: {stats.get('evidence_gathered', 0)}")
-    lines.append(f"  Verdicts generated: {stats.get('verdicts_generated', 0)}")
+        # Create panel with the verdict information
+        panel_content = []
 
-    return "\n".join(lines)
+        # Add the verdict assessment
+        verdict_text = f"Verdict: {verdict.verdict.upper()}"
+        if hasattr(verdict, "confidence") and verdict.confidence is not None:
+            verdict_text += f" (Confidence: {verdict.confidence:.0%})"
+
+        panel_content.append(verdict_text)
+
+        # Add explanation if available
+        if hasattr(verdict, "explanation") and verdict.explanation:
+            panel_content.append(f"\nExplanation: {verdict.explanation}")
+
+        # Add sources if available
+        if hasattr(verdict, "sources") and verdict.sources:
+            source_list = "\n".join(f"- {s}" for s in verdict.sources)
+            panel_content.append(f"\nSources:\n{source_list}")
+
+        # Create and add panel to output
+        panel_str = str(Panel(
+            "\n".join(panel_content),
+            title=f"Claim {i}: {claim_text}",
+            expand=False,
+            padding=(1, 2),
+        ))
+        output.append(panel_str)
+
+    # Return formatted output
+    return "\n".join(output)
 
 
 def format_results_as_csv(verdicts, stats):
@@ -422,7 +419,7 @@ def fetch_url_content(url: str) -> str:
         if not parsed_url.scheme or not parsed_url.netloc:
             raise ValueError("Invalid URL format")
     except Exception:
-        raise ValueError("Invalid URL format")
+        raise ValueError("Invalid URL format") from None
 
     # Fetch content
     try:
@@ -430,9 +427,9 @@ def fetch_url_content(url: str) -> str:
             content = response.read().decode("utf-8")
             return content
     except urllib.error.URLError as e:
-        raise ValueError(f"Failed to fetch URL: {str(e)}")
-    except UnicodeDecodeError:
-        raise ValueError("Failed to decode content as UTF-8")
+        raise ValueError(f"Failed to fetch URL: {str(e)}") from e
+    except UnicodeDecodeError as e:
+        raise ValueError("Failed to decode content as UTF-8") from e
 
 
 def load_test_dataset(path: str) -> list[dict[str, Any]]:
@@ -466,18 +463,18 @@ def load_test_dataset(path: str) -> list[dict[str, Any]]:
                         "reason": "Dataset must be a list of test cases or a dictionary with a 'test_cases' key"
                     },
                 )
-    except FileNotFoundError:
+    except FileNotFoundError as e:
         raise ValidationError(
             code="FILE_NOT_FOUND",
             message=f"Test dataset file not found: {path}",
             details={"path": path},
-        )
+        ) from e
     except json.JSONDecodeError as e:
         raise ValidationError(
             code="INVALID_JSON",
             message="Invalid JSON in test dataset",
             details={"path": path, "error": str(e)},
-        )
+        ) from e
 
 
 def filter_test_cases(
@@ -544,6 +541,7 @@ async def run_test(
             progress_callback = simple_progress
 
         # Create a request object using our Pydantic model
+        from src.models.factcheck import FactcheckRequest
         request = FactcheckRequest(
             text=claim,
             options={
@@ -560,7 +558,6 @@ async def run_test(
         else:
             # Handle the case where run_pipeline might return just verdicts
             verdicts = response
-            stats = {}
 
         # Get the first verdict (there should only be one since we're checking a single claim)
         actual_verdict = None
@@ -661,7 +658,7 @@ async def run_tests(
     total_accuracy = total_correct / total_cases if total_cases > 0 else 0
 
     # Calculate stats by category
-    categories = sorted(set(r["category"] for r in results))
+    categories = sorted({r["category"] for r in results})
     category_stats = {}
 
     for category in categories:
@@ -673,7 +670,7 @@ async def run_tests(
         category_stats[category] = {"total": total, "correct": correct, "accuracy": accuracy}
 
     # Calculate stats by difficulty level
-    levels = sorted(set(r["level"] for r in results))
+    levels = sorted({r["level"] for r in results})
     level_stats = {}
 
     for level in levels:
@@ -876,23 +873,23 @@ async def run_factcheck_command(args):
             try:
                 with open(args.file, encoding="utf-8") as f:
                     input_text = f.read()
-            except FileNotFoundError:
+            except FileNotFoundError as e:
                 raise ValidationError(
                     code="FILE_NOT_FOUND",
                     message=f"Input file not found: {args.file}",
                     details={"file_path": args.file},
-                )
-            except UnicodeDecodeError:
+                ) from e
+            except UnicodeDecodeError as e:
                 raise ValidationError(
                     code="FILE_DECODE_ERROR",
                     message=f"Failed to decode file as UTF-8: {args.file}",
                     details={"file_path": args.file},
-                )
+                ) from e
         elif args.url:
             try:
                 input_text = fetch_url_content(args.url)
             except ValueError as e:
-                raise ValidationError(code="URL_ERROR", message=str(e), details={"url": args.url})
+                raise ValidationError(code="URL_ERROR", message=str(e), details={"url": args.url}) from e
 
         # Validate input text
         if not input_text or not input_text.strip():
@@ -914,7 +911,7 @@ async def run_factcheck_command(args):
                 code="INPUT_TOO_LONG",
                 message=str(e),
                 details={"max_length": e.max_length, "actual_length": e.length},
-            )
+            ) from e
 
         # Build pipeline configuration from arguments
         config = build_pipeline_config(args)
@@ -923,7 +920,6 @@ async def run_factcheck_command(args):
         progress_callback = None
         if not args.silent:
             # Determine whether to use color output
-            use_color = not args.no_color
             # Create a progress callback with or without a progress bar
             progress_callback = create_progress_callback(
                 total_claims=config.max_claims,

@@ -32,7 +32,7 @@ def get_encryption_key() -> bytes:
                 raise ValueError("Invalid key length")
             return encryption_key.encode()
         except Exception as e:
-            raise EncryptionError(f"Invalid encryption key: {str(e)}")
+            raise EncryptionError(f"Invalid encryption key: {str(e)}") from e
 
     # For development only - in production, always set ENCRYPTION_KEY
     salt = get_credential("ENCRYPTION_SALT", "verifact-encryption-salt").encode()
@@ -74,7 +74,7 @@ def encrypt_value(value: str) -> str:
         encrypted = f.encrypt(value.encode())
         return base64.urlsafe_b64encode(encrypted).decode()
     except Exception as e:
-        raise EncryptionError(f"Encryption failed: {str(e)}")
+        raise EncryptionError(f"Encryption failed: {str(e)}") from e
 
 
 def decrypt_value(encrypted_value: str) -> str:
@@ -94,4 +94,4 @@ def decrypt_value(encrypted_value: str) -> str:
         decrypted = f.decrypt(base64.urlsafe_b64decode(encrypted_value))
         return decrypted.decode()
     except Exception as e:
-        raise EncryptionError(f"Decryption failed: {str(e)}")
+        raise EncryptionError(f"Decryption failed: {str(e)}") from e

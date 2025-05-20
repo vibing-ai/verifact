@@ -1,4 +1,4 @@
-"""API Key Management Utilities
+"""API Key Management Utilities.
 
 This module provides functions for managing API keys in the database.
 It includes functions for creating, validating, and revoking API keys.
@@ -60,13 +60,14 @@ async def get_pool() -> Pool:
             await _ensure_api_keys_table()
         except Exception as e:
             logger.exception("Failed to create database connection pool")
-            raise DatabaseError("Failed to connect to database", details={"error": str(e)})
+            raise DatabaseError("Failed to connect to database", details={"error": str(e)}) from e
 
     return _pool
 
 
 async def _ensure_api_keys_table() -> None:
     """Ensure the api_keys table exists in the database.
+
     This creates the table if it doesn't exist.
     """
     pool = await get_pool()
@@ -157,8 +158,8 @@ async def create_api_key(
         _api_key_cache[f"prefix:{api_key.key_prefix}"] = api_key
 
         return api_key, plain_key
-    except Exception as e:
-        raise QueryError(f"Failed to create API key: {str(e)}")
+    except Exception as err:
+        raise QueryError(f"Failed to create API key: {str(err)}") from err
 
 
 async def get_api_key_by_id(key_id: str) -> ApiKey | None:
@@ -361,4 +362,4 @@ async def list_user_api_keys(user_id: str) -> list[dict[str, Any]]:
             return keys
     except Exception as e:
         logger.exception("Failed to list user API keys")
-        raise DatabaseError("Failed to list user API keys", details={"error": str(e)})
+        raise DatabaseError("Failed to list user API keys", details={"error": str(e)}) from e

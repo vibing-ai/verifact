@@ -1,4 +1,4 @@
-"""Rate Limiting Utilities
+"""Rate Limiting Utilities.
 
 This module provides utilities for rate limiting API requests.
 """

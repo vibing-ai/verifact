@@ -1,0 +1,2926 @@
+src/__init__.py:1:1: D415 First line should end with a period, question mark, or exclamation point
+  |
+1 | """VeriFact: AI-powered factchecking system"""
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ D415
+2 |
+3 | __version__ = "0.1.0"
+  |
+  = help: Add closing punctuation
+
+src/agents/claim_detector/detector.py:114:1: W293 Blank line contains whitespace
+    |
+112 |             instructions="""
+113 |             You are a claim detection agent designed to identify factual claims from text that require verification.
+114 |             
+    | ^^^^^^^^^^^^ W293
+115 |             Your task is to:
+116 |             1. Identify explicit and implicit factual claims
+    |
+    = help: Remove whitespace from blank line
+
+src/agents/claim_detector/detector.py:123:1: W293 Blank line contains whitespace
+    |
+121 |             6. Split compound claims into separate checkable statements
+122 |             7. Rank claims by overall importance for fact-checking
+123 |             
+    | ^^^^^^^^^^^^ W293
+124 |             FACTUAL CLAIMS:
+125 |             - Are statements presented as facts
+    |
+    = help: Remove whitespace from blank line
+
+src/agents/claim_detector/detector.py:129:1: W293 Blank line contains whitespace
+    |
+127 |             - Make specific, measurable assertions
+128 |             - Examples: statistical claims, historical facts, scientific statements
+129 |             
+    | ^^^^^^^^^^^^ W293
+130 |             NOT FACTUAL CLAIMS:
+131 |             - Personal opinions ("I think pizza is delicious")
+    |
+    = help: Remove whitespace from blank line
+
+src/agents/claim_detector/detector.py:136:1: W293 Blank line contains whitespace
+    |
+134 |             - Pure predictions about future events ("Next year's winner will be...")
+135 |             - Questions ("Is climate change real?")
+136 |             
+    | ^^^^^^^^^^^^ W293
+137 |             DISTINCTNESS:
+138 |             Ensure each claim is distinct and doesn't substantially overlap with other claims. 
+    |
+    = help: Remove whitespace from blank line
+
+src/agents/claim_detector/detector.py:138:95: W291 Trailing whitespace
+    |
+137 |             DISTINCTNESS:
+138 |             Ensure each claim is distinct and doesn't substantially overlap with other claims. 
+    |                                                                                               ^ W291
+139 |             If a statement contains multiple related but distinct claims, separate them.
+    |
+    = help: Remove trailing whitespace
+
+src/agents/claim_detector/detector.py:140:1: W293 Blank line contains whitespace
+    |
+138 |             Ensure each claim is distinct and doesn't substantially overlap with other claims. 
+139 |             If a statement contains multiple related but distinct claims, separate them.
+140 |             
+    | ^^^^^^^^^^^^ W293
+141 |             CHECK-WORTHINESS SCORING:
+142 |             Rate claims from 0.0-1.0 based on:
+    |
+    = help: Remove whitespace from blank line
+
+src/agents/claim_detector/detector.py:147:1: W293 Blank line contains whitespace
+    |
+145 |             - Potential impact (impact_score): Significance of consequences if true/false (0.0-1.0)
+146 |             - Overall check_worthiness should be a weighted combination of these factors
+147 |             
+    | ^^^^^^^^^^^^ W293
+148 |             RANKING CRITERIA:
+149 |             Rank claims in order of importance for fact-checking, considering:
+    |
+    = help: Remove whitespace from blank line
+
+src/agents/claim_detector/detector.py:155:1: W293 Blank line contains whitespace
+    |
+153 |             4. Public interest value
+154 |             5. Potential impact if the claim is true/false
+155 |             
+    | ^^^^^^^^^^^^ W293
+156 |             ENTITY EXTRACTION:
+157 |             Identify entities such as:
+    |
+    = help: Remove whitespace from blank line
+
+src/agents/claim_detector/detector.py:161:1: W293 Blank line contains whitespace
+    |
+159 |             - Dates, times, numbers, statistics, percentages
+160 |             - Products, technologies, scientific terms
+161 |             
+    | ^^^^^^^^^^^^ W293
+162 |             DOMAIN CLASSIFICATION:
+163 |             Assign claims to the most relevant domain:
+    |
+    = help: Remove whitespace from blank line
+
+src/agents/claim_detector/detector.py:166:1: W293 Blank line contains whitespace
+    |
+164 |             - Politics, Economics, Health, Science, Technology
+165 |             - Environment, Education, Entertainment, Sports, Other
+166 |             
+    | ^^^^^^^^^^^^ W293
+167 |             CLAIM NORMALIZATION:
+168 |             - Standardize formatting and phrasing
+    |
+    = help: Remove whitespace from blank line
+
+src/agents/claim_detector/detector.py:172:1: W293 Blank line contains whitespace
+    |
+170 |             - Expand abbreviations and acronyms
+171 |             - Standardize numerical expressions
+172 |             
+    | ^^^^^^^^^^^^ W293
+173 |             COMPOUND CLAIMS:
+174 |             If a statement contains multiple verifiable claims, break it down into separate checkable statements.
+    |
+    = help: Remove whitespace from blank line
+
+src/agents/claim_detector/detector.py:175:1: W293 Blank line contains whitespace
+    |
+173 |             COMPOUND CLAIMS:
+174 |             If a statement contains multiple verifiable claims, break it down into separate checkable statements.
+175 |             
+    | ^^^^^^^^^^^^ W293
+176 |             For each claim, return:
+177 |             1. The original claim text
+    |
+    = help: Remove whitespace from blank line
+
+src/agents/claim_detector/detector.py:212:1: W293 Blank line contains whitespace
+    |
+210 |             instructions="""
+211 |             You are an entity extraction agent specialized in identifying named entities from factual claims.
+212 |             
+    | ^^^^^^^^^^^^ W293
+213 |             For each entity, identify:
+214 |             1. The entity text exactly as it appears
+    |
+    = help: Remove whitespace from blank line
+
+src/agents/claim_detector/detector.py:218:1: W293 Blank line contains whitespace
+    |
+216 |             3. A normalized/canonical form of the entity when applicable
+217 |             4. Relevance to the claim (0.0-1.0)
+218 |             
+    | ^^^^^^^^^^^^ W293
+219 |             Example entity types:
+220 |             - PERSON: Names of individual people
+    |
+    = help: Remove whitespace from blank line
+
+src/agents/claim_detector/detector.py:235:1: W293 Blank line contains whitespace
+    |
+233 |             - SCIENTIFIC_TERM: Scientific terms, theories, disciplines
+234 |             - MEDICAL_TERM: Medical conditions, treatments, procedures
+235 |             
+    | ^^^^^^^^^^^^ W293
+236 |             When extracting entities, look for:
+237 |             - Proper nouns with capital letters
+    |
+    = help: Remove whitespace from blank line
+
+src/agents/claim_detector/utils.py:214:9: D415 First line should end with a period, question mark, or exclamation point
+    |
+212 |     # Normalize numeric representations
+213 |     def format_number(match):
+214 |         """Format numbers consistently"""
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ D415
+215 |         num_str = match.group(0).replace(",", "")
+216 |         try:
+    |
+    = help: Add closing punctuation
+
+src/agents/claim_detector/utils.py:221:9: E722 Do not use bare `except`
+    |
+219 |                 return f"{int(num)}"
+220 |             return f"{num:.2f}"
+221 |         except:
+    |         ^^^^^^ E722
+222 |             return match.group(0)
+    |
+
+src/agents/evidence_hunter/hunter.py:72:1: W293 Blank line contains whitespace
+   |
+70 |             instructions="""
+71 |             You are an evidence gathering agent tasked with finding and evaluating evidence related to factual claims.
+72 |             
+   | ^^^^^^^^^^^^ W293
+73 |             For each claim:
+74 |             1. Formulate effective search queries that will find relevant information
+   |
+   = help: Remove whitespace from blank line
+
+src/agents/evidence_hunter/hunter.py:78:1: W293 Blank line contains whitespace
+   |
+76 |                - Create multiple queries to find different perspectives
+77 |                - Consider queries that might find contradicting evidence
+78 |                
+   | ^^^^^^^^^^^^^^^ W293
+79 |             2. Evaluate search results carefully:
+80 |                - Determine source credibility (news organizations, academic sources, government sites are typically more reliable)
+   |
+   = help: Remove whitespace from blank line
+
+src/agents/evidence_hunter/hunter.py:84:1: W293 Blank line contains whitespace
+   |
+82 |                - Identify the stance (supporting, contradicting, or neutral)
+83 |                - Extract specific passages that directly address the claim
+84 |                
+   | ^^^^^^^^^^^^^^^ W293
+85 |             3. Return a comprehensive set of evidence:
+86 |                - Include both supporting and contradicting evidence when available
+   |
+   = help: Remove whitespace from blank line
+
+src/agents/evidence_hunter/hunter.py:90:1: W293 Blank line contains whitespace
+   |
+88 |                - Provide full source information for citation
+89 |                - Include stance classification for each piece of evidence
+90 |             
+   | ^^^^^^^^^^^^ W293
+91 |             Your responsibilities:
+92 |             1. Focus on facts and evidence, not opinions
+   |
+   = help: Remove whitespace from blank line
+
+src/agents/evidence_hunter/hunter.py:96:1: W293 Blank line contains whitespace
+   |
+94 |             3. Identify contradictions or nuances in the evidence
+95 |             4. Evaluate source credibility and provide higher relevance to more credible sources
+96 |             
+   | ^^^^^^^^^^^^ W293
+97 |             For each evidence piece, provide:
+98 |             - content: The relevant text passage that addresses the claim
+   |
+   = help: Remove whitespace from blank line
+
+src/agents/evidence_hunter/hunter.py:132:1: W293 Blank line contains whitespace
+    |
+130 |         query = f"""
+131 |         Claim to investigate: {claim.text}
+132 |         
+    | ^^^^^^^^ W293
+133 |         Context of the claim: {claim.context if hasattr(claim, "context") and claim.context else "No additional context provided"}
+    |
+    = help: Remove whitespace from blank line
+
+src/agents/evidence_hunter/hunter.py:134:1: W293 Blank line contains whitespace
+    |
+133 |         Context of the claim: {claim.context if hasattr(claim, "context") and claim.context else "No additional context provided"}
+134 |         
+    | ^^^^^^^^ W293
+135 |         Your task:
+136 |         1. Find evidence from credible sources that either supports or contradicts this claim
+    |
+    = help: Remove whitespace from blank line
+
+src/agents/evidence_hunter/hunter.py:140:1: W293 Blank line contains whitespace
+    |
+138 |         3. Evaluate the reliability and relevance of each source
+139 |         4. Collect both supporting and contradicting evidence when available
+140 |         
+    | ^^^^^^^^ W293
+141 |         Return a comprehensive set of evidence pieces in the required format.
+142 |         """
+    |
+    = help: Remove whitespace from blank line
+
+src/agents/evidence_hunter/hunter.py:170:9: D205 1 blank line required between summary line and description
+    |
+169 |       def _generate_cache_key(self, claim: Claim) -> str:
+170 | /         """Generate a deterministic cache key from a claim.
+171 | |         Normalize text by lowercasing, removing punctuation, and stemming.
+172 | |
+173 | |         Args:
+174 | |             claim: The claim to generate a cache key for
+175 | |
+176 | |         Returns:
+177 | |             str: A normalized cache key
+178 | |         """
+    | |___________^ D205
+179 |           # Normalize the claim text
+180 |           # - Convert to lowercase
+    |
+    = help: Insert single blank line
+
+src/agents/evidence_hunter/hunter.py:191:9: D205 1 blank line required between summary line and description
+    |
+190 |       def _get_from_cache(self, key: str) -> list[Evidence] | None:
+191 | /         """Retrieve evidence from Redis cache if available.
+192 | |         Returns None if cache miss.
+193 | |
+194 | |         Args:
+195 | |             key: The cache key to retrieve
+196 | |
+197 | |         Returns:
+198 | |             Optional[List[Evidence]]: List of evidence or None if not found
+199 | |         """
+    | |___________^ D205
+200 |           start_time = time.time()
+    |
+    = help: Insert single blank line
+
+src/agents/examples/pipeline_testing.py:19:9: D107 Missing docstring in `__init__`
+   |
+17 |     """Mock implementation of ClaimDetector for testing."""
+18 |
+19 |     def __init__(self, claims_to_return: list[Claim] = None):
+   |         ^^^^^^^^ D107
+20 |         self.claims_to_return = claims_to_return or []
+21 |         self.detect_claims_called = False
+   |
+
+src/agents/examples/pipeline_testing.py:48:9: D107 Missing docstring in `__init__`
+   |
+46 |     """Mock implementation of EvidenceHunter for testing."""
+47 |
+48 |     def __init__(self, evidence_to_return: list[Evidence] = None):
+   |         ^^^^^^^^ D107
+49 |         self.evidence_to_return = evidence_to_return or []
+50 |         self.gather_evidence_called = False
+   |
+
+src/agents/examples/pipeline_testing.py:67:9: D107 Missing docstring in `__init__`
+   |
+65 |     """Mock implementation of VerdictWriter for testing."""
+66 |
+67 |     def __init__(self, verdict_to_return: Verdict = None):
+   |         ^^^^^^^^ D107
+68 |         self.verdict_to_return = verdict_to_return
+69 |         self.generate_verdict_called = False
+   |
+
+src/agents/verdict_writer/writer.py:91:1: W293 Blank line contains whitespace
+   |
+89 |             You are a verdict writing agent. Your job is to analyze evidence and determine
+90 |             the accuracy of a claim, providing a detailed explanation and citing sources.
+91 |             
+   | ^^^^^^^^^^^^ W293
+92 |             Your verdict should:
+93 |             1. Classify the claim as true, false, partially true, or unverifiable
+   |
+   = help: Remove whitespace from blank line
+
+src/agents/verdict_writer/writer.py:99:1: W293 Blank line contains whitespace
+    |
+ 97 |             5. Summarize key evidence
+ 98 |             {"6. Present alternative perspectives" if include_alternative_perspectives else ""}
+ 99 |             
+    | ^^^^^^^^^^^^ W293
+100 |             Guidelines for evidence assessment:
+101 |             - Base your verdict solely on the provided evidence
+    |
+    = help: Remove whitespace from blank line
+
+src/agents/verdict_writer/writer.py:108:1: W293 Blank line contains whitespace
+    |
+106 |             - When sources conflict, prefer more credible, more recent, and more directly relevant sources
+107 |             - Identify consensus among multiple independent sources as especially strong evidence
+108 |             
+    | ^^^^^^^^^^^^ W293
+109 |             Guidelines for confidence scoring:
+110 |             - Assign high confidence (0.8-1.0) only when evidence is consistent, highly credible, and comprehensive
+    |
+    = help: Remove whitespace from blank line
+
+src/agents/verdict_writer/writer.py:115:1: W293 Blank line contains whitespace
+    |
+113 |             - When evidence is insufficient, label as "unverifiable" with appropriate confidence based on limitations
+114 |             - For partially true claims, explain precisely which parts are true and which are false
+115 |             
+    | ^^^^^^^^^^^^ W293
+116 |             Guidelines for explanations (current detail level: {explanation_detail}):
+117 |             - Brief: Provide a 1-2 sentence summary focusing on core evidence only
+    |
+    = help: Remove whitespace from blank line
+
+src/agents/verdict_writer/writer.py:120:1: W293 Blank line contains whitespace
+    |
+118 |             - Standard: Write several paragraphs covering main evidence and reasoning
+119 |             - Detailed: Give a comprehensive explanation with all evidence, alternative views, and nuanced analysis
+120 |             
+    | ^^^^^^^^^^^^ W293
+121 |             Citation guidelines (current style: {citation_style}):
+122 |             - Inline: Cite sources directly in the explanation text (e.g., "According to [Source], ...")
+    |
+    = help: Remove whitespace from blank line
+
+src/agents/verdict_writer/writer.py:125:1: W293 Blank line contains whitespace
+    |
+123 |             - Footnote: Use numbered references in the explanation with full citations in the sources list
+124 |             - Academic: Use formal citation format with author, publication, date in the sources list
+125 |             
+    | ^^^^^^^^^^^^ W293
+126 |             Your explanation must be:
+127 |             - Clear and accessible to non-experts
+    |
+    = help: Remove whitespace from blank line
+
+src/agents/verdict_writer/writer.py:132:1: W293 Blank line contains whitespace
+    |
+130 |             - Properly cited with all sources attributed
+131 |             - Transparent about limitations and uncertainty
+132 |             
+    | ^^^^^^^^^^^^ W293
+133 |             When evidence is mixed or contradictory, clearly present the different perspectives
+134 |             and explain how you reached your conclusion based on the balance of evidence.
+    |
+    = help: Remove whitespace from blank line
+
+src/agents/verdict_writer/writer.py:269:13: E722 Do not use bare `except`
+    |
+268 |                 domain = urlparse(source).netloc
+269 |             except:
+    |             ^^^^^^ E722
+270 |                 domain = source
+    |
+
+src/agents/verdict_writer/writer.py:389:1: W293 Blank line contains whitespace
+    |
+387 |         prompt = f"""
+388 |         CLAIM: {claim.text}
+389 |         
+    | ^^^^^^^^ W293
+390 |         EVIDENCE:
+391 |         {formatted_evidence}
+    |
+    = help: Remove whitespace from blank line
+
+src/agents/verdict_writer/writer.py:392:1: W293 Blank line contains whitespace
+    |
+390 |         EVIDENCE:
+391 |         {formatted_evidence}
+392 |         
+    | ^^^^^^^^ W293
+393 |         GUIDELINES:
+394 |         - Explanation detail level: {explanation_detail}
+    |
+    = help: Remove whitespace from blank line
+
+src/agents/verdict_writer/writer.py:398:1: W293 Blank line contains whitespace
+    |
+396 |         - Include alternative perspectives: {"Yes" if include_alternative_perspectives else "No"}
+397 |         - Assign a confidence score around {confidence_score:.2f} unless you have strong reasons to change it
+398 |         
+    | ^^^^^^^^ W293
+399 |         Based on the evidence above, determine if the claim is true, false, partially true, or unverifiable.
+400 |         Provide a {"brief" if explanation_detail == "brief" else "detailed"} explanation with appropriate citations.
+    |
+    = help: Remove whitespace from blank line
+
+src/api/admin.py:1:1: D415 First line should end with a period, question mark, or exclamation point
+  |
+1 | / """VeriFact Admin API
+2 | |
+3 | | This module contains admin endpoints for the VeriFact API,
+4 | | including API key management and system configuration.
+5 | | """
+  | |___^ D415
+6 |
+7 |   import datetime
+  |
+  = help: Add closing punctuation
+
+src/api/admin.py:8:22: F811 Redefinition of unused `datetime` from line 7
+  |
+7 | import datetime
+8 | from datetime import datetime, timedelta
+  |                      ^^^^^^^^ F811
+9 | from typing import Any
+  |
+  = help: Remove definition: `datetime`
+
+src/api/admin.py:133:1: W293 Blank line contains whitespace
+    |
+131 |     description="""
+132 |     Create a new API key with the specified permissions.
+133 |     
+    | ^^^^ W293
+134 |     Requires admin permissions.
+    |
+    = help: Remove whitespace from blank line
+
+src/api/admin.py:135:1: W293 Blank line contains whitespace
+    |
+134 |     Requires admin permissions.
+135 |     
+    | ^^^^ W293
+136 |     The API key will be returned only once, so make sure to store it securely.
+137 |     """,
+    |
+    = help: Remove whitespace from blank line
+
+src/api/admin.py:140:30: B008 Do not perform function call `Body` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+    |
+138 | )
+139 | async def create_key(
+140 |     request: ApiKeyRequest = Body(...), admin: dict[str, Any] = Depends(require_admin)
+    |                              ^^^^^^^^^ B008
+141 | ):
+142 |     """Create a new API key."""
+    |
+
+src/api/admin.py:140:65: B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+    |
+138 | )
+139 | async def create_key(
+140 |     request: ApiKeyRequest = Body(...), admin: dict[str, Any] = Depends(require_admin)
+    |                                                                 ^^^^^^^^^^^^^^^^^^^^^^ B008
+141 | ):
+142 |     """Create a new API key."""
+    |
+
+src/api/admin.py:165:9: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+163 |           )
+164 |       except DatabaseError as e:
+165 | /         raise HTTPException(
+166 | |             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+167 | |             detail=f"Failed to create API key: {str(e)}",
+168 | |         )
+    | |_________^ B904
+    |
+
+src/api/admin.py:177:1: W293 Blank line contains whitespace
+    |
+175 |     description="""
+176 |     Revoke an API key by ID.
+177 |     
+    | ^^^^ W293
+178 |     Requires admin permissions.
+    |
+    = help: Remove whitespace from blank line
+
+src/api/admin.py:179:1: W293 Blank line contains whitespace
+    |
+178 |     Requires admin permissions.
+179 |     
+    | ^^^^ W293
+180 |     Once revoked, the API key can no longer be used.
+181 |     """,
+    |
+    = help: Remove whitespace from blank line
+
+src/api/admin.py:183:56: B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+    |
+181 |     """,
+182 | )
+183 | async def revoke_key(key: str, admin: dict[str, Any] = Depends(require_admin)):
+    |                                                        ^^^^^^^^^^^^^^^^^^^^^^ B008
+184 |     """Revoke an API key."""
+185 |     try:
+    |
+
+src/api/admin.py:196:9: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+194 |           return None  # 204 No Content
+195 |       except DatabaseError as e:
+196 | /         raise HTTPException(
+197 | |             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+198 | |             detail=f"Failed to revoke API key: {str(e)}",
+199 | |         )
+    | |_________^ B904
+    |
+
+src/api/admin.py:208:1: W293 Blank line contains whitespace
+    |
+206 |     description="""
+207 |     Rotate an API key by revoking the old key and creating a new one.
+208 |     
+    | ^^^^ W293
+209 |     Requires admin permissions.
+    |
+    = help: Remove whitespace from blank line
+
+src/api/admin.py:210:1: W293 Blank line contains whitespace
+    |
+209 |     Requires admin permissions.
+210 |     
+    | ^^^^ W293
+211 |     The new API key will be returned only once, so make sure to store it securely.
+212 |     """,
+    |
+    = help: Remove whitespace from blank line
+
+src/api/admin.py:214:56: B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+    |
+212 |     """,
+213 | )
+214 | async def rotate_key(key: str, admin: dict[str, Any] = Depends(require_admin)):
+    |                                                        ^^^^^^^^^^^^^^^^^^^^^^ B008
+215 |     """Rotate an API key."""
+216 |     try:
+    |
+
+src/api/admin.py:229:9: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+227 |           )
+228 |       except InvalidAPIKeyError as e:
+229 | /         raise HTTPException(
+230 | |             status_code=status.HTTP_404_NOT_FOUND, detail=f"API key not found or invalid: {str(e)}"
+231 | |         )
+    | |_________^ B904
+232 |       except DatabaseError as e:
+233 |           raise HTTPException(
+    |
+
+src/api/admin.py:233:9: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+231 |           )
+232 |       except DatabaseError as e:
+233 | /         raise HTTPException(
+234 | |             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+235 | |             detail=f"Failed to rotate API key: {str(e)}",
+236 | |         )
+    | |_________^ B904
+    |
+
+src/api/admin.py:245:1: W293 Blank line contains whitespace
+    |
+243 |     description="""
+244 |     List all active API keys for a user.
+245 |     
+    | ^^^^ W293
+246 |     Requires admin permissions.
+    |
+    = help: Remove whitespace from blank line
+
+src/api/admin.py:247:1: W293 Blank line contains whitespace
+    |
+246 |     Requires admin permissions.
+247 |     
+    | ^^^^ W293
+248 |     Returns only metadata about the keys, not the actual keys.
+249 |     """,
+    |
+    = help: Remove whitespace from blank line
+
+src/api/admin.py:251:59: B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+    |
+249 |     """,
+250 | )
+251 | async def list_keys(user_id: str, admin: dict[str, Any] = Depends(require_admin)):
+    |                                                           ^^^^^^^^^^^^^^^^^^^^^^ B008
+252 |     """List API keys for a user."""
+253 |     try:
+    |
+
+src/api/admin.py:259:9: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+257 |           return keys
+258 |       except DatabaseError as e:
+259 | /         raise HTTPException(
+260 | |             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+261 | |             detail=f"Failed to list API keys: {str(e)}",
+262 | |         )
+    | |_________^ B904
+    |
+
+src/api/admin.py:272:1: W293 Blank line contains whitespace
+    |
+270 |     description="""
+271 |     Invalidate cache entries based on namespace and optional pattern.
+272 |     
+    | ^^^^ W293
+273 |     Requires admin permissions.
+    |
+    = help: Remove whitespace from blank line
+
+src/api/admin.py:274:1: W293 Blank line contains whitespace
+    |
+273 |     Requires admin permissions.
+274 |     
+    | ^^^^ W293
+275 |     This is useful for clearing stale data when underlying information changes.
+276 |     """,
+    |
+    = help: Remove whitespace from blank line
+
+src/api/admin.py:279:62: B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+    |
+277 | )
+278 | async def invalidate_cache(
+279 |     request: InvalidateCacheRequest, admin: dict[str, Any] = Depends(require_admin)
+    |                                                              ^^^^^^^^^^^^^^^^^^^^^^ B008
+280 | ) -> dict[str, Any]:
+281 |     """Invalidate cache entries based on patterns or selectively.
+    |
+
+src/api/admin.py:281:5: D205 1 blank line required between summary line and description
+    |
+279 |       request: InvalidateCacheRequest, admin: dict[str, Any] = Depends(require_admin)
+280 |   ) -> dict[str, Any]:
+281 | /     """Invalidate cache entries based on patterns or selectively.
+282 | |     Requires admin privileges.
+283 | |     """
+    | |_______^ D205
+284 |       # Map namespace to cache instance
+285 |       cache_map = {
+    |
+    = help: Insert single blank line
+
+src/api/admin.py:320:9: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+318 |           }
+319 |       except Exception as e:
+320 | /         raise HTTPException(
+321 | |             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+322 | |             detail=f"Failed to invalidate cache: {str(e)}",
+323 | |         )
+    | |_________^ B904
+    |
+
+src/api/admin.py:332:1: W293 Blank line contains whitespace
+    |
+330 |     description="""
+331 |     Get status information about the caching system.
+332 |     
+    | ^^^^ W293
+333 |     Requires admin permissions.
+    |
+    = help: Remove whitespace from blank line
+
+src/api/admin.py:334:1: W293 Blank line contains whitespace
+    |
+333 |     Requires admin permissions.
+334 |     
+    | ^^^^ W293
+335 |     Returns information about the Redis connection and configured TTLs.
+336 |     """,
+    |
+    = help: Remove whitespace from blank line
+
+src/api/admin.py:338:48: B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+    |
+336 |     """,
+337 | )
+338 | async def cache_status(admin: dict[str, Any] = Depends(require_admin)) -> dict[str, Any]:
+    |                                                ^^^^^^^^^^^^^^^^^^^^^^ B008
+339 |     """Get cache status information."""
+340 |     import os
+    |
+
+src/api/admin.py:366:1: W293 Blank line contains whitespace
+    |
+364 |     description="""
+365 |     Get performance metrics for the caching system.
+366 |     
+    | ^^^^ W293
+367 |     Requires admin permissions.
+    |
+    = help: Remove whitespace from blank line
+
+src/api/admin.py:368:1: W293 Blank line contains whitespace
+    |
+367 |     Requires admin permissions.
+368 |     
+    | ^^^^ W293
+369 |     Returns metrics like hit rate, miss rate, and latency information.
+370 |     """,
+    |
+    = help: Remove whitespace from blank line
+
+src/api/admin.py:373:59: B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+    |
+371 | )
+372 | async def cache_metrics(
+373 |     namespace: str | None = None, admin: dict[str, Any] = Depends(require_admin)
+    |                                                           ^^^^^^^^^^^^^^^^^^^^^^ B008
+374 | ) -> dict[str, Any]:
+375 |     """Get cache performance metrics."""
+    |
+
+src/api/admin.py:407:1: W293 Blank line contains whitespace
+    |
+405 |     description="""
+406 |     Get metrics for the database connection pool.
+407 |     
+    | ^^^^ W293
+408 |     Requires admin permissions.
+    |
+    = help: Remove whitespace from blank line
+
+src/api/admin.py:409:1: W293 Blank line contains whitespace
+    |
+408 |     Requires admin permissions.
+409 |     
+    | ^^^^ W293
+410 |     Returns information about connection usage, pool size, and status.
+411 |     """,
+    |
+    = help: Remove whitespace from blank line
+
+src/api/admin.py:413:52: B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+    |
+411 |     """,
+412 | )
+413 | async def database_metrics(admin: dict[str, Any] = Depends(require_admin)) -> dict[str, Any]:
+    |                                                    ^^^^^^^^^^^^^^^^^^^^^^ B008
+414 |     """Get database connection pool metrics."""
+415 |     try:
+    |
+
+src/api/admin.py:423:9: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+421 |           return result
+422 |       except Exception as e:
+423 | /         raise HTTPException(
+424 | |             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+425 | |             detail=f"Failed to get database metrics: {str(e)}",
+426 | |         )
+    | |_________^ B904
+    |
+
+src/api/factcheck.py:1:1: D415 First line should end with a period, question mark, or exclamation point
+  |
+1 | / """VeriFact Factchecking API
+2 | |
+3 | | This module provides the API endpoints for the factchecking service.
+4 | | """
+  | |___^ D415
+5 |
+6 |   import logging
+  |
+  = help: Add closing punctuation
+
+src/api/factcheck.py:173:9: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+171 |       except ValidationError as e:
+172 |           # Re-raise with more context
+173 | /         raise ValidationError(
+174 | |             message=f"Invalid pipeline configuration: {e.message}", details=e.details
+175 | |         )
+    | |_________^ B904
+    |
+
+src/api/factcheck.py:184:1: W293 Blank line contains whitespace
+    |
+182 |     description="""
+183 |     Process a piece of text, extract claims, gather evidence, and generate verdicts.
+184 |     
+    | ^^^^ W293
+185 |     This endpoint accepts text input containing potential factual claims and
+186 |     returns an assessment of the truthfulness of those claims with supporting evidence
+    |
+    = help: Remove whitespace from blank line
+
+src/api/factcheck.py:188:1: W293 Blank line contains whitespace
+    |
+186 |     returns an assessment of the truthfulness of those claims with supporting evidence
+187 |     and explanations.
+188 |     
+    | ^^^^ W293
+189 |     The factchecking process includes:
+190 |     1. Claim detection and extraction
+    |
+    = help: Remove whitespace from blank line
+
+src/api/factcheck.py:193:1: W293 Blank line contains whitespace
+    |
+191 |     2. Evidence gathering from trusted sources
+192 |     3. Verdict generation based on the evidence
+193 |     
+    | ^^^^ W293
+194 |     Request options can be used to customize the factchecking process, such as
+195 |     setting minimum check-worthiness thresholds or limiting the domains of interest.
+    |
+    = help: Remove whitespace from blank line
+
+src/api/factcheck.py:200:72: B008 Do not perform function call `Security` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+    |
+198 | )
+199 | async def factcheck(
+200 |     request: FactcheckRequest, api_request: Request, api_key: APIKey = Security(get_api_key)
+    |                                                                        ^^^^^^^^^^^^^^^^^^^^^ B008
+201 | ):
+202 |     """Factcheck claims in the provided text.
+    |
+
+src/api/factcheck.py:316:1: W293 Blank line contains whitespace
+    |
+314 |     Start an asynchronous factchecking process. This endpoint returns immediately with a job ID
+315 |     that can be used to check the status of the factchecking process and retrieve results when complete.
+316 |     
+    | ^^^^ W293
+317 |     This is useful for factchecking large documents or when the client doesn't want to keep a connection open.
+318 |     """,
+    |
+    = help: Remove whitespace from blank line
+
+src/api/factcheck.py:324:23: B008 Do not perform function call `Security` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+    |
+322 |     background_tasks: BackgroundTasks,
+323 |     api_request: Request,
+324 |     api_key: APIKey = Security(get_api_key),
+    |                       ^^^^^^^^^^^^^^^^^^^^^ B008
+325 | ):
+326 |     """Start an asynchronous factchecking job.
+    |
+
+src/api/factcheck.py:391:57: B008 Do not perform function call `Security` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+    |
+389 |     """,
+390 | )
+391 | async def get_job_status(job_id: str, api_key: APIKey = Security(get_api_key)):
+    |                                                         ^^^^^^^^^^^^^^^^^^^^^ B008
+392 |     """Get the status of a factchecking job.
+    |
+
+src/api/factcheck.py:445:23: B008 Do not perform function call `Security` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+    |
+443 |     domain: str | None = None,
+444 |     verdict_type: str | None = None,
+445 |     api_key: APIKey = Security(get_api_key),
+    |                       ^^^^^^^^^^^^^^^^^^^^^ B008
+446 | ):
+447 |     """Get recent factchecks with pagination and filtering.
+    |
+
+src/api/factcheck.py:472:9: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+470 |       except Exception as e:
+471 |           logger.error(f"Error retrieving factchecks: {str(e)}", exc_info=True)
+472 | /         raise HTTPException(
+473 | |             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+474 | |             detail=f"Failed to retrieve factchecks: {str(e)}",
+475 | |         )
+    | |_________^ B904
+    |
+
+src/api/factcheck.py:484:62: B008 Do not perform function call `Security` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+    |
+482 |     response_model=dict[str, Any],
+483 | )
+484 | async def get_factcheck(factcheck_id: str, api_key: APIKey = Security(get_api_key)):
+    |                                                              ^^^^^^^^^^^^^^^^^^^^^ B008
+485 |     """Get a specific factcheck by ID.
+    |
+
+src/api/factcheck.py:514:9: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+512 |       except Exception as e:
+513 |           logger.error(f"Error retrieving factcheck: {str(e)}", exc_info=True)
+514 | /         raise HTTPException(
+515 | |             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+516 | |             detail=f"Failed to retrieve factcheck: {str(e)}",
+517 | |         )
+    | |_________^ B904
+    |
+
+src/api/factcheck_batch.py:1:1: D415 First line should end with a period, question mark, or exclamation point
+  |
+1 | / """VeriFact Batch Factchecking API
+2 | |
+3 | | This module provides API endpoints for batch factchecking of multiple claims.
+4 | | """
+  | |___^ D415
+5 |
+6 |   import logging
+  |
+  = help: Add closing punctuation
+
+src/api/factcheck_batch.py:173:9: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+171 |       except ValidationError as e:
+172 |           # Re-raise with more context
+173 | /         raise ValidationError(
+174 | |             message=f"Invalid pipeline configuration: {e.message}", details=e.details
+175 | |         )
+    | |_________^ B904
+    |
+
+src/api/factcheck_batch.py:278:1: W293 Blank line contains whitespace
+    |
+276 |     description="""
+277 |     Start an asynchronous batch processing job for multiple claims.
+278 |     
+    | ^^^^ W293
+279 |     This endpoint accepts a list of claims and processes them concurrently
+280 |     based on priority and available resources. The response includes a job ID
+    |
+    = help: Remove whitespace from blank line
+
+src/api/factcheck_batch.py:282:1: W293 Blank line contains whitespace
+    |
+280 |     based on priority and available resources. The response includes a job ID
+281 |     that can be used to check the status and retrieve results when complete.
+282 |     
+    | ^^^^ W293
+283 |     Options can be used to control concurrency, timeouts, and other aspects
+284 |     of the batch processing.
+    |
+    = help: Remove whitespace from blank line
+
+src/api/factcheck_batch.py:291:23: B008 Do not perform function call `Security` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+    |
+289 |     background_tasks: BackgroundTasks,
+290 |     api_request: Request,
+291 |     api_key: APIKey = Security(get_api_key),
+    |                       ^^^^^^^^^^^^^^^^^^^^^ B008
+292 | ):
+293 |     """Process multiple claims in a batch.
+    |
+
+src/api/factcheck_batch.py:377:1: W293 Blank line contains whitespace
+    |
+375 |     description="""
+376 |     Check the status of a batch factchecking job and retrieve results if available.
+377 |     
+    | ^^^^ W293
+378 |     This endpoint returns detailed information about the job, including:
+379 |     - Overall job status
+    |
+    = help: Remove whitespace from blank line
+
+src/api/factcheck_batch.py:391:23: B008 Do not perform function call `Security` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+    |
+389 |         True, description="Whether to include full verdicts in the response"
+390 |     ),
+391 |     api_key: APIKey = Security(get_api_key),
+    |                       ^^^^^^^^^^^^^^^^^^^^^ B008
+392 | ):
+393 |     """Get status and results of a batch factchecking job.
+    |
+
+src/api/factcheck_batch.py:464:59: B008 Do not perform function call `Security` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+    |
+462 |     description="Cancel a running batch factchecking job.",
+463 | )
+464 | async def cancel_batch_job(job_id: str, api_key: APIKey = Security(get_api_key)):
+    |                                                           ^^^^^^^^^^^^^^^^^^^^^ B008
+465 |     """Cancel a batch factchecking job.
+    |
+
+src/api/factcheck_batch.py:501:13: B007 Loop control variable `claim_id` not used within loop body
+    |
+499 |     # Update claim statuses for queued claims
+500 |     if job.claim_statuses:
+501 |         for claim_id, status in job.claim_statuses.items():
+    |             ^^^^^^^^ B007
+502 |             if status.status == JobStatus.QUEUED:
+503 |                 status.status = JobStatus.CANCELED
+    |
+    = help: Rename unused `claim_id` to `_claim_id`
+
+src/api/feedback.py:1:1: D415 First line should end with a period, question mark, or exclamation point
+  |
+1 | / """VeriFact Feedback API
+2 | |
+3 | | This module provides API endpoints for handling user feedback on factchecking results.
+4 | | """
+  | |___^ D415
+5 |
+6 |   import logging
+  |
+  = help: Add closing punctuation
+
+src/api/feedback.py:124:1: W293 Blank line contains whitespace
+    |
+122 |     description="""
+123 |     Submit user feedback for a specific factcheck.
+124 |     
+    | ^^^^ W293
+125 |     This endpoint allows users to provide ratings and comments on factchecking results.
+126 |     It includes rate limiting to prevent abuse (5 submissions per hour per IP address).
+    |
+    = help: Remove whitespace from blank line
+
+src/api/feedback.py:127:1: W293 Blank line contains whitespace
+    |
+125 |     This endpoint allows users to provide ratings and comments on factchecking results.
+126 |     It includes rate limiting to prevent abuse (5 submissions per hour per IP address).
+127 |     
+    | ^^^^ W293
+128 |     Feedback can include:
+129 |     - Accuracy rating (1-5 scale)
+    |
+    = help: Remove whitespace from blank line
+
+src/api/feedback.py:132:1: W293 Blank line contains whitespace
+    |
+130 |     - Helpfulness rating (1-5 scale)
+131 |     - Optional text comment
+132 |     
+    | ^^^^ W293
+133 |     At least one of these fields must be provided.
+134 |     """,
+    |
+    = help: Remove whitespace from blank line
+
+src/api/feedback.py:182:9: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+180 |       except ValidationError as e:
+181 |           logger.error(f"Validation error in feedback submission: {str(e)}")
+182 | /         raise HTTPException(
+183 | |             status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid feedback data: {str(e)}"
+184 | |         )
+    | |_________^ B904
+185 |       except QueryError as e:
+186 |           logger.error(f"Database error in feedback submission: {str(e)}")
+    |
+
+src/api/feedback.py:187:9: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+185 |       except QueryError as e:
+186 |           logger.error(f"Database error in feedback submission: {str(e)}")
+187 | /         raise HTTPException(
+188 | |             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+189 | |             detail="Failed to store feedback. Please try again later.",
+190 | |         )
+    | |_________^ B904
+191 |       except Exception as e:
+192 |           logger.error(f"Unexpected error in feedback submission: {str(e)}")
+    |
+
+src/api/feedback.py:193:9: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+191 |       except Exception as e:
+192 |           logger.error(f"Unexpected error in feedback submission: {str(e)}")
+193 | /         raise HTTPException(
+194 | |             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An unexpected error occurred"
+195 | |         )
+    | |_________^ B904
+    |
+
+src/api/feedback.py:204:1: W293 Blank line contains whitespace
+    |
+202 |     description="""
+203 |     Get aggregated statistics for feedback across all factchecks.
+204 |     
+    | ^^^^ W293
+205 |     This endpoint provides summary statistics including:
+206 |     - Total number of feedback submissions
+    |
+    = help: Remove whitespace from blank line
+
+src/api/feedback.py:212:48: B008 Do not perform function call `Security` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+    |
+210 |     """,
+211 | )
+212 | async def get_feedback_stats(api_key: APIKey = Security(get_api_key)):
+    |                                                ^^^^^^^^^^^^^^^^^^^^^ B008
+213 |     """Get aggregated feedback statistics."""
+214 |     try:
+    |
+
+src/api/feedback.py:231:9: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+229 |       except Exception as e:
+230 |           logger.error(f"Error getting feedback statistics: {str(e)}")
+231 | /         raise HTTPException(
+232 | |             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+233 | |             detail="Failed to retrieve feedback statistics",
+234 | |         )
+    | |_________^ B904
+    |
+
+src/api/feedback.py:243:1: W293 Blank line contains whitespace
+    |
+241 |     description="""
+242 |     Get all feedback for a specific factcheck claim.
+243 |     
+    | ^^^^ W293
+244 |     This endpoint retrieves all feedback submissions for a given claim ID,
+245 |     with pagination support.
+    |
+    = help: Remove whitespace from blank line
+
+src/api/feedback.py:252:23: B008 Do not perform function call `Security` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+    |
+250 |     limit: int = Query(50, ge=1, le=100),
+251 |     offset: int = Query(0, ge=0),
+252 |     api_key: APIKey = Security(get_api_key),
+    |                       ^^^^^^^^^^^^^^^^^^^^^ B008
+253 | ):
+254 |     """Get feedback for a specific claim."""
+    |
+
+src/api/feedback.py:262:9: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+260 |       except Exception as e:
+261 |           logger.error(f"Error getting feedback for claim {claim_id}: {str(e)}")
+262 | /         raise HTTPException(
+263 | |             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+264 | |             detail=f"Failed to retrieve feedback for claim {claim_id}",
+265 | |         )
+    | |_________^ B904
+    |
+
+src/api/feedback.py:274:1: W293 Blank line contains whitespace
+    |
+272 |     description="""
+273 |     Get aggregated statistics for feedback on a specific factcheck claim.
+274 |     
+    | ^^^^ W293
+275 |     This endpoint provides claim-specific summary statistics including:
+276 |     - Total number of feedback submissions for this claim
+    |
+    = help: Remove whitespace from blank line
+
+src/api/feedback.py:282:69: B008 Do not perform function call `Security` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+    |
+280 |     """,
+281 | )
+282 | async def get_claim_feedback_stats(claim_id: str, api_key: APIKey = Security(get_api_key)):
+    |                                                                     ^^^^^^^^^^^^^^^^^^^^^ B008
+283 |     """Get aggregated feedback statistics for a specific claim."""
+284 |     try:
+    |
+
+src/api/feedback.py:301:9: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+299 |       except Exception as e:
+300 |           logger.error(f"Error getting feedback statistics for claim {claim_id}: {str(e)}")
+301 | /         raise HTTPException(
+302 | |             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+303 | |             detail=f"Failed to retrieve feedback statistics for claim {claim_id}",
+304 | |         )
+    | |_________^ B904
+    |
+
+src/api/middleware.py:1:1: D415 First line should end with a period, question mark, or exclamation point
+  |
+1 | / """VeriFact API Middleware
+2 | |
+3 | | This module contains middleware components for the VeriFact API,
+4 | | including error handling, logging, request/response processing, rate limiting, and security.
+5 | | """
+  | |___^ D415
+6 |
+7 |   import logging
+  |
+  = help: Add closing punctuation
+
+src/api/middleware.py:71:9: D107 Missing docstring in `__init__`
+   |
+69 |     """Middleware to set up logging context for each request."""
+70 |
+71 |     def __init__(self, app: FastAPI):
+   |         ^^^^^^^^ D107
+72 |         super().__init__(app)
+73 |         self.logger = logging.getLogger("verifact.api.middleware")
+   |
+
+src/api/middleware.py:248:9: D107 Missing docstring in `__init__`
+    |
+246 |     """Middleware for API key authentication."""
+247 |
+248 |     def __init__(self, app, **kwargs):
+    |         ^^^^^^^^ D107
+249 |         super().__init__(app, **kwargs)
+250 |         self.api_key_cache = Cache(
+    |
+
+src/api/middleware.py:404:9: D107 Missing docstring in `__init__`
+    |
+402 |     """Middleware for global rate limiting across all requests."""
+403 |
+404 |     def __init__(self, app, **kwargs):
+    |         ^^^^^^^^ D107
+405 |         super().__init__(app, **kwargs)
+406 |         # Import here to avoid circular imports
+    |
+
+src/api/middleware.py:462:67: F821 Undefined name `ApiKeyScope`
+    |
+461 | async def verify_api_key(
+462 |     api_key: str = Depends(API_KEY_HEADER), required_scopes: list[ApiKeyScope] | None = None
+    |                                                                   ^^^^^^^^^^^ F821
+463 | ) -> str:
+464 |     """Verify the API key and check required scopes.
+    |
+
+src/api/middleware.py:482:9: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+480 |             raise ValueError("Invalid key format")
+481 |     except (ValueError, AttributeError):
+482 |         raise HTTPException(status_code=401, detail="Invalid API key format")
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B904
+483 |
+484 |     # Import here to avoid circular imports
+    |
+
+src/cli.py:2:1: D415 First line should end with a period, question mark, or exclamation point
+  |
+1 |   #!/usr/bin/env python
+2 | / """VeriFact CLI
+3 | |
+4 | | Command-line interface for factchecking text using the VeriFact pipeline.
+5 | | """
+  | |___^ D415
+6 |
+7 |   import argparse
+  |
+  = help: Add closing punctuation
+
+src/cli.py:27:26: F811 Redefinition of unused `PipelineConfig` from line 25
+   |
+25 |     PipelineConfig,
+26 | )
+27 | from src.pipeline import PipelineConfig, PipelineEvent
+   |                          ^^^^^^^^^^^^^^ F811
+28 | from src.utils.exceptions import InputTooLongError, ValidationError, VerifactError
+29 | from src.utils.logger import configure_logging
+   |
+   = help: Remove definition: `PipelineConfig`
+
+src/cli.py:148:5: F841 Local variable `version_parser` is assigned to but never used
+    |
+147 |     # Version command
+148 |     version_parser = subparsers.add_parser("version", help="Show version information")
+    |     ^^^^^^^^^^^^^^ F841
+149 |
+150 |     return parser.parse_args()
+    |
+    = help: Remove assignment to unused variable `version_parser`
+
+src/cli.py:425:9: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+423 |             raise ValueError("Invalid URL format")
+424 |     except Exception:
+425 |         raise ValueError("Invalid URL format")
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B904
+426 |
+427 |     # Fetch content
+    |
+
+src/cli.py:433:9: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+431 |             return content
+432 |     except urllib.error.URLError as e:
+433 |         raise ValueError(f"Failed to fetch URL: {str(e)}")
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B904
+434 |     except UnicodeDecodeError:
+435 |         raise ValueError("Failed to decode content as UTF-8")
+    |
+
+src/cli.py:435:9: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+433 |         raise ValueError(f"Failed to fetch URL: {str(e)}")
+434 |     except UnicodeDecodeError:
+435 |         raise ValueError("Failed to decode content as UTF-8")
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B904
+    |
+
+src/cli.py:470:9: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+468 |                   )
+469 |       except FileNotFoundError:
+470 | /         raise ValidationError(
+471 | |             code="FILE_NOT_FOUND",
+472 | |             message=f"Test dataset file not found: {path}",
+473 | |             details={"path": path},
+474 | |         )
+    | |_________^ B904
+475 |       except json.JSONDecodeError as e:
+476 |           raise ValidationError(
+    |
+
+src/cli.py:476:9: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+474 |           )
+475 |       except json.JSONDecodeError as e:
+476 | /         raise ValidationError(
+477 | |             code="INVALID_JSON",
+478 | |             message="Invalid JSON in test dataset",
+479 | |             details={"path": path, "error": str(e)},
+480 | |         )
+    | |_________^ B904
+    |
+
+src/cli.py:563:13: F841 Local variable `stats` is assigned to but never used
+    |
+561 |             # Handle the case where run_pipeline might return just verdicts
+562 |             verdicts = response
+563 |             stats = {}
+    |             ^^^^^ F841
+564 |
+565 |         # Get the first verdict (there should only be one since we're checking a single claim)
+    |
+    = help: Remove assignment to unused variable `stats`
+
+src/cli.py:664:25: C401 Unnecessary generator (rewrite as a set comprehension)
+    |
+663 |     # Calculate stats by category
+664 |     categories = sorted(set(r["category"] for r in results))
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ C401
+665 |     category_stats = {}
+    |
+    = help: Rewrite as a set comprehension
+
+src/cli.py:676:21: C401 Unnecessary generator (rewrite as a set comprehension)
+    |
+675 |     # Calculate stats by difficulty level
+676 |     levels = sorted(set(r["level"] for r in results))
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ C401
+677 |     level_stats = {}
+    |
+    = help: Rewrite as a set comprehension
+
+src/cli.py:880:17: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+878 |                       input_text = f.read()
+879 |               except FileNotFoundError:
+880 | /                 raise ValidationError(
+881 | |                     code="FILE_NOT_FOUND",
+882 | |                     message=f"Input file not found: {args.file}",
+883 | |                     details={"file_path": args.file},
+884 | |                 )
+    | |_________________^ B904
+885 |               except UnicodeDecodeError:
+886 |                   raise ValidationError(
+    |
+
+src/cli.py:886:17: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+884 |                   )
+885 |               except UnicodeDecodeError:
+886 | /                 raise ValidationError(
+887 | |                     code="FILE_DECODE_ERROR",
+888 | |                     message=f"Failed to decode file as UTF-8: {args.file}",
+889 | |                     details={"file_path": args.file},
+890 | |                 )
+    | |_________________^ B904
+891 |           elif args.url:
+892 |               try:
+    |
+
+src/cli.py:895:17: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+893 |                 input_text = fetch_url_content(args.url)
+894 |             except ValueError as e:
+895 |                 raise ValidationError(code="URL_ERROR", message=str(e), details={"url": args.url})
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B904
+896 |
+897 |         # Validate input text
+    |
+
+src/cli.py:913:13: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+911 |               raise e
+912 |           except InputTooLongError as e:
+913 | /             raise ValidationError(
+914 | |                 code="INPUT_TOO_LONG",
+915 | |                 message=str(e),
+916 | |                 details={"max_length": e.max_length, "actual_length": e.length},
+917 | |             )
+    | |_____________^ B904
+918 |
+919 |           # Build pipeline configuration from arguments
+    |
+
+src/cli.py:926:13: F841 Local variable `use_color` is assigned to but never used
+    |
+924 |         if not args.silent:
+925 |             # Determine whether to use color output
+926 |             use_color = not args.no_color
+    |             ^^^^^^^^^ F841
+927 |             # Create a progress callback with or without a progress bar
+928 |             progress_callback = create_progress_callback(
+    |
+    = help: Remove assignment to unused variable `use_color`
+
+src/config.py:1:1: D415 First line should end with a period, question mark, or exclamation point
+  |
+1 | / """VeriFact Configuration Module
+2 | |
+3 | | This module provides centralized configuration management using Pydantic for
+4 | | validation of environment variables.
+5 | | """
+  | |___^ D415
+6 |
+7 |   import os
+  |
+  = help: Add closing punctuation
+
+src/config.py:63:9: D102 Missing docstring in public method
+   |
+62 |     @validator("url", pre=True)
+63 |     def build_db_url(cls, v: str | None) -> str:
+   |         ^^^^^^^^^^^^ D102
+64 |         if v:
+65 |             return v
+   |
+
+src/config.py:87:9: D102 Missing docstring in public method
+   |
+86 |     @validator("url", pre=True)
+87 |     def build_redis_url(cls, v: str | None, values: dict[str, Any]) -> str | None:
+   |         ^^^^^^^^^^^^^^^ D102
+88 |         if not values.get("enabled", True):
+89 |             return None
+   |
+
+src/config.py:117:9: D102 Missing docstring in public method
+    |
+116 |     @validator("api_keys", pre=True)
+117 |     def parse_api_keys(cls, v: str | list[str]) -> list[str]:
+    |         ^^^^^^^^^^^^^^ D102
+118 |         if isinstance(v, str):
+119 |             return [key.strip() for key in v.split(",") if key.strip()]
+    |
+
+src/config.py:177:9: D102 Missing docstring in public method
+    |
+176 |     @validator("serper_api_key")
+177 |     def validate_serper_api_key(cls, v: str | None, values: dict[str, Any]) -> str | None:
+    |         ^^^^^^^^^^^^^^^^^^^^^^^ D102
+178 |         if values.get("use_serper", False) and not v:
+179 |             raise ValueError("Serper API key is required when use_serper is True")
+    |
+
+src/config.py:203:9: D415 First line should end with a period, question mark, or exclamation point
+    |
+202 |     class Config:
+203 |         """Pydantic config"""
+    |         ^^^^^^^^^^^^^^^^^^^^^ D415
+204 |
+205 |         env_nested_delimiter = "__"
+    |
+    = help: Add closing punctuation
+
+src/main.py:1:1: D415 First line should end with a period, question mark, or exclamation point
+   |
+ 1 | / """VeriFact API Entry Point
+ 2 | |
+ 3 | | This module serves as the main entry point for the VeriFact API service.
+ 4 | | It initializes a FastAPI application with the factcheck router.
+ 5 | |
+ 6 | | To run the API server directly:
+ 7 | |     python -m src.main
+ 8 | |
+ 9 | | For the web UI interface, use `app.py` with Chainlit.
+10 | | For CLI access, use `cli.py`.
+11 | | """
+   | |___^ D415
+12 |
+13 |   import logging
+   |
+   = help: Add closing punctuation
+
+src/main.py:56:82: W291 Trailing whitespace
+   |
+54 | # VeriFact API
+55 |
+56 | VeriFact is an open-source AI factchecking application designed to detect claims, 
+   |                                                                                  ^ W291
+57 | gather evidence, and generate accurate verdicts.
+   |
+   = help: Remove trailing whitespace
+
+src/models/factcheck.py:140:17: E722 Do not use bare `except`
+    |
+138 |                     domain = urlparse(source).netloc
+139 |                     values["source_name"] = domain
+140 |                 except:
+    |                 ^^^^^^ E722
+141 |                     pass
+142 |         return values
+    |
+
+src/models/factcheck.py:293:24: UP038 Use `X | Y` in `isinstance` call instead of `(X, Y)`
+    |
+291 |             if numeric_field in v:
+292 |                 value = v[numeric_field]
+293 |                 if not isinstance(value, (int, float)) or value < 0 or value > 1:
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ UP038
+294 |                     raise ValueError(f"{numeric_field} must be a number between 0 and 1")
+    |
+    = help: Convert to `X | Y`
+
+src/models/factcheck.py:475:20: UP038 Use `X | Y` in `isinstance` call instead of `(X, Y)`
+    |
+473 |         if "timeout_per_claim" in v:
+474 |             timeout = v["timeout_per_claim"]
+475 |             if not isinstance(timeout, (int, float)) or timeout < 10 or timeout > 300:
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ UP038
+476 |                 raise ValueError("timeout_per_claim must be between 10 and 300 seconds")
+    |
+    = help: Convert to `X | Y`
+
+src/models/factcheck.py:481:20: UP038 Use `X | Y` in `isinstance` call instead of `(X, Y)`
+    |
+479 |         if "min_check_worthiness" in v:
+480 |             threshold = v["min_check_worthiness"]
+481 |             if not isinstance(threshold, (int, float)) or threshold < 0.0 or threshold > 1.0:
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ UP038
+482 |                 raise ValueError("min_check_worthiness must be between 0.0 and 1.0")
+    |
+    = help: Convert to `X | Y`
+
+src/models/factcheck.py:534:7: F811 Redefinition of unused `FactcheckJob` from line 373
+    |
+534 | class FactcheckJob(BaseModel):
+    |       ^^^^^^^^^^^^ F811
+535 |     """Model for tracking asynchronous factchecking jobs."""
+    |
+    = help: Remove definition: `FactcheckJob`
+
+src/models/feedback.py:91:13: C419 Unnecessary list comprehension
+   |
+89 |         """Validate that at least one feedback field is provided."""
+90 |         if not any(
+91 |             [values.get(field) for field in ["accuracy_rating", "helpfulness_rating", "comment"]]
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ C419
+92 |         ):
+93 |             raise ValueError("At least one feedback field (rating or comment) must be provided")
+   |
+   = help: Remove unnecessary comprehension
+
+src/pipeline/factcheck_pipeline.py:1:1: D415 First line should end with a period, question mark, or exclamation point
+   |
+ 1 | / """VeriFact Factcheck Pipeline
+ 2 | |
+ 3 | | This module provides a unified pipeline that orchestrates the three agents:
+ 4 | | 1. ClaimDetector: Identifies factual claims in text
+ 5 | | 2. EvidenceHunter: Gathers evidence for claims
+ 6 | | 3. VerdictWriter: Analyzes evidence and generates verdicts
+ 7 | |
+ 8 | | The pipeline handles data transformation between agents, error recovery,
+ 9 | | and provides both synchronous and asynchronous operation modes.
+10 | | """
+   | |___^ D415
+11 |
+12 |   import asyncio
+   |
+   = help: Add closing punctuation
+
+src/pipeline/factcheck_pipeline.py:278:85: F841 Local variable `timer` is assigned to but never used
+    |
+276 |         while True:
+277 |             try:
+278 |                 with performance_timer("evidence_gathering", logger=self.logger) as timer:
+    |                                                                                     ^^^^^ F841
+279 |                     evidence = await self.evidence_hunter.gather_evidence(claim)
+    |
+    = help: Remove assignment to unused variable `timer`
+
+src/pipeline/factcheck_pipeline.py:324:85: F841 Local variable `timer` is assigned to but never used
+    |
+322 |         while True:
+323 |             try:
+324 |                 with performance_timer("verdict_generation", logger=self.logger) as timer:
+    |                                                                                     ^^^^^ F841
+325 |                     verdict = await self.verdict_writer.generate_verdict(claim, evidence)
+    |
+    = help: Remove assignment to unused variable `timer`
+
+src/tests/__init__.py:23:1: F403 `from .agents import *` used; unable to detect undefined names
+   |
+22 | # Import test modules from subdirectories
+23 | from .agents import *
+   | ^^^^^^^^^^^^^^^^^^^^^ F403
+24 | from .api import *
+25 | from .integration import *
+   |
+
+src/tests/__init__.py:24:1: F403 `from .api import *` used; unable to detect undefined names
+   |
+22 | # Import test modules from subdirectories
+23 | from .agents import *
+24 | from .api import *
+   | ^^^^^^^^^^^^^^^^^^ F403
+25 | from .integration import *
+26 | from .models import *
+   |
+
+src/tests/__init__.py:25:1: F403 `from .integration import *` used; unable to detect undefined names
+   |
+23 | from .agents import *
+24 | from .api import *
+25 | from .integration import *
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^ F403
+26 | from .models import *
+27 | from .performance import *
+   |
+
+src/tests/__init__.py:26:1: F403 `from .models import *` used; unable to detect undefined names
+   |
+24 | from .api import *
+25 | from .integration import *
+26 | from .models import *
+   | ^^^^^^^^^^^^^^^^^^^^^ F403
+27 | from .performance import *
+28 | from .system import *
+   |
+
+src/tests/__init__.py:27:1: F403 `from .performance import *` used; unable to detect undefined names
+   |
+25 | from .integration import *
+26 | from .models import *
+27 | from .performance import *
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^ F403
+28 | from .system import *
+29 | from .utils import *
+   |
+
+src/tests/__init__.py:28:1: F403 `from .system import *` used; unable to detect undefined names
+   |
+26 | from .models import *
+27 | from .performance import *
+28 | from .system import *
+   | ^^^^^^^^^^^^^^^^^^^^^ F403
+29 | from .utils import *
+   |
+
+src/tests/__init__.py:29:1: F403 `from .utils import *` used; unable to detect undefined names
+   |
+27 | from .performance import *
+28 | from .system import *
+29 | from .utils import *
+   | ^^^^^^^^^^^^^^^^^^^^ F403
+   |
+
+src/tests/agents/__init__.py:11:1: F403 `from .test_agent_detector import *` used; unable to detect undefined names
+   |
+10 | # Import test modules for discovery
+11 | from .test_agent_detector import *
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ F403
+12 | from .test_claim_detector import *
+13 | from .test_evidence_hunter import *
+   |
+
+src/tests/agents/__init__.py:12:1: F403 `from .test_claim_detector import *` used; unable to detect undefined names
+   |
+10 | # Import test modules for discovery
+11 | from .test_agent_detector import *
+12 | from .test_claim_detector import *
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ F403
+13 | from .test_evidence_hunter import *
+14 | from .test_verdict_writer import *
+   |
+
+src/tests/agents/__init__.py:13:1: F403 `from .test_evidence_hunter import *` used; unable to detect undefined names
+   |
+11 | from .test_agent_detector import *
+12 | from .test_claim_detector import *
+13 | from .test_evidence_hunter import *
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ F403
+14 | from .test_verdict_writer import *
+   |
+
+src/tests/agents/__init__.py:14:1: F403 `from .test_verdict_writer import *` used; unable to detect undefined names
+   |
+12 | from .test_claim_detector import *
+13 | from .test_evidence_hunter import *
+14 | from .test_verdict_writer import *
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ F403
+   |
+
+src/tests/agents/test_agent_detector.py:33:7: D101 Missing docstring in public class
+   |
+33 | class MockRunner:
+   |       ^^^^^^^^^^ D101
+34 |     @staticmethod
+35 |     async def run(agent, text):
+   |
+
+src/tests/agents/test_agent_detector.py:36:9: D415 First line should end with a period, question mark, or exclamation point
+   |
+34 |     @staticmethod
+35 |     async def run(agent, text):
+36 |         """Mock the OpenAI Runner.run method"""
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ D415
+37 |         mock_result = MagicMock()
+   |
+   = help: Add closing punctuation
+
+src/tests/agents/test_agent_detector.py:126:9: F841 Local variable `results` is assigned to but never used
+    |
+124 |     with patch("src.agents.claim_detector.detector.Runner", MockRunner):
+125 |         # Call the method
+126 |         results = await claim_detector.detect_claims(test_text, expected_claims=expected_claims)
+    |         ^^^^^^^ F841
+127 |
+128 |         # Verify metrics tracking was called
+    |
+    = help: Remove assignment to unused variable `results`
+
+src/tests/agents/test_evidence_hunter.py:40:66: F841 Local variable `mock_agent` is assigned to but never used
+   |
+38 |     with patch("src.utils.search_tools.get_search_tool") as mock_get_search_tool:
+39 |         mock_get_search_tool.return_value = "mock_search_tool"
+40 |         with patch("src.agents.evidence_hunter.hunter.Agent") as mock_agent:
+   |                                                                  ^^^^^^^^^^ F841
+41 |             return EvidenceHunter(model_name="test/model")
+   |
+   = help: Remove assignment to unused variable `mock_agent`
+
+src/tests/api/__init__.py:7:1: F403 `from .test_api import *` used; unable to detect undefined names
+  |
+6 | # Import test modules for discovery
+7 | from .test_api import *
+  | ^^^^^^^^^^^^^^^^^^^^^^^ F403
+  |
+
+src/tests/api/test_api.py:2:1: D415 First line should end with a period, question mark, or exclamation point
+  |
+1 |   #!/usr/bin/env python3
+2 | / """API Testing Script for VeriFact
+3 | |
+4 | | This script tests the VeriFact API endpoints to ensure they're working correctly.
+5 | | """
+  | |___^ D415
+6 |
+7 |   import json
+  |
+  = help: Add closing punctuation
+
+src/tests/api/test_api.py:131:9: E722 Do not use bare `except`
+    |
+129 |             else:
+130 |                 result["response_sample"] = str(response_data)[:200]
+131 |         except:
+    |         ^^^^^^ E722
+132 |             # Not JSON, store a snippet of the text
+133 |             result["response_sample"] = response.text[:200]
+    |
+
+src/tests/integration/__init__.py:10:1: F403 `from .test_db_integration import *` used; unable to detect undefined names
+   |
+ 9 | # Import test modules for discovery
+10 | from .test_db_integration import *
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ F403
+11 | from .test_factcheck_pipeline import *
+12 | from .test_pipeline_integration import *
+   |
+
+src/tests/integration/__init__.py:11:1: F403 `from .test_factcheck_pipeline import *` used; unable to detect undefined names
+   |
+ 9 | # Import test modules for discovery
+10 | from .test_db_integration import *
+11 | from .test_factcheck_pipeline import *
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ F403
+12 | from .test_pipeline_integration import *
+   |
+
+src/tests/integration/__init__.py:12:1: F403 `from .test_pipeline_integration import *` used; unable to detect undefined names
+   |
+10 | from .test_db_integration import *
+11 | from .test_factcheck_pipeline import *
+12 | from .test_pipeline_integration import *
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ F403
+   |
+
+src/tests/performance/__init__.py:7:1: F403 `from .test_benchmark_pipeline import *` used; unable to detect undefined names
+  |
+6 | # Import test modules for discovery
+7 | from .test_benchmark_pipeline import *
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ F403
+  |
+
+src/tests/performance/conftest.py:31:109: W291 Trailing whitespace
+   |
+29 |     return [
+30 |         # Scientific text
+31 |         """The Earth is approximately 4.54 billion years old, with an error range of about 50 million years. 
+   |                                                                                                             ^ W291
+32 |         This age has been determined through radiometric dating of meteorites and the oldest-known Earth rocks.
+33 |         Water covers about 71% of the Earth's surface, with oceans holding about 96.5% of all Earth's water.""",
+   |
+   = help: Remove trailing whitespace
+
+src/tests/performance/conftest.py:35:111: W291 Trailing whitespace
+   |
+33 |         Water covers about 71% of the Earth's surface, with oceans holding about 96.5% of all Earth's water.""",
+34 |         # Historical text
+35 |         """The First World War, also known as the Great War, lasted from 1914 to 1918 and involved many of the 
+   |                                                                                                               ^ W291
+36 |         world's nations. The United States Declaration of Independence was adopted by the Continental Congress 
+37 |         on July 4, 1776, announcing that the thirteen American colonies were no longer subject to British rule.""",
+   |
+   = help: Remove trailing whitespace
+
+src/tests/performance/conftest.py:36:111: W291 Trailing whitespace
+   |
+34 |         # Historical text
+35 |         """The First World War, also known as the Great War, lasted from 1914 to 1918 and involved many of the 
+36 |         world's nations. The United States Declaration of Independence was adopted by the Continental Congress 
+   |                                                                                                               ^ W291
+37 |         on July 4, 1776, announcing that the thirteen American colonies were no longer subject to British rule.""",
+38 |         # Mixed claims text
+   |
+   = help: Remove trailing whitespace
+
+src/tests/performance/conftest.py:39:108: W291 Trailing whitespace
+   |
+37 |         on July 4, 1776, announcing that the thirteen American colonies were no longer subject to British rule.""",
+38 |         # Mixed claims text
+39 |         """The human genome contains approximately 20,000-25,000 genes, far fewer than initially predicted. 
+   |                                                                                                            ^ W291
+40 |         The average global temperature has risen by about 1.1°C since the pre-industrial period, primarily 
+41 |         due to human activities. Mount Everest is the highest mountain on Earth with a height of 8,848.86 
+   |
+   = help: Remove trailing whitespace
+
+src/tests/performance/conftest.py:40:107: W291 Trailing whitespace
+   |
+38 |         # Mixed claims text
+39 |         """The human genome contains approximately 20,000-25,000 genes, far fewer than initially predicted. 
+40 |         The average global temperature has risen by about 1.1°C since the pre-industrial period, primarily 
+   |                                                                                                           ^ W291
+41 |         due to human activities. Mount Everest is the highest mountain on Earth with a height of 8,848.86 
+42 |         meters above sea level. I personally think that climate change is the biggest threat we face today.""",
+   |
+   = help: Remove trailing whitespace
+
+src/tests/performance/conftest.py:41:106: W291 Trailing whitespace
+   |
+39 |         """The human genome contains approximately 20,000-25,000 genes, far fewer than initially predicted. 
+40 |         The average global temperature has risen by about 1.1°C since the pre-industrial period, primarily 
+41 |         due to human activities. Mount Everest is the highest mountain on Earth with a height of 8,848.86 
+   |                                                                                                          ^ W291
+42 |         meters above sea level. I personally think that climate change is the biggest threat we face today.""",
+43 |     ]
+   |
+   = help: Remove trailing whitespace
+
+src/tests/system/__init__.py:7:1: F403 `from .test_verifact import *` used; unable to detect undefined names
+  |
+6 | # Import test modules for discovery
+7 | from .test_verifact import *
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ F403
+  |
+
+src/tests/system/test_verifact.py:2:1: D415 First line should end with a period, question mark, or exclamation point
+  |
+1 |   #!/usr/bin/env python3
+2 | / """VeriFact End-to-End Testing Script
+3 | |
+4 | | This script executes a comprehensive testing plan for the VeriFact factchecking platform,
+5 | | verifying all components are correctly implemented and functioning together.
+6 | | """
+  | |___^ D415
+7 |
+8 |   import asyncio
+  |
+  = help: Add closing punctuation
+
+src/tests/utils/__init__.py:10:1: F403 `from .test_db_utils import *` used; unable to detect undefined names
+   |
+ 9 | # Import test modules for discovery
+10 | from .test_db_utils import *
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ F403
+11 | from .test_model_config import *
+12 | from .test_search_tools import *
+   |
+
+src/tests/utils/__init__.py:11:1: F403 `from .test_model_config import *` used; unable to detect undefined names
+   |
+ 9 | # Import test modules for discovery
+10 | from .test_db_utils import *
+11 | from .test_model_config import *
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ F403
+12 | from .test_search_tools import *
+   |
+
+src/tests/utils/__init__.py:12:1: F403 `from .test_search_tools import *` used; unable to detect undefined names
+   |
+10 | from .test_db_utils import *
+11 | from .test_model_config import *
+12 | from .test_search_tools import *
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ F403
+   |
+
+src/ui/app.py:1:1: D415 First line should end with a period, question mark, or exclamation point
+   |
+ 1 | / """VeriFact Chainlit UI Entry Point
+ 2 | |
+ 3 | | This module serves as the main entry point for the VeriFact Chainlit web interface.
+ 4 | | It initializes a Chainlit chat application with the three main agents:
+ 5 | | - ClaimDetector: Identifies factual claims from user input
+ 6 | | - EvidenceHunter: Gathers evidence for those claims
+ 7 | | - VerdictWriter: Generates verdicts based on the evidence
+ 8 | |
+ 9 | | To run the web interface:
+10 | |     chainlit run app.py
+11 | |
+12 | | For API access, use `src/main.py`.
+13 | | For CLI access, use `cli.py`.
+14 | | """
+   | |___^ D415
+15 |
+16 |   import datetime
+   |
+   = help: Add closing punctuation
+
+src/ui/events.py:24:5: D205 1 blank line required between summary line and description
+   |
+22 |   @cl.password_auth_callback
+23 |   def auth_callback(username: str, password: str):
+24 | /     """Handle password-based authentication.
+25 | |     This is a simple implementation for demonstration.
+26 | |     In production, you should use secure password storage and verification.
+27 | |     """
+   | |_______^ D205
+28 |       # Get predefined credentials from environment variables or use defaults for demo
+29 |       valid_credentials = {
+   |
+   = help: Insert single blank line
+
+src/ui/utils.py:41:20: UP038 Use `X | Y` in `isinstance` call instead of `(X, Y)`
+   |
+39 |         for evidence in serializable_result["evidence"]:
+40 |             for key in list(evidence.keys()):
+41 |                 if isinstance(evidence[key], (datetime.datetime, datetime.date)):
+   |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ UP038
+42 |                     evidence[key] = evidence[key].isoformat()
+43 |                 elif not isinstance(evidence[key], (str, int, float, bool, list, dict, type(None))):
+   |
+   = help: Convert to `X | Y`
+
+src/ui/utils.py:43:26: UP038 Use `X | Y` in `isinstance` call instead of `(X, Y)`
+   |
+41 |                 if isinstance(evidence[key], (datetime.datetime, datetime.date)):
+42 |                     evidence[key] = evidence[key].isoformat()
+43 |                 elif not isinstance(evidence[key], (str, int, float, bool, list, dict, type(None))):
+   |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ UP038
+44 |                     evidence[key] = str(evidence[key])
+   |
+   = help: Convert to `X | Y`
+
+src/utils/async/priority_queue.py:1:1: D415 First line should end with a period, question mark, or exclamation point
+   |
+ 1 | / """Priority Queue Implementation for VeriFact
+ 2 | |
+ 3 | | This module provides a priority queue implementation for processing claims
+ 4 | | in order of their importance. It supports:
+ 5 | | - Sorting by priority scores
+ 6 | | - Configurable thresholds
+ 7 | | - Batch size control for processing
+ 8 | | - Status tracking for claims
+ 9 | | """
+   | |___^ D415
+10 |
+11 |   import heapq
+   |
+   = help: Add closing punctuation
+
+src/utils/async/retry.py:1:1: D415 First line should end with a period, question mark, or exclamation point
+  |
+1 | / """VeriFact Retry Utilities
+2 | |
+3 | | This module provides utilities for implementing retry logic
+4 | | for handling recoverable errors in the VeriFact system.
+5 | | """
+  | |___^ D415
+6 |
+7 |   import asyncio
+  |
+  = help: Add closing punctuation
+
+src/utils/db/api_keys.py:1:1: D415 First line should end with a period, question mark, or exclamation point
+  |
+1 | / """API Key Management Utilities
+2 | |
+3 | | This module provides functions for managing API keys in the database.
+4 | | It includes functions for creating, validating, and revoking API keys.
+5 | | """
+  | |___^ D415
+6 |
+7 |   import base64
+  |
+  = help: Add closing punctuation
+
+src/utils/db/api_keys.py:63:13: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+   |
+61 |         except Exception as e:
+62 |             logger.exception("Failed to create database connection pool")
+63 |             raise DatabaseError("Failed to connect to database", details={"error": str(e)})
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B904
+64 |
+65 |     return _pool
+   |
+
+src/utils/db/api_keys.py:69:5: D205 1 blank line required between summary line and description
+   |
+68 |   async def _ensure_api_keys_table() -> None:
+69 | /     """Ensure the api_keys table exists in the database.
+70 | |     This creates the table if it doesn't exist.
+71 | |     """
+   | |_______^ D205
+72 |       pool = await get_pool()
+73 |       async with pool.acquire() as conn:
+   |
+   = help: Insert single blank line
+
+src/utils/db/api_keys.py:161:9: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+159 |         return api_key, plain_key
+160 |     except Exception as e:
+161 |         raise QueryError(f"Failed to create API key: {str(e)}")
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B904
+    |
+
+src/utils/db/api_keys.py:364:9: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+362 |     except Exception as e:
+363 |         logger.exception("Failed to list user API keys")
+364 |         raise DatabaseError("Failed to list user API keys", details={"error": str(e)})
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B904
+    |
+
+src/utils/db/db.py:25:45: F401 `psycopg2.extras.execute_values` imported but unused; consider using `importlib.util.find_spec` to test for availability
+   |
+23 | # in all environments, so we use try/except
+24 | try:
+25 |     from psycopg2.extras import DictCursor, execute_values
+   |                                             ^^^^^^^^^^^^^^ F401
+26 |     from psycopg2.pool import ThreadedConnectionPool
+   |
+   = help: Remove unused import: `psycopg2.extras.execute_values`
+
+src/utils/db/db.py:225:13: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+223 |         except Exception as e:
+224 |             logger.error(f"Connection error: {str(e)}")
+225 |             raise ConnectionError(f"Failed to get database connection: {str(e)}")
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B904
+226 |         finally:
+227 |             if conn and self.connection_pool:
+    |
+
+src/utils/db/db.py:251:17: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+249 |                 conn.rollback()
+250 |                 logger.error(f"Database query error: {str(e)}")
+251 |                 raise QueryError(f"Query execution failed: {str(e)}")
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B904
+252 |             finally:
+253 |                 cursor.close()
+    |
+
+src/utils/db/db.py:319:13: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+317 |         except Exception as e:
+318 |             logger.error(f"Failed to generate embedding: {str(e)}")
+319 |             raise EmbeddingError(f"Failed to generate embedding: {str(e)}")
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B904
+320 |
+321 |     @retry_on_error()
+    |
+
+src/utils/db/db.py:1021:47: F821 Undefined name `Feedback`
+     |
+1020 |     @retry_on_error()
+1021 |     def store_feedback(self, feedback: Union["Feedback", dict[str, Any]]) -> dict[str, Any]:
+     |                                               ^^^^^^^^ F821
+1022 |         """Store user feedback in the database.
+     |
+
+src/utils/db/db.py:1045:13: F841 Local variable `metadata` is assigned to but never used
+     |
+1044 |             # Handle metadata
+1045 |             metadata = feedback_dict.get("metadata", {})
+     |             ^^^^^^^^ F841
+1046 |
+1047 |             # Ensure IDs are UUIDs
+     |
+     = help: Remove assignment to unused variable `metadata`
+
+src/utils/db/db.py:1090:13: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+     |
+1088 |         except Exception as e:
+1089 |             logger.error(f"Error storing feedback: {str(e)}")
+1090 |             raise QueryError(f"Failed to store feedback: {str(e)}")
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B904
+1091 |
+1092 |     @retry_on_error()
+     |
+
+src/utils/db/db.py:1142:13: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+     |
+1140 |         except Exception as e:
+1141 |             logger.error(f"Error getting feedback for claim {claim_id}: {str(e)}")
+1142 |             raise QueryError(f"Failed to get feedback for claim: {str(e)}")
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B904
+1143 |
+1144 |     @retry_on_error()
+     |
+
+src/utils/db/db.py:1214:13: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+     |
+1212 |         except Exception as e:
+1213 |             logger.error(f"Error getting feedback statistics: {str(e)}")
+1214 |             raise QueryError(f"Failed to get feedback statistics: {str(e)}")
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B904
+1215 |
+1216 |     @retry_on_error()
+     |
+
+src/utils/db/db.py:1391:13: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+     |
+1389 |         except Exception as e:
+1390 |             logger.error(f"Error getting all feedback: {str(e)}")
+1391 |             raise QueryError(f"Failed to get all feedback: {str(e)}")
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B904
+1392 |
+1393 |     def _encrypt_sensitive_fields(
+     |
+
+src/utils/db/pool.py:36:5: D205 1 blank line required between summary line and description
+   |
+35 |   async def init_db_pool():
+36 | /     """Initialize the database connection pool.
+37 | |     Should be called during application startup.
+38 | |     """
+   | |_______^ D205
+39 |       global _pool
+40 |       if _pool is not None:
+   |
+   = help: Insert single blank line
+
+src/utils/db/pool.py:75:5: D205 1 blank line required between summary line and description
+   |
+74 |   async def close_db_pool():
+75 | /     """Close the database connection pool.
+76 | |     Should be called during application shutdown.
+77 | |     """
+   | |_______^ D205
+78 |       global _pool
+79 |       if _pool is None:
+   |
+   = help: Insert single blank line
+
+src/utils/db/users.py:27:9: F841 Local variable `user_data` is assigned to but never used
+   |
+25 |     try:
+26 |         # Convert to dict with encryption applied
+27 |         user_data = user.dict()
+   |         ^^^^^^^^^ F841
+28 |
+29 |         # In a real implementation, store in database
+   |
+   = help: Remove assignment to unused variable `user_data`
+
+src/utils/db/users.py:33:9: F841 Local variable `query` is assigned to but never used
+   |
+32 |         # Example SQL that would be used
+33 |         query = """
+   |         ^^^^^ F841
+34 |         INSERT INTO users (
+35 |             id, email, name, phone, api_key, access_token, refresh_token,
+   |
+   = help: Remove assignment to unused variable `query`
+
+src/utils/db/users.py:48:9: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+   |
+46 |         return user.id
+47 |     except Exception as e:
+48 |         raise QueryError(f"Failed to create user: {str(e)}")
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B904
+   |
+
+src/utils/db/users.py:64:9: F841 Local variable `query` is assigned to but never used
+   |
+63 |         # Example SQL that would be used
+64 |         query = """
+   |         ^^^^^ F841
+65 |         SELECT id, email, name, phone, api_key, access_token, refresh_token,
+66 |                created_at, updated_at, last_login_at, metadata
+   |
+   = help: Remove assignment to unused variable `query`
+
+src/utils/db/users.py:92:9: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+   |
+90 |         return User.from_encrypted(mock_user_data)
+91 |     except Exception as e:
+92 |         raise QueryError(f"Failed to get user: {str(e)}")
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B904
+   |
+
+src/utils/db/users.py:116:9: F841 Local variable `query` is assigned to but never used
+    |
+115 |         # Example SQL that would be used
+116 |         query = """
+    |         ^^^^^ F841
+117 |         UPDATE users
+118 |         SET email = %s, name = %s, phone = %s, api_key = %s,
+    |
+    = help: Remove assignment to unused variable `query`
+
+src/utils/db/users.py:127:9: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+125 |         return True
+126 |     except Exception as e:
+127 |         raise QueryError(f"Failed to update user: {str(e)}")
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B904
+    |
+
+src/utils/db/users.py:143:9: F841 Local variable `query` is assigned to but never used
+    |
+142 |         # Example SQL that would be used
+143 |         query = """
+    |         ^^^^^ F841
+144 |         DELETE FROM users
+145 |         WHERE id = %s
+    |
+    = help: Remove assignment to unused variable `query`
+
+src/utils/db/users.py:151:9: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+149 |         return True
+150 |     except Exception as e:
+151 |         raise QueryError(f"Failed to delete user: {str(e)}")
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B904
+    |
+
+src/utils/db/users.py:168:9: F841 Local variable `query` is assigned to but never used
+    |
+167 |         # Example SQL that would be used
+168 |         query = """
+    |         ^^^^^ F841
+169 |         SELECT id, email, name, phone, api_key, access_token, refresh_token,
+170 |                created_at, updated_at, last_login_at, metadata
+    |
+    = help: Remove assignment to unused variable `query`
+
+src/utils/db/users.py:180:9: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+178 |         return []
+179 |     except Exception as e:
+180 |         raise QueryError(f"Failed to get users: {str(e)}")
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B904
+    |
+
+src/utils/db/users.py:196:9: F841 Local variable `query` is assigned to but never used
+    |
+195 |         # Example SQL that would be used
+196 |         query = """
+    |         ^^^^^ F841
+197 |         SELECT id, email, name, phone, api_key, access_token, refresh_token,
+198 |                created_at, updated_at, last_login_at, metadata
+    |
+    = help: Remove assignment to unused variable `query`
+
+src/utils/db/users.py:207:9: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+205 |         return None
+206 |     except Exception as e:
+207 |         raise QueryError(f"Failed to find user by email: {str(e)}")
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B904
+    |
+
+src/utils/error_handling.py:17:5: D415 First line should end with a period, question mark, or exclamation point
+   |
+16 | class ErrorDetail:
+17 |     """Structured error detail"""
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ D415
+18 |
+19 |     def __init__(
+   |
+   = help: Add closing punctuation
+
+src/utils/error_handling.py:19:9: D107 Missing docstring in `__init__`
+   |
+17 |     """Structured error detail"""
+18 |
+19 |     def __init__(
+   |         ^^^^^^^^ D107
+20 |         self,
+21 |         code: str,
+   |
+
+src/utils/error_handling.py:33:5: D415 First line should end with a period, question mark, or exclamation point
+   |
+32 | class ErrorResponseFactory:
+33 |     """Factory for creating consistent error responses"""
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ D415
+34 |
+35 |     # Define standard error types
+   |
+   = help: Add closing punctuation
+
+src/utils/logging/logger.py:38:13: D102 Missing docstring in public method
+   |
+36 |         """Simple JSON formatter if python-json-logger is not available."""
+37 |
+38 |         def format(self, record):
+   |             ^^^^^^ D102
+39 |             log_data = {
+40 |                 "timestamp": self.formatTime(record, self.datefmt),
+   |
+
+src/utils/logging/logger.py:128:87: B039 Do not use mutable data structures for `ContextVar` defaults
+    |
+126 |     request_id_var: ContextVar[str] = ContextVar("request_id", default="")
+127 |     component_var: ContextVar[str] = ContextVar("component", default="")
+128 |     context_data_var: ContextVar[dict[str, Any]] = ContextVar("context_data", default={})
+    |                                                                                       ^^ B039
+129 | except ImportError:
+130 |     # Fallback for older Python versions
+    |
+    = help: Replace with `None`; initialize with `.set()``
+
+src/utils/logging/logger.py:145:9: D102 Missing docstring in public method
+    |
+143 |     """Filter to remove sensitive information from logs."""
+144 |
+145 |     def filter(self, record):
+    |         ^^^^^^ D102
+146 |         # Don't modify the original record if it doesn't have a message
+147 |         if not hasattr(record, "msg") or not record.msg:
+    |
+
+src/utils/logging/logger.py:191:9: D102 Missing docstring in public method
+    |
+189 |     """Filter that adds request context to log records."""
+190 |
+191 |     def filter(self, record):
+    |         ^^^^^^ D102
+192 |         # Add request ID if available
+193 |         if request_id_var is not None:
+    |
+
+src/utils/logging/structured_logger.py:27:9: D107 Missing docstring in `__init__`
+   |
+25 |     """Extended LogRecord class that includes structured context data."""
+26 |
+27 |     def __init__(self, *args, **kwargs):
+   |         ^^^^^^^^ D107
+28 |         super().__init__(*args, **kwargs)
+29 |         # Add context data to log record
+   |
+
+src/utils/logging/structured_logger.py:49:9: D102 Missing docstring in public method
+   |
+47 |     """Logger subclass that creates StructuredLogRecord instances."""
+48 |
+49 |     def makeRecord(self, *args, **kwargs):
+   |         ^^^^^^^^^^ D102
+50 |         return StructuredLogRecord(*args, **kwargs)
+   |
+
+src/utils/logging/structured_logger.py:110:9: D107 Missing docstring in `__init__`
+    |
+108 |     """Context manager for adding temporary context to logs."""
+109 |
+110 |     def __init__(self, logger: StructuredLogger, **context):
+    |         ^^^^^^^^ D107
+111 |         self.logger = logger
+112 |         self.context = context
+    |
+
+src/utils/logging/structured_logger.py:115:9: D105 Missing docstring in magic method
+    |
+113 |         self.tokens: list[tuple[ContextVar, Token]] = []
+114 |
+115 |     def __enter__(self):
+    |         ^^^^^^^^^ D105
+116 |         # Set context variables and store tokens for later reset
+117 |         for key, value in self.context.items():
+    |
+
+src/utils/logging/structured_logger.py:132:9: D105 Missing docstring in magic method
+    |
+130 |         return self.logger
+131 |
+132 |     def __exit__(self, exc_type, exc_val, exc_tb):
+    |         ^^^^^^^^ D105
+133 |         # Reset context variables to their previous values
+134 |         for var, token in reversed(self.tokens):
+    |
+
+src/utils/logging/structured_logger.py:141:9: D107 Missing docstring in `__init__`
+    |
+139 |     """Formatter that converts log records to JSON."""
+140 |
+141 |     def __init__(self, include_traceback: bool = True):
+    |         ^^^^^^^^ D107
+142 |         super().__init__()
+143 |         self.include_traceback = include_traceback
+    |
+
+src/utils/models/model_config.py:91:9: D107 Missing docstring in `__init__`
+   |
+89 |     """Exception raised for errors in API requests."""
+90 |
+91 |     def __init__(self, message, status_code=None, request_id=None):
+   |         ^^^^^^^^ D107
+92 |         self.status_code = status_code
+93 |         self.request_id = request_id
+   |
+
+src/utils/models/model_config.py:112:9: D107 Missing docstring in `__init__`
+    |
+110 |     """Exception raised when hitting rate limits."""
+111 |
+112 |     def __init__(self, message, retry_after=None):
+    |         ^^^^^^^^ D107
+113 |         self.retry_after = retry_after
+114 |         super().__init__(message)
+    |
+
+src/utils/models/model_config.py:169:20: B007 Loop control variable `default` not used within loop body
+    |
+167 |         # Try to load agent-specific parameters first, fall back to general
+168 |         # parameters
+169 |         for param, default in DEFAULT_PARAMETERS.items():
+    |                    ^^^^^^^ B007
+170 |             env_var = f"{prefix}MODEL_{param.upper()}"
+171 |             general_env_var = f"MODEL_{param.upper()}"
+    |
+    = help: Rename unused `default` to `_default`
+
+src/utils/models/model_config.py:371:5: B019 Use of `functools.lru_cache` or `functools.cache` on methods can lead to memory leaks
+    |
+369 |         return hashlib.md5(cache_str.encode(), usedforsecurity=False).hexdigest()
+370 |
+371 |     @lru_cache(maxsize=CACHE_SIZE)
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B019
+372 |     def _cached_completion(self, cache_key: str, model: str) -> dict[str, Any]:
+373 |         """LRU cache for model completions.
+    |
+
+src/utils/models/model_config.py:495:73: F841 Local variable `request_id` is assigned to but never used
+    |
+493 |         """
+494 |         # Create a unique request ID for this completion
+495 |         with request_context(component=self.agent_type or "general") as request_id:
+    |                                                                         ^^^^^^^^^^ F841
+496 |             # Add request context
+497 |             logger.info(
+    |
+    = help: Remove assignment to unused variable `request_id`
+
+src/utils/models/model_config.py:683:73: F841 Local variable `request_id` is assigned to but never used
+    |
+681 |         """
+682 |         # Create a unique request ID for this completion
+683 |         with request_context(component=self.agent_type or "general") as request_id:
+    |                                                                         ^^^^^^^^^^ F841
+684 |             # Add request context
+685 |             logger.info(
+    |
+    = help: Remove assignment to unused variable `request_id`
+
+src/utils/models/model_config.py:921:45: F401 `openai._base_client.DEFAULT_MAX_RETRIES` imported but unused; consider using `importlib.util.find_spec` to test for availability
+    |
+919 |         try:
+920 |             from openai import OpenAI
+921 |             from openai._base_client import DEFAULT_MAX_RETRIES
+    |                                             ^^^^^^^^^^^^^^^^^^^ F401
+922 |             from openai._client import _configure_transport
+    |
+    = help: Remove unused import: `openai._base_client.DEFAULT_MAX_RETRIES`
+
+src/utils/models/model_config.py:952:13: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+951 |           except ImportError:
+952 | /             raise ImportError(
+953 | |                 "OpenAI package is required. Install with 'pip install openai>=1.0.0'."
+954 | |             )
+    | |_____________^ B904
+955 |
+956 |       def configure_openai_for_agent(self):
+    |
+
+src/utils/models/model_config.py:988:13: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+987 |           except ImportError:
+988 | /             raise ImportError(
+989 | |                 "OpenAI package is required. Install with 'pip install openai>=1.0.0'."
+990 | |             )
+    | |_____________^ B904
+991 |
+992 |       def get_agent_client(self):
+    |
+
+src/utils/rate_limiter.py:1:1: D415 First line should end with a period, question mark, or exclamation point
+  |
+1 | / """Rate Limiting Utilities
+2 | |
+3 | | This module provides utilities for rate limiting API requests.
+4 | | """
+  | |___^ D415
+5 |
+6 |   import logging
+  |
+  = help: Add closing punctuation
+
+src/utils/search/search_tools.py:70:15: D417 Missing argument description in the docstring for `call`: `**kwargs`
+   |
+68 |         self.api_url = "https://google.serper.dev"
+69 |
+70 |     async def call(self, params: dict[str, Any], **kwargs) -> list[dict[str, Any]]:
+   |               ^^^^ D417
+71 |         """Call the Serper.dev API to search for information.
+   |
+
+src/utils/security/encrypted_fields.py:17:9: D105 Missing docstring in magic method
+   |
+16 |     @classmethod
+17 |     def __get_validators__(cls):
+   |         ^^^^^^^^^^^^^^^^^^ D105
+18 |         yield cls.validate
+   |
+
+src/utils/security/encrypted_fields.py:21:9: D102 Missing docstring in public method
+   |
+20 |     @classmethod
+21 |     def validate(cls, v):
+   |         ^^^^^^^^ D102
+22 |         if v is None:
+23 |             return v
+   |
+
+src/utils/security/encrypted_fields.py:28:9: D105 Missing docstring in magic method
+   |
+26 |         return v
+27 |
+28 |     def __repr__(self):
+   |         ^^^^^^^^ D105
+29 |         return "EncryptedStr('***')"
+   |
+
+src/utils/security/encryption.py:35:13: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+   |
+33 |             return encryption_key.encode()
+34 |         except Exception as e:
+35 |             raise EncryptionError(f"Invalid encryption key: {str(e)}")
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B904
+36 |
+37 |     # For development only - in production, always set ENCRYPTION_KEY
+   |
+
+src/utils/security/encryption.py:77:9: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+   |
+75 |         return base64.urlsafe_b64encode(encrypted).decode()
+76 |     except Exception as e:
+77 |         raise EncryptionError(f"Encryption failed: {str(e)}")
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B904
+   |
+
+src/utils/security/encryption.py:97:9: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+   |
+95 |         return decrypted.decode()
+96 |     except Exception as e:
+97 |         raise EncryptionError(f"Decryption failed: {str(e)}")
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B904
+   |
+
+src/utils/validation/config.py:1:1: D415 First line should end with a period, question mark, or exclamation point
+  |
+1 | / """Validation Configuration Loader
+2 | |
+3 | | This module loads and provides access to validation configuration settings.
+4 | | """
+  | |___^ D415
+5 |
+6 |   import os
+  |
+  = help: Add closing punctuation
+
+src/utils/validation/exceptions.py:1:1: D415 First line should end with a period, question mark, or exclamation point
+  |
+1 | / """VeriFact Exception Classes
+2 | |
+3 | | This module defines a hierarchy of custom exceptions for the VeriFact system
+4 | | to ensure consistent error handling across all interfaces (API, CLI, UI).
+5 | | """
+  | |___^ D415
+6 |
+7 |   from typing import Any
+  |
+  = help: Add closing punctuation
+
+src/utils/validation/exceptions.py:13:9: D107 Missing docstring in `__init__`
+   |
+11 |     """Base exception class for all VeriFact errors."""
+12 |
+13 |     def __init__(
+   |         ^^^^^^^^ D107
+14 |         self,
+15 |         message: str = "An error occurred in the VeriFact system",
+   |
+
+src/utils/validation/exceptions.py:37:9: D107 Missing docstring in `__init__`
+   |
+35 |     """Exception raised for data validation errors."""
+36 |
+37 |     def __init__(
+   |         ^^^^^^^^ D107
+38 |         self,
+39 |         message: str = "Invalid data format or values",
+   |
+
+src/utils/validation/exceptions.py:55:9: D107 Missing docstring in `__init__`
+   |
+53 |     """Exception raised when input text exceeds maximum allowed length."""
+54 |
+55 |     def __init__(self, max_length: int, actual_length: int):
+   |         ^^^^^^^^ D107
+56 |         super().__init__(
+57 |             message=f"Input text exceeds maximum allowed length of {max_length} characters",
+   |
+
+src/utils/validation/exceptions.py:69:9: D107 Missing docstring in `__init__`
+   |
+67 |     """Base exception for errors in the factchecking pipeline."""
+68 |
+69 |     def __init__(
+   |         ^^^^^^^^ D107
+70 |         self,
+71 |         message: str = "Error in factchecking pipeline",
+   |
+
+src/utils/validation/exceptions.py:86:9: D107 Missing docstring in `__init__`
+   |
+84 |     """Exception raised when an AI model fails."""
+85 |
+86 |     def __init__(
+   |         ^^^^^^^^ D107
+87 |         self,
+88 |         message: str = "AI model processing failed",
+   |
+
+src/utils/validation/exceptions.py:103:9: D107 Missing docstring in `__init__`
+    |
+101 |     """Exception raised when evidence gathering fails."""
+102 |
+103 |     def __init__(
+    |         ^^^^^^^^ D107
+104 |         self,
+105 |         message: str = "Failed to gather evidence",
+    |
+
+src/utils/validation/exceptions.py:121:9: D107 Missing docstring in `__init__`
+    |
+119 |     """Exception raised when a rate limit is exceeded."""
+120 |
+121 |     def __init__(
+    |         ^^^^^^^^ D107
+122 |         self,
+123 |         message: str = "Rate limit exceeded",
+    |
+
+src/utils/validation/exceptions.py:143:9: D107 Missing docstring in `__init__`
+    |
+141 |     """Exception raised when a required resource is unavailable."""
+142 |
+143 |     def __init__(
+    |         ^^^^^^^^ D107
+144 |         self,
+145 |         message: str = "Required resource is unavailable",
+    |
+
+src/utils/validation/exceptions.py:161:9: D107 Missing docstring in `__init__`
+    |
+159 |     """Exception raised when database operations fail."""
+160 |
+161 |     def __init__(
+    |         ^^^^^^^^ D107
+162 |         self,
+163 |         message: str = "Database operation failed",
+    |
+
+src/utils/validation/exceptions.py:177:9: D107 Missing docstring in `__init__`
+    |
+175 |     """Exception raised when an external service fails or is unavailable."""
+176 |
+177 |     def __init__(
+    |         ^^^^^^^^ D107
+178 |         self,
+179 |         message: str = "External service error",
+    |
+
+src/utils/validation/exceptions.py:196:9: D107 Missing docstring in `__init__`
+    |
+194 |     """Base exception for authentication and authorization errors."""
+195 |
+196 |     def __init__(
+    |         ^^^^^^^^ D107
+197 |         self,
+198 |         message: str = "Authentication error",
+    |
+
+src/utils/validation/exceptions.py:208:9: D107 Missing docstring in `__init__`
+    |
+206 |     """Exception raised when a user is not authorized to perform an action."""
+207 |
+208 |     def __init__(
+    |         ^^^^^^^^ D107
+209 |         self,
+210 |         message: str = "Not authorized to perform this action",
+    |
+
+src/utils/validation/exceptions.py:222:9: D107 Missing docstring in `__init__`
+    |
+220 |     """Base exception for API related errors."""
+221 |
+222 |     def __init__(
+    |         ^^^^^^^^ D107
+223 |         self,
+224 |         message: str = "API operation failed",
+    |
+
+src/utils/validation/exceptions.py:238:9: D107 Missing docstring in `__init__`
+    |
+236 |     """Exception raised when an API request times out."""
+237 |
+238 |     def __init__(
+    |         ^^^^^^^^ D107
+239 |         self,
+240 |         message: str = "Request timed out",
+    |
+
+src/utils/validation/exceptions.py:256:9: D107 Missing docstring in `__init__`
+    |
+254 |     """Exception raised when rate limits are exceeded."""
+255 |
+256 |     def __init__(
+    |         ^^^^^^^^ D107
+257 |         self,
+258 |         message: str = "Too many requests",
+    |
+
+src/utils/validation/exceptions.py:274:9: D107 Missing docstring in `__init__`
+    |
+272 |     """Exception raised when API authentication fails."""
+273 |
+274 |     def __init__(
+    |         ^^^^^^^^ D107
+275 |         self, message: str = "API authentication failed", details: dict[str, Any] | None = None
+276 |     ):
+    |
+
+src/utils/validation/exceptions.py:284:9: D107 Missing docstring in `__init__`
+    |
+282 |     """Exception raised when an invalid API key is provided."""
+283 |
+284 |     def __init__(self, message: str = "Invalid API key", details: dict[str, Any] | None = None):
+    |         ^^^^^^^^ D107
+285 |         super().__init__(message=message, details=details)
+    |
+
+src/utils/validation/exceptions.py:291:9: D107 Missing docstring in `__init__`
+    |
+289 |     """Exception raised when an expired API key is provided."""
+290 |
+291 |     def __init__(
+    |         ^^^^^^^^ D107
+292 |         self,
+293 |         message: str = "API key has expired",
+    |
+
+src/utils/validation/exceptions.py:307:9: D107 Missing docstring in `__init__`
+    |
+305 |     """Exception raised when the user has insufficient quota."""
+306 |
+307 |     def __init__(
+    |         ^^^^^^^^ D107
+308 |         self,
+309 |         message: str = "Insufficient API quota",
+    |
+
+src/utils/validation/sanitizer.py:1:1: D415 First line should end with a period, question mark, or exclamation point
+  |
+1 | / """Input Sanitization Utilities
+2 | |
+3 | | This module provides functions for sanitizing input data to prevent
+4 | | security vulnerabilities like XSS, SQL injection, etc.
+5 | | """
+  | |___^ D415
+6 |
+7 |   import html
+  |
+  = help: Add closing punctuation
+
+src/utils/validation/sanitizer.py:35:5: D205 1 blank line required between summary line and description
+   |
+34 |   def sanitize_html(html_content: str) -> str:
+35 | /     """Sanitize HTML content to remove potentially dangerous tags and attributes.
+36 | |     For VeriFact, we don't need to allow any HTML, so we just escape everything.
+37 | |
+38 | |     Args:
+39 | |         html_content: HTML content to sanitize
+40 | |
+41 | |     Returns:
+42 | |         str: Sanitized HTML
+43 | |     """
+   | |_______^ D205
+44 |       return sanitize_text(html_content)
+   |
+   = help: Insert single blank line
+
+src/utils/validation/validation.py:47:9: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+   |
+45 |             message = f"Validation error for field '{field}': {field_errors[field]}"
+46 |
+47 |         raise ValidationError(message=message, details={"field_errors": field_errors})
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B904
+   |
+
+src/utils/validation/validation.py:227:9: B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+    |
+225 |         return json.loads(json_str)
+226 |     except json.JSONDecodeError as e:
+227 |         raise ValidationError(message=f"Invalid JSON: {str(e)}", details={"json_error": str(e)})
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B904
+    |
+
+src/utils/validation/validator.py:1:1: D415 First line should end with a period, question mark, or exclamation point
+  |
+1 | / """Input Validation Utilities
+2 | |
+3 | | This module provides functions for validating and sanitizing input data.
+4 | | """
+  | |___^ D415
+5 |
+6 |   import logging
+  |
+  = help: Add closing punctuation
+
+Found 279 errors.
+No fixes available (122 hidden fixes can be enabled with the `--unsafe-fixes` option).

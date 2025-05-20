@@ -1,10 +1,9 @@
-"""VeriFact Admin API
+"""VeriFact Admin API.
 
 This module contains admin endpoints for the VeriFact API,
 including API key management and system configuration.
 """
 
-import datetime
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -130,16 +129,22 @@ async def require_admin(request: Request) -> dict[str, Any]:
     summary="Create a new API key",
     description="""
     Create a new API key with the specified permissions.
-    
+
     Requires admin permissions.
-    
+
     The API key will be returned only once, so make sure to store it securely.
     """,
 )
 async def create_key(
-    request: ApiKeyRequest = Body(...), admin: dict[str, Any] = Depends(require_admin)
+    request: ApiKeyRequest = None,
+    admin: dict[str, Any] = None
 ):
     """Create a new API key."""
+    if request is None:
+        request = Body()
+    if admin is None:
+        admin = require_admin()
+
     try:
         # Create the API key
         key, key_data = await create_api_key(
@@ -161,11 +166,11 @@ async def create_key(
             permissions=key_data["permissions"],
             user_id=key_data["user_id"],
         )
-    except DatabaseError as e:
+    except DatabaseError as err:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create API key: {str(e)}",
-        )
+            detail=f"Failed to create API key: {str(err)}",
+        ) from err
 
 
 @router.delete(
@@ -174,14 +179,17 @@ async def create_key(
     summary="Revoke an API key",
     description="""
     Revoke an API key by ID.
-    
+
     Requires admin permissions.
-    
+
     Once revoked, the API key can no longer be used.
     """,
 )
-async def revoke_key(key: str, admin: dict[str, Any] = Depends(require_admin)):
+async def revoke_key(key: str, admin: dict[str, Any] = None):
     """Revoke an API key."""
+    if admin is None:
+        admin = require_admin()
+
     try:
         # Revoke the API key
         result = await revoke_api_key(key)
@@ -192,11 +200,11 @@ async def revoke_key(key: str, admin: dict[str, Any] = Depends(require_admin)):
             )
 
         return None  # 204 No Content
-    except DatabaseError as e:
+    except DatabaseError as err:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to revoke API key: {str(e)}",
-        )
+            detail=f"Failed to revoke API key: {str(err)}",
+        ) from err
 
 
 @router.post(
@@ -205,14 +213,17 @@ async def revoke_key(key: str, admin: dict[str, Any] = Depends(require_admin)):
     summary="Rotate an API key",
     description="""
     Rotate an API key by revoking the old key and creating a new one.
-    
+
     Requires admin permissions.
-    
+
     The new API key will be returned only once, so make sure to store it securely.
     """,
 )
-async def rotate_key(key: str, admin: dict[str, Any] = Depends(require_admin)):
+async def rotate_key(key: str, admin: dict[str, Any] = None):
     """Rotate an API key."""
+    if admin is None:
+        admin = require_admin()
+
     try:
         # Rotate the API key
         new_key, key_data = await rotate_api_key(key)
@@ -225,15 +236,16 @@ async def rotate_key(key: str, admin: dict[str, Any] = Depends(require_admin)):
             permissions=key_data["permissions"],
             user_id=key_data["user_id"],
         )
-    except InvalidAPIKeyError as e:
+    except InvalidAPIKeyError as err:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"API key not found or invalid: {str(e)}"
-        )
-    except DatabaseError as e:
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"API key not found or invalid: {str(err)}",
+        ) from err
+    except DatabaseError as err:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to rotate API key: {str(e)}",
-        )
+            detail=f"Failed to rotate API key: {str(err)}",
+        ) from err
 
 
 @router.get(
@@ -242,24 +254,37 @@ async def rotate_key(key: str, admin: dict[str, Any] = Depends(require_admin)):
     summary="List API keys for a user",
     description="""
     List all active API keys for a user.
-    
+
     Requires admin permissions.
-    
+
     Returns only metadata about the keys, not the actual keys.
     """,
 )
-async def list_keys(user_id: str, admin: dict[str, Any] = Depends(require_admin)):
+async def list_keys(user_id: str, admin: dict[str, Any] = None):
     """List API keys for a user."""
-    try:
-        # List API keys
-        keys = await list_user_api_keys(user_id)
+    if admin is None:
+        admin = require_admin()
 
-        return keys
-    except DatabaseError as e:
+    try:
+        # Get all API keys for the user
+        api_keys = await list_user_api_keys(user_id)
+
+        # Transform to response format
+        return [
+            ApiKeyInfo(
+                id=key["id"],
+                prefix=key["prefix"],
+                expires_at=key["expires_at"],
+                permissions=key["permissions"],
+                created_at=key["created_at"],
+            )
+            for key in api_keys
+        ]
+    except DatabaseError as err:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to list API keys: {str(e)}",
-        )
+            detail=f"Failed to list API keys: {str(err)}",
+        ) from err
 
 
 @router.post(
@@ -269,18 +294,22 @@ async def list_keys(user_id: str, admin: dict[str, Any] = Depends(require_admin)
     summary="Invalidate cache entries",
     description="""
     Invalidate cache entries based on namespace and optional pattern.
-    
+
     Requires admin permissions.
-    
+
     This is useful for clearing stale data when underlying information changes.
     """,
 )
 async def invalidate_cache(
-    request: InvalidateCacheRequest, admin: dict[str, Any] = Depends(require_admin)
+        request: InvalidateCacheRequest = None,
+    admin: dict[str, Any] = None
 ) -> dict[str, Any]:
-    """Invalidate cache entries based on patterns or selectively.
-    Requires admin privileges.
-    """
+    """Invalidate cache entries."""
+    if request is None:
+        request = InvalidateCacheRequest()
+    if admin is None:
+        admin = require_admin()
+
     # Map namespace to cache instance
     cache_map = {
         "evidence": evidence_cache,
@@ -320,7 +349,7 @@ async def invalidate_cache(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to invalidate cache: {str(e)}",
-        )
+        ) from e
 
 
 @router.get(
@@ -329,14 +358,17 @@ async def invalidate_cache(
     summary="Get cache status",
     description="""
     Get status information about the caching system.
-    
+
     Requires admin permissions.
-    
+
     Returns information about the Redis connection and configured TTLs.
     """,
 )
-async def cache_status(admin: dict[str, Any] = Depends(require_admin)) -> dict[str, Any]:
-    """Get cache status information."""
+async def cache_status(admin: dict[str, Any] = None) -> dict[str, Any]:
+    """Get cache status."""
+    if admin is None:
+        admin = require_admin()
+
     import os
 
     from src.utils.cache.cache import DEFAULT_CACHE_TTL, REDIS_ENABLED, REDIS_URL
@@ -363,16 +395,20 @@ async def cache_status(admin: dict[str, Any] = Depends(require_admin)) -> dict[s
     summary="Get cache metrics",
     description="""
     Get performance metrics for the caching system.
-    
+
     Requires admin permissions.
-    
+
     Returns metrics like hit rate, miss rate, and latency information.
     """,
 )
 async def cache_metrics(
-    namespace: str | None = None, admin: dict[str, Any] = Depends(require_admin)
+    namespace: str | None = None,
+    admin: dict[str, Any] = None
 ) -> dict[str, Any]:
-    """Get cache performance metrics."""
+    """Get cache metrics."""
+    if admin is None:
+        admin = require_admin()
+
     # Map namespace to metrics instance
     metrics_map = {
         "evidence": evidence_metrics,
@@ -404,14 +440,17 @@ async def cache_metrics(
     summary="Get database connection pool metrics",
     description="""
     Get metrics for the database connection pool.
-    
+
     Requires admin permissions.
-    
+
     Returns information about connection usage, pool size, and status.
     """,
 )
-async def database_metrics(admin: dict[str, Any] = Depends(require_admin)) -> dict[str, Any]:
-    """Get database connection pool metrics."""
+async def database_metrics(admin: dict[str, Any] = None) -> dict[str, Any]:
+    """Get database metrics."""
+    if admin is None:
+        admin = require_admin()
+
     try:
         metrics = await ConnectionPoolMetrics.collect()
 
@@ -423,7 +462,7 @@ async def database_metrics(admin: dict[str, Any] = Depends(require_admin)) -> di
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get database metrics: {str(e)}",
-        )
+        ) from e
 
 
 @router.post("/api-keys", response_model=dict)
@@ -431,9 +470,12 @@ async def create_new_api_key(
     name: str,
     scopes: list[ApiKeyScope],
     expires_days: int = 365,
-    owner_id: str = Depends(lambda: verify_api_key(required_scopes=[ApiKeyScope.ADMIN])),
+    owner_id: str = None,
 ):
-    """Create a new API key."""
+    """Create a new API key with the given parameters."""
+    # Get owner_id from verification
+    if owner_id is None:
+        owner_id = verify_api_key(required_scopes=[ApiKeyScope.ADMIN])
     expires_at = datetime.utcnow() + timedelta(days=expires_days)
 
     # Create the key

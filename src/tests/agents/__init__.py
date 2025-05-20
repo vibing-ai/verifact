@@ -8,7 +8,15 @@ This package contains tests for all agent components:
 """
 
 # Import test modules for discovery
-from .test_agent_detector import *
-from .test_claim_detector import *
-from .test_evidence_hunter import *
-from .test_verdict_writer import *
+from .test_agent_detector import TestAgentDetector
+from .test_claim_detector import TestClaimDetector
+from .test_evidence_hunter import TestEvidenceHunter
+from .test_verdict_writer import TestVerdictWriter
+
+# Export test classes
+__all__ = [
+    "TestAgentDetector",
+    "TestClaimDetector",
+    "TestEvidenceHunter",
+    "TestVerdictWriter",
+]

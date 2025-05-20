@@ -57,7 +57,6 @@ class ClaimDetector(IClaimDetector):
                 "component": "claim_detector",
             },
         )
-
         # Set minimum check-worthiness threshold and max claims
         self.min_check_worthiness = min_check_worthiness
         self.max_claims = max_claims
@@ -76,7 +75,6 @@ class ClaimDetector(IClaimDetector):
         # Initialize helper components
         self.entity_extractor = EntityExtractor(model_name=model_name)
         self.domain_classifier = DomainClassifier()
-
         # Override the model name if explicitly provided
         if model_name:
             self.model_manager.model_name = model_name
@@ -101,7 +99,6 @@ class ClaimDetector(IClaimDetector):
             self.logger.info(
                 "Using default model", extra={"model_name": self.model_manager.model_name}
             )
-
         # Configure OpenAI for Agent SDK
         self.model_manager.configure_openai_for_agent()
 
@@ -111,7 +108,6 @@ class ClaimDetector(IClaimDetector):
             name="ClaimDetector",
             instructions="""
             You are a claim detection agent designed to identify factual claims from text that require verification.
-            
             Your task is to:
             1. Identify explicit and implicit factual claims
             2. Score each claim's check-worthiness, specificity, public interest, and impact
@@ -120,31 +116,31 @@ class ClaimDetector(IClaimDetector):
             5. Normalize claims to a standard format
             6. Split compound claims into separate checkable statements
             7. Rank claims by overall importance for fact-checking
-            
+
             FACTUAL CLAIMS:
             - Are statements presented as facts
             - Can be verified with evidence
             - Make specific, measurable assertions
             - Examples: statistical claims, historical facts, scientific statements
-            
+
             NOT FACTUAL CLAIMS:
             - Personal opinions ("I think pizza is delicious")
             - Subjective judgments ("This is the best movie")
             - Hypotheticals ("If it rains tomorrow...")
             - Pure predictions about future events ("Next year's winner will be...")
             - Questions ("Is climate change real?")
-            
+
             DISTINCTNESS:
-            Ensure each claim is distinct and doesn't substantially overlap with other claims. 
+            Ensure each claim is distinct and doesn't substantially overlap with other claims.
             If a statement contains multiple related but distinct claims, separate them.
-            
+
             CHECK-WORTHINESS SCORING:
             Rate claims from 0.0-1.0 based on:
             - Specificity (specificity_score): How specific and measurable the claim is (0.0-1.0)
             - Public interest (public_interest_score): Relevance to public figures/institutions (0.0-1.0)
             - Potential impact (impact_score): Significance of consequences if true/false (0.0-1.0)
             - Overall check_worthiness should be a weighted combination of these factors
-            
+
             RANKING CRITERIA:
             Rank claims in order of importance for fact-checking, considering:
             1. Check-worthiness score (primary factor)
@@ -152,27 +148,27 @@ class ClaimDetector(IClaimDetector):
             3. Domain importance (health/safety claims prioritized)
             4. Public interest value
             5. Potential impact if the claim is true/false
-            
+
             ENTITY EXTRACTION:
             Identify entities such as:
             - People, organizations, locations
             - Dates, times, numbers, statistics, percentages
             - Products, technologies, scientific terms
-            
+
             DOMAIN CLASSIFICATION:
             Assign claims to the most relevant domain:
             - Politics, Economics, Health, Science, Technology
             - Environment, Education, Entertainment, Sports, Other
-            
+
             CLAIM NORMALIZATION:
             - Standardize formatting and phrasing
             - Resolve pronouns to their antecedents
             - Expand abbreviations and acronyms
             - Standardize numerical expressions
-            
+
             COMPOUND CLAIMS:
             If a statement contains multiple verifiable claims, break it down into separate checkable statements.
-            
+
             For each claim, return:
             1. The original claim text
             2. A normalized version of the claim
@@ -209,13 +205,13 @@ class ClaimDetector(IClaimDetector):
             name="EntityExtractor",
             instructions="""
             You are an entity extraction agent specialized in identifying named entities from factual claims.
-            
+
             For each entity, identify:
             1. The entity text exactly as it appears
             2. The entity type (person, organization, location, date, number, etc.)
             3. A normalized/canonical form of the entity when applicable
             4. Relevance to the claim (0.0-1.0)
-            
+
             Example entity types:
             - PERSON: Names of individual people
             - ORGANIZATION: Companies, agencies, institutions
@@ -232,7 +228,7 @@ class ClaimDetector(IClaimDetector):
             - LANGUAGE: Named languages
             - SCIENTIFIC_TERM: Scientific terms, theories, disciplines
             - MEDICAL_TERM: Medical conditions, treatments, procedures
-            
+
             When extracting entities, look for:
             - Proper nouns with capital letters
             """,

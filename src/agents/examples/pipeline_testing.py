@@ -17,6 +17,11 @@ class MockClaimDetector:
     """Mock implementation of ClaimDetector for testing."""
 
     def __init__(self, claims_to_return: list[Claim] = None):
+        """Initialize the MockClaimDetector with predetermined claims.
+
+        Args:
+            claims_to_return: List of claim objects to return from detect_claims.
+        """
         self.claims_to_return = claims_to_return or []
         self.detect_claims_called = False
         self.last_text = ""
@@ -46,6 +51,11 @@ class MockEvidenceHunter:
     """Mock implementation of EvidenceHunter for testing."""
 
     def __init__(self, evidence_to_return: list[Evidence] = None):
+        """Initialize the MockEvidenceHunter with predetermined evidence.
+
+        Args:
+            evidence_to_return: List of evidence objects to return from gather_evidence.
+        """
         self.evidence_to_return = evidence_to_return or []
         self.gather_evidence_called = False
         self.last_claim = None
@@ -65,6 +75,11 @@ class MockVerdictWriter:
     """Mock implementation of VerdictWriter for testing."""
 
     def __init__(self, verdict_to_return: Verdict = None):
+        """Initialize the MockVerdictWriter with a predetermined verdict.
+
+        Args:
+            verdict_to_return: Verdict object to return from generate_verdict.
+        """
         self.verdict_to_return = verdict_to_return
         self.generate_verdict_called = False
         self.last_claim = None

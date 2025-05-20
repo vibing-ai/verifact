@@ -14,23 +14,31 @@ logger = logging.getLogger(__name__)
 
 
 class ErrorDetail:
-    """Structured error detail"""
+    """Structured error detail."""
 
     def __init__(
         self,
         code: str,
         message: str,
-        details: str | dict[str, Any] | None = None,
-        log_level: int = logging.ERROR,
+        details: dict[str, Any] | None = None,
+        status_code: int = 400,
     ):
+        """Initialize an ErrorDetail object.
+
+        Args:
+            code: Error code identifier
+            message: Human-readable error message
+            details: Additional context about the error
+            status_code: HTTP status code associated with this error
+        """
         self.code = code
         self.message = message
         self.details = details
-        self.log_level = log_level
+        self.log_level = logging.ERROR
 
 
 class ErrorResponseFactory:
-    """Factory for creating consistent error responses"""
+    """Factory for creating consistent error responses."""
 
     # Define standard error types
     VALIDATION_ERROR = "validation_error"

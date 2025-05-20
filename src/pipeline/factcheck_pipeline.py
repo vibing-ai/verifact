@@ -1,4 +1,4 @@
-"""VeriFact Factcheck Pipeline
+"""VeriFact Factcheck Pipeline.
 
 This module provides a unified pipeline that orchestrates the three agents:
 1. ClaimDetector: Identifies factual claims in text
@@ -207,10 +207,10 @@ class FactcheckPipeline:
         retry_count = 0
         while True:
             try:
-                with performance_timer("claim_detection", logger=self.logger) as timer:
+                with performance_timer("claim_detection", logger=self.logger):
                     claims = await self.claim_detector.detect_claims(text)
 
-                self.stats["claim_detection_time"] = timer.elapsed
+                self.stats["claim_detection_time"] = performance_timer("claim_detection").elapsed
                 self.stats["claims_detected"] = len(claims)
 
                 # Filter claims by checkworthiness if configured
@@ -275,7 +275,7 @@ class FactcheckPipeline:
         retry_count = 0
         while True:
             try:
-                with performance_timer("evidence_gathering", logger=self.logger) as timer:
+                with performance_timer("evidence_gathering", logger=self.logger):
                     evidence = await self.evidence_hunter.gather_evidence(claim)
 
                 self._emit_event(
@@ -321,7 +321,7 @@ class FactcheckPipeline:
         retry_count = 0
         while True:
             try:
-                with performance_timer("verdict_generation", logger=self.logger) as timer:
+                with performance_timer("verdict_generation", logger=self.logger):
                     verdict = await self.verdict_writer.generate_verdict(claim, evidence)
 
                 self._emit_event(

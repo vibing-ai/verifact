@@ -14,7 +14,7 @@ import time
 from dataclasses import dataclass
 from datetime import datetime
 from functools import wraps
-from typing import Any, Generic, TypeVar, Union
+from typing import Any, Generic, TypeVar
 
 # Import Pydantic for model validation
 from pydantic import BaseModel
@@ -22,7 +22,7 @@ from pydantic import BaseModel
 # Import optional dependencies - these might not be available
 # in all environments, so we use try/except
 try:
-    from psycopg2.extras import DictCursor, execute_values
+    from psycopg2.extras import DictCursor
     from psycopg2.pool import ThreadedConnectionPool
 
     PSYCOPG2_AVAILABLE = True
@@ -222,7 +222,7 @@ class SupabaseClient:
             yield conn
         except Exception as e:
             logger.error(f"Connection error: {str(e)}")
-            raise ConnectionError(f"Failed to get database connection: {str(e)}")
+            raise ConnectionError(f"Failed to get database connection: {str(e)}") from e
         finally:
             if conn and self.connection_pool:
                 self.connection_pool.putconn(conn)
@@ -248,7 +248,7 @@ class SupabaseClient:
             except Exception as e:
                 conn.rollback()
                 logger.error(f"Database query error: {str(e)}")
-                raise QueryError(f"Query execution failed: {str(e)}")
+                raise QueryError(f"Query execution failed: {str(e)}") from e
             finally:
                 cursor.close()
 
@@ -316,7 +316,7 @@ class SupabaseClient:
             return embedding
         except Exception as e:
             logger.error(f"Failed to generate embedding: {str(e)}")
-            raise EmbeddingError(f"Failed to generate embedding: {str(e)}")
+            raise EmbeddingError(f"Failed to generate embedding: {str(e)}") from e
 
     @retry_on_error()
     def store_embedding(
@@ -1018,7 +1018,7 @@ class SupabaseClient:
             return {"success": False, "error": str(e)}
 
     @retry_on_error()
-    def store_feedback(self, feedback: Union["Feedback", dict[str, Any]]) -> dict[str, Any]:
+    def store_feedback(self, feedback: dict[str, Any]) -> dict[str, Any]:
         """Store user feedback in the database.
 
         Args:
@@ -1042,7 +1042,7 @@ class SupabaseClient:
                 feedback_dict = feedback
 
             # Handle metadata
-            metadata = feedback_dict.get("metadata", {})
+            feedback_dict.get("metadata", {})
 
             # Ensure IDs are UUIDs
             if "feedback_id" not in feedback_dict or not feedback_dict["feedback_id"]:
@@ -1087,7 +1087,7 @@ class SupabaseClient:
 
         except Exception as e:
             logger.error(f"Error storing feedback: {str(e)}")
-            raise QueryError(f"Failed to store feedback: {str(e)}")
+            raise QueryError(f"Failed to store feedback: {str(e)}") from e
 
     @retry_on_error()
     def get_feedback_for_claim(
@@ -1139,7 +1139,7 @@ class SupabaseClient:
 
         except Exception as e:
             logger.error(f"Error getting feedback for claim {claim_id}: {str(e)}")
-            raise QueryError(f"Failed to get feedback for claim: {str(e)}")
+            raise QueryError(f"Failed to get feedback for claim: {str(e)}") from e
 
     @retry_on_error()
     def get_feedback_statistics(self, claim_id: str | None = None) -> dict[str, Any]:
@@ -1211,7 +1211,7 @@ class SupabaseClient:
 
         except Exception as e:
             logger.error(f"Error getting feedback statistics: {str(e)}")
-            raise QueryError(f"Failed to get feedback statistics: {str(e)}")
+            raise QueryError(f"Failed to get feedback statistics: {str(e)}") from e
 
     @retry_on_error()
     def _get_rating_distribution(self, claim_id: str | None = None) -> dict[str, dict[int, int]]:
@@ -1361,20 +1361,24 @@ class SupabaseClient:
         try:
             # Use Supabase if available
             if self.supabase:
-                result = (
-                    self.supabase.table("feedback")
-                    .select("*")
-                    .order("created_at", desc=True)
-                    .limit(limit)
-                    .offset(offset)
-                    .execute()
-                )
+                try:
+                    result = (
+                        self.supabase.table("feedback")
+                        .select("*")
+                        .order("created_at", desc=True)
+                        .limit(limit)
+                        .offset(offset)
+                        .execute()
+                    )
 
-                if "data" in result:
-                    return result["data"]
-                else:
-                    logger.error(f"Failed to get all feedback: {result}")
-                    return []
+                    if "data" in result:
+                        return result["data"]
+                    else:
+                        logger.error(f"Failed to get all feedback: {result}")
+                        return []
+                except Exception as err:
+                    logger.error(f"Error getting all feedback: {str(err)}")
+                    raise QueryError(f"Failed to get all feedback: {str(err)}") from err
 
             # Direct PostgreSQL query
             with self.get_cursor() as cursor:
@@ -1388,7 +1392,7 @@ class SupabaseClient:
 
         except Exception as e:
             logger.error(f"Error getting all feedback: {str(e)}")
-            raise QueryError(f"Failed to get all feedback: {str(e)}")
+            raise QueryError(f"Failed to get all feedback: {str(e)}") from e
 
     def _encrypt_sensitive_fields(
         self, data: dict[str, Any], sensitive_fields: list[str]

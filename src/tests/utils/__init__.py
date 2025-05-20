@@ -7,6 +7,13 @@ This package contains tests for utility functions and modules:
 """
 
 # Import test modules for discovery
-from .test_db_utils import *
-from .test_model_config import *
-from .test_search_tools import *
+from .test_db_utils import TestDBUtils
+from .test_model_config import TestModelConfig
+from .test_search_tools import TestSearchTools
+
+# Export test classes
+__all__ = [
+    "TestDBUtils",
+    "TestModelConfig",
+    "TestSearchTools"
+]

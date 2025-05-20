@@ -88,7 +88,7 @@ class FeedbackRequest(BaseModel):
     def check_at_least_one_field(cls, values):
         """Validate that at least one feedback field is provided."""
         if not any(
-            [values.get(field) for field in ["accuracy_rating", "helpfulness_rating", "comment"]]
+            values.get(field) for field in ["accuracy_rating", "helpfulness_rating", "comment"]
         ):
             raise ValueError("At least one feedback field (rating or comment) must be provided")
         return values

@@ -31,9 +31,11 @@ TEST_NON_CLAIMS = [
 
 
 class MockRunner:
+    """Mock implementation of the Runner class for testing."""
+
     @staticmethod
     async def run(agent, text):
-        """Mock the OpenAI Runner.run method"""
+        """Mock the OpenAI Runner.run method."""
         mock_result = MagicMock()
 
         # Create mock claims based on the input text
@@ -80,13 +82,13 @@ async def test_detect_claims(claim_detector):
 
     # Mock Runner.run to return predetermined claims
     with patch("src.agents.claim_detector.detector.Runner", MockRunner):
-        # Call the method
-        results = await claim_detector.detect_claims(test_text)
+        # Call the method and verify results
+        claims = await claim_detector.detect_claims(test_text)
 
         # Verify results
-        assert len(results) == 3
-        assert all(isinstance(claim, Claim) for claim in results)
-        assert all(claim.check_worthiness >= 0.5 for claim in results)
+        assert len(claims) == 3
+        assert all(isinstance(claim, Claim) for claim in claims)
+        assert all(claim.check_worthiness >= 0.5 for claim in claims)
 
 
 @pytest.mark.asyncio
@@ -123,7 +125,7 @@ async def test_detect_claims_with_metrics(claim_detector):
     # Mock Runner.run to return predetermined claims
     with patch("src.agents.claim_detector.detector.Runner", MockRunner):
         # Call the method
-        results = await claim_detector.detect_claims(test_text, expected_claims=expected_claims)
+        await claim_detector.detect_claims(test_text, expected_claims=expected_claims)
 
         # Verify metrics tracking was called
         mock_metrics.track_claim_detection.assert_called_once()

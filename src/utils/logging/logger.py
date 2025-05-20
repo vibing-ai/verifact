@@ -1,6 +1,6 @@
 """Comprehensive logging framework for VeriFact.
 
-This module provides a unified logging system with support for:
+This package provides a unified logging system with support for:
 1. Structured JSON logging
 2. Component-specific loggers
 3. Context tracking across components
@@ -36,6 +36,14 @@ except ImportError:
         """Simple JSON formatter if python-json-logger is not available."""
 
         def format(self, record):
+            """Format log record as JSON string.
+
+            Args:
+                record: Log record to format.
+
+            Returns:
+                JSON string representation of the log record.
+            """
             log_data = {
                 "timestamp": self.formatTime(record, self.datefmt),
                 "name": record.name,
@@ -118,6 +126,17 @@ SENSITIVE_PATTERNS = [
 # Cache of created loggers
 _LOGGERS = {}
 
+
+# Function to get an empty dict for context data to avoid mutable default issue
+def _get_empty_context_dict() -> dict[str, Any]:
+    """Return an empty dictionary for context data.
+
+    Returns:
+        New empty dictionary for context data.
+    """
+    return {}
+
+
 # Thread-local storage for request context
 try:
     from contextvars import ContextVar
@@ -125,7 +144,9 @@ try:
     # Context variables for tracking request context across async boundaries
     request_id_var: ContextVar[str] = ContextVar("request_id", default="")
     component_var: ContextVar[str] = ContextVar("component", default="")
-    context_data_var: ContextVar[dict[str, Any]] = ContextVar("context_data", default={})
+    context_data_var: ContextVar[dict[str, Any]] = ContextVar(
+        "context_data", default=None
+    )
 except ImportError:
     # Fallback for older Python versions
     request_id_var = None
@@ -143,6 +164,14 @@ class SensitiveFilter(logging.Filter):
     """Filter to remove sensitive information from logs."""
 
     def filter(self, record):
+        """Filter log records by redacting sensitive information.
+
+        Args:
+            record: Log record to filter.
+
+        Returns:
+            True to include the record in the log output.
+        """
         # Don't modify the original record if it doesn't have a message
         if not hasattr(record, "msg") or not record.msg:
             return True
@@ -189,6 +218,14 @@ class ContextFilter(logging.Filter):
     """Filter that adds request context to log records."""
 
     def filter(self, record):
+        """Add contextual information to log records.
+
+        Args:
+            record: Log record to enhance with context.
+
+        Returns:
+            True to include the record in the log output.
+        """
         # Add request ID if available
         if request_id_var is not None:
             record.request_id = request_id_var.get("")
@@ -328,14 +365,14 @@ class LogManager:
         self.configured = True
 
     def get_logger(self, name: str = "verifact", **kwargs) -> logging.Logger:
-        """Get a logger for the specified name, creating it if necessary.
+        """Get a configured logger instance.
 
         Args:
-            name: Logger name
-            **kwargs: Additional configuration parameters
+            name: Name of the logger.
+            **kwargs: Additional configuration options.
 
         Returns:
-            Logger instance
+            Configured logger instance.
         """
         # Ensure the logging system is configured
         if not self.configured:
@@ -357,10 +394,10 @@ class LogManager:
         """Get a logger for a specific component.
 
         Args:
-            component: Component name (e.g., 'claim_detector', 'evidence_hunter')
+            component: Name of the component.
 
         Returns:
-            Logger configured for the component
+            Logger configured for the specified component.
         """
         # Set component in context
         self.set_component(component)
@@ -388,7 +425,11 @@ class LogManager:
         return request_id
 
     def get_request_id(self) -> str:
-        """Get the current request ID."""
+        """Get the current request ID.
+
+        Returns:
+            The current request ID string.
+        """
         if request_id_var is not None:
             return request_id_var.get("")
         else:
@@ -406,7 +447,11 @@ class LogManager:
             _thread_local.component = component
 
     def get_component(self) -> str:
-        """Get the current component name."""
+        """Get the current component name.
+
+        Returns:
+            The current component name string.
+        """
         if component_var is not None:
             return component_var.get("")
         else:
@@ -428,7 +473,10 @@ class LogManager:
             _thread_local.context_data.update(kwargs)
 
     def clear_context(self) -> None:
-        """Clear the current logging context."""
+        """Clear the current logging context.
+
+        Removes all context data from the current context.
+        """
         if context_data_var is not None:
             context_data_var.set({})
         else:

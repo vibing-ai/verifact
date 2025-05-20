@@ -44,7 +44,7 @@ def validate_model(data: dict[str, Any], model_class: type[T]) -> T:
             field = next(iter(field_errors.keys()))
             message = f"Validation error for field '{field}': {field_errors[field]}"
 
-        raise ValidationError(message=message, details={"field_errors": field_errors})
+        raise ValidationError(message=message, details={"field_errors": field_errors}) from e
 
 
 def sanitize_text(text: str) -> str:
@@ -224,4 +224,4 @@ def try_parse_json(json_str: str) -> dict[str, Any]:
     try:
         return json.loads(json_str)
     except json.JSONDecodeError as e:
-        raise ValidationError(message=f"Invalid JSON: {str(e)}", details={"json_error": str(e)})
+        raise ValidationError(message=f"Invalid JSON: {str(e)}", details={"json_error": str(e)}) from e

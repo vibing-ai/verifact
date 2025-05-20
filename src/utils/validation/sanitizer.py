@@ -1,4 +1,4 @@
-"""Input Sanitization Utilities
+"""Input Sanitization Utilities.
 
 This module provides functions for sanitizing input data to prevent
 security vulnerabilities like XSS, SQL injection, etc.
@@ -33,6 +33,7 @@ def sanitize_text(text: str) -> str:
 
 def sanitize_html(html_content: str) -> str:
     """Sanitize HTML content to remove potentially dangerous tags and attributes.
+
     For VeriFact, we don't need to allow any HTML, so we just escape everything.
 
     Args:

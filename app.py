@@ -1,5 +1,4 @@
-"""
-VeriFact Chainlit UI Entry Point
+"""VeriFact Chainlit UI Entry Point.
 
 This module serves as the main entry point for the VeriFact Chainlit web interface.
 It initializes a Chainlit chat application with the three main agents:
@@ -18,4 +17,4 @@ For CLI access, use `cli.py`.
 
 # Additional components are automatically imported via the @cl decorators
 # The event handlers defined in src/ui/app.py and src/ui/events.py will be
-# properly registered with Chainlit when this file is run. 
+# properly registered with Chainlit when this file is run.

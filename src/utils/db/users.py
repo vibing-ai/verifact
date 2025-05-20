@@ -24,28 +24,29 @@ async def create_user(user: User) -> str:
     """
     try:
         # Convert to dict with encryption applied
-        user_data = user.dict()
+        # In a real implementation, this would be used to store in database
+        _ = user.dict()
 
         # In a real implementation, store in database
         # For now, we'll demonstrate the approach
 
-        # Example SQL that would be used
-        query = """
-        INSERT INTO users (
-            id, email, name, phone, api_key, access_token, refresh_token,
-            created_at, metadata
-        )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-        RETURNING id
-        """
+        # Example SQL that would be used (would be executed in a real implementation)
+        # query = """
+        # INSERT INTO users (
+        #     id, email, name, phone, api_key, access_token, refresh_token,
+        #     created_at, metadata
+        # )
+        # VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        # RETURNING id
+        # """
 
         # Note: user_data["api_key"], user_data["access_token"], etc. are
         # already encrypted
 
         # In a real implementation, execute the query and return the ID
         return user.id
-    except Exception as e:
-        raise QueryError(f"Failed to create user: {str(e)}")
+    except Exception as err:
+        raise QueryError(f"Failed to create user: {str(err)}") from err
 
 
 async def get_user_by_id(user_id: str) -> User | None:
@@ -60,13 +61,13 @@ async def get_user_by_id(user_id: str) -> User | None:
     try:
         # In a real implementation, fetch from database
 
-        # Example SQL that would be used
-        query = """
-        SELECT id, email, name, phone, api_key, access_token, refresh_token,
-               created_at, updated_at, last_login_at, metadata
-        FROM users
-        WHERE id = %s
-        """
+        # Example SQL that would be used (would be executed in a real implementation)
+        # query = """
+        # SELECT id, email, name, phone, api_key, access_token, refresh_token,
+        #        created_at, updated_at, last_login_at, metadata
+        # FROM users
+        # WHERE id = %s
+        # """
 
         # For demonstration, we'll return a mock user
         # In a real implementation, this would be fetched from the database
@@ -88,8 +89,8 @@ async def get_user_by_id(user_id: str) -> User | None:
         # Create user from encrypted data
         # This will automatically decrypt the sensitive fields
         return User.from_encrypted(mock_user_data)
-    except Exception as e:
-        raise QueryError(f"Failed to get user: {str(e)}")
+    except Exception as err:
+        raise QueryError(f"Failed to get user: {str(err)}") from err
 
 
 async def update_user(user: User) -> bool:
@@ -103,28 +104,30 @@ async def update_user(user: User) -> bool:
     """
     try:
         # Convert to dict with encryption applied
-        user_data = user.dict()
+        # In a real implementation, this would be used to update in database
+        _ = user.dict()
 
         # Update the updated_at timestamp
-        user_data["updated_at"] = datetime.utcnow()
+        # In a real implementation, this would be used to update the user
+        datetime.utcnow()
 
         # In a real implementation, update in database
         # Note: user_data["api_key"], user_data["access_token"], etc. are
         # already encrypted
 
-        # Example SQL that would be used
-        query = """
-        UPDATE users
-        SET email = %s, name = %s, phone = %s, api_key = %s,
-            access_token = %s, refresh_token = %s, updated_at = %s,
-            metadata = %s
-        WHERE id = %s
-        """
+        # Example SQL that would be used (would be executed in a real implementation)
+        # query = """
+        # UPDATE users
+        # SET email = %s, name = %s, phone = %s, api_key = %s,
+        #     access_token = %s, refresh_token = %s, updated_at = %s,
+        #     metadata = %s
+        # WHERE id = %s
+        # """
 
         # In a real implementation, execute the query and return success
         return True
-    except Exception as e:
-        raise QueryError(f"Failed to update user: {str(e)}")
+    except Exception as err:
+        raise QueryError(f"Failed to update user: {str(err)}") from err
 
 
 async def delete_user(user_id: str) -> bool:
@@ -139,16 +142,16 @@ async def delete_user(user_id: str) -> bool:
     try:
         # In a real implementation, delete from database
 
-        # Example SQL that would be used
-        query = """
-        DELETE FROM users
-        WHERE id = %s
-        """
+        # Example SQL that would be used (would be executed in a real implementation)
+        # query = """
+        # DELETE FROM users
+        # WHERE id = %s
+        # """
 
         # In a real implementation, execute the query and return success
         return True
-    except Exception as e:
-        raise QueryError(f"Failed to delete user: {str(e)}")
+    except Exception as err:
+        raise QueryError(f"Failed to delete user: {str(err)}") from err
 
 
 async def get_users(limit: int = 100, offset: int = 0) -> list[User]:
@@ -164,20 +167,20 @@ async def get_users(limit: int = 100, offset: int = 0) -> list[User]:
     try:
         # In a real implementation, fetch from database
 
-        # Example SQL that would be used
-        query = """
-        SELECT id, email, name, phone, api_key, access_token, refresh_token,
-               created_at, updated_at, last_login_at, metadata
-        FROM users
-        ORDER BY created_at DESC
-        LIMIT %s OFFSET %s
-        """
+        # Example SQL that would be used (would be executed in a real implementation)
+        # query = """
+        # SELECT id, email, name, phone, api_key, access_token, refresh_token,
+        #        created_at, updated_at, last_login_at, metadata
+        # FROM users
+        # ORDER BY created_at DESC
+        # LIMIT %s OFFSET %s
+        # """
 
         # For demonstration, we'll return an empty list
         # In a real implementation, this would be fetched from the database
         return []
-    except Exception as e:
-        raise QueryError(f"Failed to get users: {str(e)}")
+    except Exception as err:
+        raise QueryError(f"Failed to get users: {str(err)}") from err
 
 
 async def find_user_by_email(email: str) -> User | None:
@@ -192,16 +195,16 @@ async def find_user_by_email(email: str) -> User | None:
     try:
         # In a real implementation, fetch from database
 
-        # Example SQL that would be used
-        query = """
-        SELECT id, email, name, phone, api_key, access_token, refresh_token,
-               created_at, updated_at, last_login_at, metadata
-        FROM users
-        WHERE email = %s
-        """
+        # Example SQL that would be used (would be executed in a real implementation)
+        # query = """
+        # SELECT id, email, name, phone, api_key, access_token, refresh_token,
+        #        created_at, updated_at, last_login_at, metadata
+        # FROM users
+        # WHERE email = %s
+        # """
 
         # For demonstration, we'll return None
         # In a real implementation, this would be fetched from the database
         return None
-    except Exception as e:
-        raise QueryError(f"Failed to find user by email: {str(e)}")
+    except Exception as err:
+        raise QueryError(f"Failed to find user by email: {str(err)}") from err

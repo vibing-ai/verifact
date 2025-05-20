@@ -1,4 +1,4 @@
-"""VeriFact Feedback API
+"""VeriFact Feedback API.
 
 This module provides API endpoints for handling user feedback on factchecking results.
 """
@@ -121,15 +121,12 @@ def check_feedback_rate_limit(request: Request, limit: int = 5, window: int = 36
     summary="Submit feedback on a factcheck",
     description="""
     Submit user feedback for a specific factcheck.
-    
     This endpoint allows users to provide ratings and comments on factchecking results.
     It includes rate limiting to prevent abuse (5 submissions per hour per IP address).
-    
     Feedback can include:
     - Accuracy rating (1-5 scale)
     - Helpfulness rating (1-5 scale)
     - Optional text comment
-    
     At least one of these fields must be provided.
     """,
 )
@@ -177,22 +174,22 @@ async def submit_feedback(
             message="Thank you for your feedback!",
         )
 
-    except ValidationError as e:
-        logger.error(f"Validation error in feedback submission: {str(e)}")
+    except ValidationError as err:
+        logger.error(f"Validation error in feedback submission: {str(err)}")
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid feedback data: {str(e)}"
-        )
-    except QueryError as e:
-        logger.error(f"Database error in feedback submission: {str(e)}")
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid feedback data: {str(err)}"
+        ) from err
+    except QueryError as err:
+        logger.error(f"Database error in feedback submission: {str(err)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to store feedback. Please try again later.",
-        )
-    except Exception as e:
-        logger.error(f"Unexpected error in feedback submission: {str(e)}")
+        ) from err
+    except Exception as err:
+        logger.error(f"Unexpected error in feedback submission: {str(err)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An unexpected error occurred"
-        )
+        ) from err
 
 
 @router.get(
@@ -201,7 +198,6 @@ async def submit_feedback(
     summary="Get feedback statistics",
     description="""
     Get aggregated statistics for feedback across all factchecks.
-    
     This endpoint provides summary statistics including:
     - Total number of feedback submissions
     - Average ratings for accuracy and helpfulness
@@ -209,8 +205,11 @@ async def submit_feedback(
     - Recent comments
     """,
 )
-async def get_feedback_stats(api_key: APIKey = Security(get_api_key)):
+async def get_feedback_stats(api_key: APIKey = None):
     """Get aggregated feedback statistics."""
+    # Get API key from Security if not provided
+    if api_key is None:
+        api_key = await get_api_key()
     try:
         # Get statistics from database
         stats = db_client.get_feedback_statistics()
@@ -226,12 +225,12 @@ async def get_feedback_stats(api_key: APIKey = Security(get_api_key)):
 
         return feedback_stats
 
-    except Exception as e:
-        logger.error(f"Error getting feedback statistics: {str(e)}")
+    except Exception as err:
+        logger.error(f"Error getting feedback statistics: {str(err)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve feedback statistics",
-        )
+        ) from err
 
 
 @router.get(
@@ -240,7 +239,6 @@ async def get_feedback_stats(api_key: APIKey = Security(get_api_key)):
     summary="Get feedback for a specific claim",
     description="""
     Get all feedback for a specific factcheck claim.
-    
     This endpoint retrieves all feedback submissions for a given claim ID,
     with pagination support.
     """,
@@ -249,20 +247,25 @@ async def get_claim_feedback(
     claim_id: str,
     limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0),
-    api_key: APIKey = Security(get_api_key),
+    api_key: APIKey = None,
 ):
     """Get feedback for a specific claim."""
+    # Get API key from Security if not provided
+    if api_key is None:
+        api_key = await get_api_key()
     try:
-        # Get feedback from database
-        feedback_list = db_client.get_feedback_for_claim(claim_id, limit, offset)
-        return feedback_list
+        # Get feedback for the claim from database
+        feedback = db_client.get_claim_feedback(claim_id, limit, offset)
 
-    except Exception as e:
-        logger.error(f"Error getting feedback for claim {claim_id}: {str(e)}")
+        # Return feedback items
+        return feedback
+
+    except Exception as err:
+        logger.error(f"Error getting claim feedback: {str(err)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve feedback for claim {claim_id}",
-        )
+            detail="Failed to retrieve feedback for claim",
+        ) from err
 
 
 @router.get(
@@ -271,7 +274,6 @@ async def get_claim_feedback(
     summary="Get feedback statistics for a specific claim",
     description="""
     Get aggregated statistics for feedback on a specific factcheck claim.
-    
     This endpoint provides claim-specific summary statistics including:
     - Total number of feedback submissions for this claim
     - Average ratings for accuracy and helpfulness
@@ -279,11 +281,14 @@ async def get_claim_feedback(
     - Recent comments
     """,
 )
-async def get_claim_feedback_stats(claim_id: str, api_key: APIKey = Security(get_api_key)):
-    """Get aggregated feedback statistics for a specific claim."""
+async def get_claim_feedback_stats(claim_id: str, api_key: APIKey = None):
+    """Get feedback statistics for a specific claim."""
+    # Get API key from Security if not provided
+    if api_key is None:
+        api_key = await get_api_key()
     try:
-        # Get statistics from database
-        stats = db_client.get_feedback_statistics(claim_id)
+        # Get claim-specific statistics from database
+        stats = db_client.get_claim_feedback_statistics(claim_id)
 
         # Convert to FeedbackStats model
         feedback_stats = FeedbackStats(
@@ -296,9 +301,9 @@ async def get_claim_feedback_stats(claim_id: str, api_key: APIKey = Security(get
 
         return feedback_stats
 
-    except Exception as e:
-        logger.error(f"Error getting feedback statistics for claim {claim_id}: {str(e)}")
+    except Exception as err:
+        logger.error(f"Error getting feedback statistics for claim: {str(err)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve feedback statistics for claim {claim_id}",
-        )
+            detail="Failed to retrieve feedback statistics for claim",
+        ) from err

@@ -1,4 +1,4 @@
-"""Validation Configuration Loader
+"""Validation Configuration Loader.
 
 This module loads and provides access to validation configuration settings.
 """

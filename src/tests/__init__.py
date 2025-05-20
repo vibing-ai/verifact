@@ -19,11 +19,16 @@ import sys
 # for both running tests and for the modules being tested
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-# Import test modules from subdirectories
-from .agents import *
-from .api import *
-from .integration import *
-from .models import *
-from .performance import *
-from .system import *
-from .utils import *
+# Import test packages
+from . import agents, api, integration, models, performance, system, utils
+
+# Export all test packages
+__all__ = [
+    "agents",
+    "api",
+    "integration",
+    "models",
+    "performance",
+    "system",
+    "utils"
+]

@@ -1,4 +1,4 @@
-"""VeriFact API Entry Point
+"""VeriFact API Entry Point.
 
 This module serves as the main entry point for the VeriFact API service.
 It initializes a FastAPI application with the factcheck router.
@@ -53,7 +53,7 @@ logger = get_structured_logger("verifact")
 description = """
 # VeriFact API
 
-VeriFact is an open-source AI factchecking application designed to detect claims, 
+VeriFact is an open-source AI factchecking application designed to detect claims,
 gather evidence, and generate accurate verdicts.
 
 ## Factchecking

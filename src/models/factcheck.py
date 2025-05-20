@@ -131,14 +131,13 @@ class Evidence(BaseModel):
         if not values.get("source_name") and values.get("source"):
             source = values.get("source")
             # Attempt to extract a name from source (e.g., domain from URL)
-            if source.startswith(("http://", "https://")):
-                try:
-                    from urllib.parse import urlparse
+            try:
+                from urllib.parse import urlparse
 
-                    domain = urlparse(source).netloc
-                    values["source_name"] = domain
-                except:
-                    pass
+                domain = urlparse(source).netloc
+                values["source_name"] = domain
+            except Exception:
+                pass
         return values
 
 
@@ -290,7 +289,7 @@ class FactcheckRequest(BaseModel):
         ]:
             if numeric_field in v:
                 value = v[numeric_field]
-                if not isinstance(value, (int, float)) or value < 0 or value > 1:
+                if not isinstance(value, int | float) or value < 0 or value > 1:
                     raise ValueError(f"{numeric_field} must be a number between 0 and 1")
 
         # Validate integer ranges
@@ -370,7 +369,46 @@ class JobStatus(str, Enum):
     PAUSED = "paused"
 
 
-class FactcheckJob(BaseModel):
+class BatchProcessingProgress(BaseModel):
+    """Progress information for batch processing."""
+
+    total_claims: int = Field(..., description="Total number of claims in the batch")
+    processed_claims: int = Field(..., description="Number of claims processed so far")
+    pending_claims: int = Field(..., description="Number of claims pending processing")
+    failed_claims: int = Field(..., description="Number of claims that failed processing")
+    success_rate: float = Field(..., description="Rate of successful processing (0-1)")
+    estimated_time_remaining: float | None = Field(
+        None, description="Estimated time remaining in seconds"
+    )
+    avg_processing_time: float | None = Field(
+        None, description="Average time to process a claim in seconds"
+    )
+    start_time: datetime | None = Field(None, description="When processing started")
+    last_update_time: datetime = Field(
+        default_factory=datetime.now, description="When this progress was last updated"
+    )
+
+
+class BatchClaimStatus(BaseModel):
+    """Status of an individual claim in a batch."""
+
+    claim_id: str = Field(..., description="Identifier for the claim")
+    status: JobStatus = Field(..., description="Current status of the claim")
+    position: int | None = Field(None, description="Position in processing queue")
+    started_at: datetime | None = Field(None, description="When processing started")
+    completed_at: datetime | None = Field(None, description="When processing completed")
+    error: str | None = Field(None, description="Error message if failed")
+    processing_time: float | None = Field(
+        None, description="Processing time in seconds if completed"
+    )
+    verdict: Verdict | None = Field(None, description="Verdict if completed successfully")
+    claim_text: str = Field(..., description="The text of the claim")
+    related_claims: list[str] = Field(
+        default_factory=list, description="IDs of related claims in the batch"
+    )
+
+
+class BatchFactcheckJob(BaseModel):
     """Model for tracking asynchronous factchecking jobs."""
 
     job_id: str = Field(..., description="Unique identifier for the job")
@@ -380,16 +418,74 @@ class FactcheckJob(BaseModel):
     )
     updated_at: datetime | None = Field(None, description="When the job was last updated")
     completed_at: datetime | None = Field(None, description="When the job was completed")
-    result: FactcheckResponse | None = Field(None, description="Results when job is completed")
+    result: Union[FactcheckResponse, "BatchFactcheckResponse"] | None = Field(
+        None, description="Results when job is completed"
+    )
     error: dict[str, Any] | None = Field(None, description="Error details if job failed")
+    progress: BatchProcessingProgress | None = Field(
+        None, description="Progress information for batch jobs"
+    )
+    claim_statuses: dict[str, BatchClaimStatus] | None = Field(
+        None, description="Status of individual claims for batch jobs"
+    )
+    is_batch: bool = Field(False, description="Whether this is a batch job")
 
     @root_validator(skip_on_failure=True)
     def update_timestamps(cls, values):
-        """Update timestamps based on status."""
+        """Update timestamps based on status changes."""
+        status = values.get("status")
         now = datetime.now()
-        if values.get("status") in [JobStatus.COMPLETED, JobStatus.FAILED]:
-            values["completed_at"] = now
+
+        # Always update the updated_at timestamp
         values["updated_at"] = now
+
+        # Set completed_at if status is terminal
+        if status in [
+            JobStatus.COMPLETED,
+            JobStatus.FAILED,
+            JobStatus.PARTIALLY_COMPLETED,
+            JobStatus.CANCELED,
+        ]:
+            if not values.get("completed_at"):
+                values["completed_at"] = now
+
+        return values
+
+
+class BatchFactcheckResponse(BaseModel):
+    """Response model for batch factchecking API."""
+
+    verdicts: dict[str, Verdict] = Field(..., description="Map of claim IDs to verdicts")
+    failed_claims: dict[str, dict[str, Any]] = Field(
+        default_factory=dict, description="Map of claim IDs to failure details"
+    )
+    metadata: dict[str, Any] = Field(
+        default_factory=dict, description="Processing metadata and statistics"
+    )
+    request_id: str | None = Field(None, description="ID of the original request")
+    total_claims: int = Field(..., description="Total number of claims processed")
+    successful_claims: int = Field(..., description="Number of claims processed successfully")
+    processing_time: float = Field(..., description="Total processing time in seconds")
+    related_claims: dict[str, list[str]] | None = Field(
+        None, description="Mapping of related claims"
+    )
+
+    @validator("verdicts")
+    def validate_verdicts(cls, v):
+        """Validate verdicts map."""
+        if not v:
+            raise ValueError("At least one verdict must be provided")
+        return v
+
+    @root_validator(skip_on_failure=True)
+    def calculate_statistics(cls, values):
+        """Calculate statistics based on verdicts and failed claims."""
+        verdicts = values.get("verdicts", {})
+        failed_claims = values.get("failed_claims", {})
+
+        values["total_claims"] = len(verdicts) + len(failed_claims)
+        values["successful_claims"] = len(verdicts)
+
         return values
 
 
@@ -472,13 +568,13 @@ class BatchFactcheckRequest(BaseModel):
         # Validate timeout_per_claim
         if "timeout_per_claim" in v:
             timeout = v["timeout_per_claim"]
-            if not isinstance(timeout, (int, float)) or timeout < 10 or timeout > 300:
+            if not isinstance(timeout, int | float) or timeout < 10 or timeout > 300:
                 raise ValueError("timeout_per_claim must be between 10 and 300 seconds")
 
         # Validate min_check_worthiness
         if "min_check_worthiness" in v:
             threshold = v["min_check_worthiness"]
-            if not isinstance(threshold, (int, float)) or threshold < 0.0 or threshold > 1.0:
+            if not isinstance(threshold, int | float) or threshold < 0.0 or threshold > 1.0:
                 raise ValueError("min_check_worthiness must be between 0.0 and 1.0")
 
         # Validate detect_related_claims
@@ -490,123 +586,3 @@ class BatchFactcheckRequest(BaseModel):
             raise ValueError("webhook_notification must be a boolean")
 
         return v
-
-
-class BatchProcessingProgress(BaseModel):
-    """Progress information for batch processing."""
-
-    total_claims: int = Field(..., description="Total number of claims in the batch")
-    processed_claims: int = Field(..., description="Number of claims processed so far")
-    pending_claims: int = Field(..., description="Number of claims pending processing")
-    failed_claims: int = Field(..., description="Number of claims that failed processing")
-    success_rate: float = Field(..., description="Rate of successful processing (0-1)")
-    estimated_time_remaining: float | None = Field(
-        None, description="Estimated time remaining in seconds"
-    )
-    avg_processing_time: float | None = Field(
-        None, description="Average time to process a claim in seconds"
-    )
-    start_time: datetime | None = Field(None, description="When processing started")
-    last_update_time: datetime = Field(
-        default_factory=datetime.now, description="When progress was last updated"
-    )
-
-
-class BatchClaimStatus(BaseModel):
-    """Status of an individual claim in a batch."""
-
-    claim_id: str = Field(..., description="Identifier for the claim")
-    status: JobStatus = Field(..., description="Current status of the claim")
-    position: int | None = Field(None, description="Position in processing queue")
-    started_at: datetime | None = Field(None, description="When processing started")
-    completed_at: datetime | None = Field(None, description="When processing completed")
-    error: str | None = Field(None, description="Error message if failed")
-    processing_time: float | None = Field(
-        None, description="Processing time in seconds if completed"
-    )
-    verdict: Verdict | None = Field(None, description="Verdict if completed successfully")
-    claim_text: str = Field(..., description="The text of the claim")
-    related_claims: list[str] = Field(
-        default_factory=list, description="IDs of related claims in the batch"
-    )
-
-
-class FactcheckJob(BaseModel):
-    """Model for tracking asynchronous factchecking jobs."""
-
-    job_id: str = Field(..., description="Unique identifier for the job")
-    status: JobStatus = Field(JobStatus.QUEUED, description="Current status of the job")
-    created_at: datetime = Field(
-        default_factory=datetime.now, description="When the job was created"
-    )
-    updated_at: datetime | None = Field(None, description="When the job was last updated")
-    completed_at: datetime | None = Field(None, description="When the job was completed")
-    result: Union[FactcheckResponse, "BatchFactcheckResponse"] | None = Field(
-        None, description="Results when job is completed"
-    )
-    error: dict[str, Any] | None = Field(None, description="Error details if job failed")
-    progress: BatchProcessingProgress | None = Field(
-        None, description="Progress information for batch jobs"
-    )
-    claim_statuses: dict[str, BatchClaimStatus] | None = Field(
-        None, description="Status of individual claims for batch jobs"
-    )
-    is_batch: bool = Field(False, description="Whether this is a batch job")
-
-    @root_validator(skip_on_failure=True)
-    def update_timestamps(cls, values):
-        """Update timestamps based on status changes."""
-        status = values.get("status")
-        now = datetime.now()
-
-        # Always update the updated_at timestamp
-        values["updated_at"] = now
-
-        # Set completed_at if status is terminal
-        if status in [
-            JobStatus.COMPLETED,
-            JobStatus.FAILED,
-            JobStatus.PARTIALLY_COMPLETED,
-            JobStatus.CANCELED,
-        ]:
-            if not values.get("completed_at"):
-                values["completed_at"] = now
-
-        return values
-
-
-class BatchFactcheckResponse(BaseModel):
-    """Response model for batch factchecking API."""
-
-    verdicts: dict[str, Verdict] = Field(..., description="Map of claim IDs to verdicts")
-    failed_claims: dict[str, dict[str, Any]] = Field(
-        default_factory=dict, description="Map of claim IDs to failure details"
-    )
-    metadata: dict[str, Any] = Field(
-        default_factory=dict, description="Processing metadata and statistics"
-    )
-    request_id: str | None = Field(None, description="ID of the original request")
-    total_claims: int = Field(..., description="Total number of claims processed")
-    successful_claims: int = Field(..., description="Number of claims processed successfully")
-    processing_time: float = Field(..., description="Total processing time in seconds")
-    related_claims: dict[str, list[str]] | None = Field(
-        None, description="Mapping of related claims"
-    )
-
-    @validator("verdicts")
-    def validate_verdicts(cls, v):
-        """Validate verdicts map."""
-        if not v:
-            raise ValueError("At least one verdict must be provided")
-        return v
-
-    @root_validator(skip_on_failure=True)
-    def calculate_statistics(cls, values):
-        """Calculate statistics based on verdicts and failed claims."""
-        verdicts = values.get("verdicts", {})
-        failed_claims = values.get("failed_claims", {})
-
-        values["total_claims"] = len(verdicts) + len(failed_claims)
-        values["successful_claims"] = len(verdicts)
-
-        return values

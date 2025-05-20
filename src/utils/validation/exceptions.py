@@ -1,4 +1,4 @@
-"""VeriFact Exception Classes
+"""VeriFact Exception Classes.
 
 This module defines a hierarchy of custom exceptions for the VeriFact system
 to ensure consistent error handling across all interfaces (API, CLI, UI).
@@ -17,6 +17,14 @@ class VerifactError(Exception):
         status_code: int = 500,
         details: dict[str, Any] | None = None,
     ):
+        """Initialize the base VeriFact error.
+
+        Args:
+            message: Human-readable error message
+            code: Machine-readable error code
+            status_code: HTTP status code to use in API responses
+            details: Additional error context and metadata
+        """
         self.message = message
         self.code = code
         self.status_code = status_code
@@ -40,6 +48,13 @@ class ValidationError(VerifactError):
         details: dict[str, Any] | None = None,
         field: str | None = None,
     ):
+        """Initialize a validation error.
+
+        Args:
+            message: Description of the validation error
+            details: Additional error details
+            field: Name of the specific field that failed validation
+        """
         code = "VALIDATION_ERROR"
         if field:
             details = details or {}
@@ -53,6 +68,12 @@ class InputTooLongError(ValidationError):
     """Exception raised when input text exceeds maximum allowed length."""
 
     def __init__(self, max_length: int, actual_length: int):
+        """Initialize an input length error.
+
+        Args:
+            max_length: Maximum allowed length in characters
+            actual_length: Actual length of the provided input
+        """
         super().__init__(
             message=f"Input text exceeds maximum allowed length of {max_length} characters",
             details={"max_length": max_length, "actual_length": actual_length},
@@ -73,6 +94,14 @@ class PipelineError(VerifactError):
         stage: str | None = None,
         details: dict[str, Any] | None = None,
     ):
+        """Initialize a pipeline error.
+
+        Args:
+            message: Description of the pipeline error
+            code: Error code for the specific pipeline error
+            stage: Pipeline stage where the error occurred
+            details: Additional error details
+        """
         details = details or {}
         if stage:
             details["pipeline_stage"] = stage
@@ -90,6 +119,14 @@ class ModelError(PipelineError):
         stage: str | None = None,
         details: dict[str, Any] | None = None,
     ):
+        """Initialize a model error.
+
+        Args:
+            message: Description of the model error
+            model_name: Name of the AI model that failed
+            stage: Pipeline stage where the error occurred
+            details: Additional error details
+        """
         details = details or {}
         if model_name:
             details["model_name"] = model_name
@@ -106,6 +143,13 @@ class EvidenceGatheringError(PipelineError):
         source: str | None = None,
         details: dict[str, Any] | None = None,
     ):
+        """Initialize an evidence gathering error.
+
+        Args:
+            message: Description of the evidence gathering error
+            source: Source where evidence gathering failed
+            details: Additional error details
+        """
         details = details or {}
         if source:
             details["source"] = source
@@ -125,6 +169,14 @@ class RateLimitError(PipelineError):
         retry_after: int | None = None,
         details: dict[str, Any] | None = None,
     ):
+        """Initialize a rate limit error.
+
+        Args:
+            message: Description of the rate limit error
+            service: Service that imposed the rate limit
+            retry_after: Seconds to wait before retrying
+            details: Additional error details
+        """
         details = details or {}
         if service:
             details["service"] = service
@@ -146,6 +198,13 @@ class ResourceUnavailableError(VerifactError):
         resource_type: str | None = None,
         details: dict[str, Any] | None = None,
     ):
+        """Initialize a resource unavailable error.
+
+        Args:
+            message: Description of the resource error
+            resource_type: Type of resource that is unavailable
+            details: Additional error details
+        """
         details = details or {}
         if resource_type:
             details["resource_type"] = resource_type
@@ -164,6 +223,13 @@ class DatabaseError(ResourceUnavailableError):
         operation: str | None = None,
         details: dict[str, Any] | None = None,
     ):
+        """Initialize a database error.
+
+        Args:
+            message: Description of the database error
+            operation: Database operation that failed
+            details: Additional error details
+        """
         details = details or {}
         if operation:
             details["operation"] = operation
@@ -180,6 +246,13 @@ class ExternalServiceError(ResourceUnavailableError):
         service_name: str | None = None,
         details: dict[str, Any] | None = None,
     ):
+        """Initialize an external service error.
+
+        Args:
+            message: Description of the external service error
+            service_name: Name of the external service
+            details: Additional error details
+        """
         details = details or {}
         if service_name:
             details["service_name"] = service_name
@@ -199,6 +272,13 @@ class AuthError(VerifactError):
         code: str = "AUTH_ERROR",
         details: dict[str, Any] | None = None,
     ):
+        """Initialize an authentication error.
+
+        Args:
+            message: Description of the authentication error
+            code: Error code for the specific authentication error
+            details: Additional error details
+        """
         super().__init__(message=message, code=code, status_code=401, details=details)
 
 
@@ -210,6 +290,12 @@ class UnauthorizedError(AuthError):
         message: str = "Not authorized to perform this action",
         details: dict[str, Any] | None = None,
     ):
+        """Initialize an unauthorized error.
+
+        Args:
+            message: Description of the authorization error
+            details: Additional error details
+        """
         super().__init__(message=message, code="UNAUTHORIZED", details=details)
 
 
@@ -225,6 +311,13 @@ class APIError(VerifactError):
         endpoint: str | None = None,
         details: dict[str, Any] | None = None,
     ):
+        """Initialize an API error.
+
+        Args:
+            message: Description of the API error
+            endpoint: API endpoint where the error occurred
+            details: Additional error details
+        """
         details = details or {}
         if endpoint:
             details["endpoint"] = endpoint
@@ -242,6 +335,14 @@ class RequestTimeoutError(APIError):
         timeout: float | None = None,
         details: dict[str, Any] | None = None,
     ):
+        """Initialize a request timeout error.
+
+        Args:
+            message: Description of the timeout error
+            endpoint: API endpoint that timed out
+            timeout: Timeout duration in seconds
+            details: Additional error details
+        """
         details = details or {}
         if timeout:
             details["timeout_seconds"] = timeout
@@ -251,7 +352,7 @@ class RequestTimeoutError(APIError):
 
 
 class TooManyRequestsError(APIError):
-    """Exception raised when rate limits are exceeded."""
+    """Exception raised when API rate limits are exceeded."""
 
     def __init__(
         self,
@@ -260,6 +361,14 @@ class TooManyRequestsError(APIError):
         retry_after: int | None = None,
         details: dict[str, Any] | None = None,
     ):
+        """Initialize a rate limiting error.
+
+        Args:
+            message: Description of the rate limit error
+            endpoint: API endpoint that imposed the rate limit
+            retry_after: Seconds to wait before retrying
+            details: Additional error details
+        """
         details = details or {}
         if retry_after:
             details["retry_after"] = retry_after
@@ -274,14 +383,25 @@ class APIAuthenticationError(AuthError):
     def __init__(
         self, message: str = "API authentication failed", details: dict[str, Any] | None = None
     ):
+        """Initialize an API authentication error.
+
+        Args:
+            message: Description of the authentication error
+            details: Additional error details
+        """
         super().__init__(message=message, code="API_AUTH_ERROR", details=details)
-        self.status_code = 401
 
 
 class InvalidAPIKeyError(APIAuthenticationError):
     """Exception raised when an invalid API key is provided."""
 
     def __init__(self, message: str = "Invalid API key", details: dict[str, Any] | None = None):
+        """Initialize an invalid API key error.
+
+        Args:
+            message: Description of the API key error
+            details: Additional error details
+        """
         super().__init__(message=message, details=details)
 
 
@@ -294,6 +414,13 @@ class ExpiredAPIKeyError(APIAuthenticationError):
         expiry_date: str | None = None,
         details: dict[str, Any] | None = None,
     ):
+        """Initialize an expired API key error.
+
+        Args:
+            message: Description of the API key expiration
+            expiry_date: When the API key expired
+            details: Additional error details
+        """
         details = details or {}
         if expiry_date:
             details["expiry_date"] = expiry_date
@@ -302,7 +429,7 @@ class ExpiredAPIKeyError(APIAuthenticationError):
 
 
 class InsufficientQuotaError(APIError):
-    """Exception raised when the user has insufficient quota."""
+    """Exception raised when a user exceeds their quota."""
 
     def __init__(
         self,
@@ -311,6 +438,14 @@ class InsufficientQuotaError(APIError):
         quota_limit: int | None = None,
         details: dict[str, Any] | None = None,
     ):
+        """Initialize an insufficient quota error.
+
+        Args:
+            message: Description of the quota error
+            current_usage: Current usage amount
+            quota_limit: Maximum allowed quota
+            details: Additional error details
+        """
         details = details or {}
         if current_usage is not None:
             details["current_usage"] = current_usage
@@ -318,4 +453,4 @@ class InsufficientQuotaError(APIError):
             details["quota_limit"] = quota_limit
 
         super().__init__(message=message, details=details)
-        self.status_code = 403
+        self.status_code = 429

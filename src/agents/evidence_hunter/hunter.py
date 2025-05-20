@@ -69,31 +69,31 @@ class EvidenceHunter(IEvidenceHunter):
             name="EvidenceHunter",
             instructions="""
             You are an evidence gathering agent tasked with finding and evaluating evidence related to factual claims.
-            
+
             For each claim:
             1. Formulate effective search queries that will find relevant information
                - Extract key entities and concepts
-               - Create multiple queries to find different perspectives
-               - Consider queries that might find contradicting evidence
-               
+                             - Create multiple queries to find different perspectives
+              - Consider queries that might find contradicting evidence
+
             2. Evaluate search results carefully:
                - Determine source credibility (news organizations, academic sources, government sites are typically more reliable)
                - Assess relevance to the specific claim
                - Identify the stance (supporting, contradicting, or neutral)
                - Extract specific passages that directly address the claim
-               
+
             3. Return a comprehensive set of evidence:
                - Include both supporting and contradicting evidence when available
                - Rank evidence by relevance and credibility (0.0-1.0 scale)
                - Provide full source information for citation
                - Include stance classification for each piece of evidence
-            
+
             Your responsibilities:
             1. Focus on facts and evidence, not opinions
             2. Find multiple sources when possible to corroborate information
             3. Identify contradictions or nuances in the evidence
             4. Evaluate source credibility and provide higher relevance to more credible sources
-            
+
             For each evidence piece, provide:
             - content: The relevant text passage that addresses the claim
             - source: The full URL of the source
@@ -129,15 +129,15 @@ class EvidenceHunter(IEvidenceHunter):
         # Create a rich query with context and guidance for better search results
         query = f"""
         Claim to investigate: {claim.text}
-        
+
         Context of the claim: {claim.context if hasattr(claim, "context") and claim.context else "No additional context provided"}
-        
+
         Your task:
         1. Find evidence from credible sources that either supports or contradicts this claim
         2. Search for multiple perspectives and authoritative sources
         3. Evaluate the reliability and relevance of each source
         4. Collect both supporting and contradicting evidence when available
-        
+
         Return a comprehensive set of evidence pieces in the required format.
         """
 
@@ -168,6 +168,7 @@ class EvidenceHunter(IEvidenceHunter):
 
     def _generate_cache_key(self, claim: Claim) -> str:
         """Generate a deterministic cache key from a claim.
+
         Normalize text by lowercasing, removing punctuation, and stemming.
 
         Args:
@@ -189,6 +190,7 @@ class EvidenceHunter(IEvidenceHunter):
 
     def _get_from_cache(self, key: str) -> list[Evidence] | None:
         """Retrieve evidence from Redis cache if available.
+
         Returns None if cache miss.
 
         Args:

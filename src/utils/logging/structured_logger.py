@@ -25,6 +25,12 @@ class StructuredLogRecord(logging.LogRecord):
     """Extended LogRecord class that includes structured context data."""
 
     def __init__(self, *args, **kwargs):
+        """Initialize a structured log record with context data.
+
+        Args:
+            *args: Arguments passed to the parent LogRecord constructor
+            **kwargs: Keyword arguments passed to the parent LogRecord constructor
+        """
         super().__init__(*args, **kwargs)
         # Add context data to log record
         self.request_id = request_id_var.get()
@@ -47,6 +53,15 @@ class StructuredLogger(logging.Logger):
     """Logger subclass that creates StructuredLogRecord instances."""
 
     def makeRecord(self, *args, **kwargs):
+        """Create a StructuredLogRecord instance.
+
+        Args:
+            *args: Arguments passed to the LogRecord constructor
+            **kwargs: Keyword arguments passed to the LogRecord constructor
+
+        Returns:
+            StructuredLogRecord: A log record with added context data
+        """
         return StructuredLogRecord(*args, **kwargs)
 
     def process_success(self, message: str, duration_ms: float | None = None, **kwargs):
@@ -108,11 +123,22 @@ class LoggingContext:
     """Context manager for adding temporary context to logs."""
 
     def __init__(self, logger: StructuredLogger, **context):
+        """Initialize the logging context manager.
+
+        Args:
+            logger: The logger to use within the context
+            **context: Key-value pairs to add to the logging context
+        """
         self.logger = logger
         self.context = context
         self.tokens: list[tuple[ContextVar, Token]] = []
 
     def __enter__(self):
+        """Set up the logging context when entering the context manager.
+
+        Returns:
+            StructuredLogger: The logger with added context
+        """
         # Set context variables and store tokens for later reset
         for key, value in self.context.items():
             if key == "request_id" and value:
@@ -130,6 +156,13 @@ class LoggingContext:
         return self.logger
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        """Clean up the logging context when exiting the context manager.
+
+        Args:
+            exc_type: Exception type if an exception was raised
+            exc_val: Exception value if an exception was raised
+            exc_tb: Exception traceback if an exception was raised
+        """
         # Reset context variables to their previous values
         for var, token in reversed(self.tokens):
             var.reset(token)
@@ -139,6 +172,11 @@ class JSONFormatter(logging.Formatter):
     """Formatter that converts log records to JSON."""
 
     def __init__(self, include_traceback: bool = True):
+        """Initialize the JSON formatter.
+
+        Args:
+            include_traceback: Whether to include exception tracebacks in the logs
+        """
         super().__init__()
         self.include_traceback = include_traceback
 

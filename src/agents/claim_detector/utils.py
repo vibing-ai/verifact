@@ -211,14 +211,14 @@ def normalize_claim_text(text: str) -> str:
 
     # Normalize numeric representations
     def format_number(match):
-        """Format numbers consistently"""
+        """Format numbers consistently."""
         num_str = match.group(0).replace(",", "")
         try:
             num = float(num_str)
             if num.is_integer():
                 return f"{int(num)}"
             return f"{num:.2f}"
-        except:
+        except ValueError:
             return match.group(0)
 
     normalized = re.sub(r"\b\d+(?:,\d{3})*(?:\.\d+)?\b", format_number, normalized)

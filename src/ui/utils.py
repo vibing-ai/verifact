@@ -38,9 +38,9 @@ async def export_results_to_json(results: list[dict[str, Any]]) -> str:
         # Remove any non-serializable objects from evidence
         for evidence in serializable_result["evidence"]:
             for key in list(evidence.keys()):
-                if isinstance(evidence[key], (datetime.datetime, datetime.date)):
+                if isinstance(evidence[key], datetime.datetime | datetime.date):
                     evidence[key] = evidence[key].isoformat()
-                elif not isinstance(evidence[key], (str, int, float, bool, list, dict, type(None))):
+                elif not isinstance(evidence[key], str | int | float | bool | list | dict | type(None)):
                     evidence[key] = str(evidence[key])
 
         serializable_results.append(serializable_result)

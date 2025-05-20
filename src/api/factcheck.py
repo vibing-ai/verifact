@@ -1,4 +1,4 @@
-"""VeriFact Factchecking API
+"""VeriFact Factchecking API.
 
 This module provides the API endpoints for the factchecking service.
 """
@@ -59,7 +59,7 @@ rate_limit_cache = Cache(max_size=1000, ttl_seconds=3600)
 API_KEY_NAME = "X-API-Key"
 api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
 
-# Create database client
+# Create database clien
 db_client = SupabaseClient()
 
 # Initialize router
@@ -108,7 +108,7 @@ def check_rate_limit(api_key: str, limit: int = 10, window: int = 60):
     """Check if the request exceeds rate limits.
 
     Args:
-        api_key: API key from authenticated request
+        api_key: API key from authenticated reques
         limit: Maximum number of requests in time window
         window: Time window in seconds
 
@@ -141,16 +141,16 @@ async def get_pipeline_config(request: FactcheckRequest) -> PipelineConfig:
     """Create a pipeline configuration from request options.
 
     Args:
-        request: Factchecking request
+        request: Factchecking reques
 
     Returns:
         PipelineConfig instance
     """
-    # Extract options from request
+    # Extract options from reques
     options = request.options or {}
 
     try:
-        # Add configuration options from the request
+        # Add configuration options from the reques
         config_dict = {
             # Default PipelineConfig fields
             "claim_detection_threshold": options.get("min_check_worthiness", 0.5),
@@ -169,10 +169,10 @@ async def get_pipeline_config(request: FactcheckRequest) -> PipelineConfig:
         # Validate options against PipelineConfig model
         return validate_model(config_dict, PipelineConfig)
     except ValidationError as e:
-        # Re-raise with more context
+        # Re-raise with more contex
         raise ValidationError(
             message=f"Invalid pipeline configuration: {e.message}", details=e.details
-        )
+        ) from e
 
 
 @router.post(
@@ -181,29 +181,31 @@ async def get_pipeline_config(request: FactcheckRequest) -> PipelineConfig:
     summary="Factcheck claims in text",
     description="""
     Process a piece of text, extract claims, gather evidence, and generate verdicts.
-    
+
     This endpoint accepts text input containing potential factual claims and
     returns an assessment of the truthfulness of those claims with supporting evidence
     and explanations.
-    
+
     The factchecking process includes:
     1. Claim detection and extraction
     2. Evidence gathering from trusted sources
     3. Verdict generation based on the evidence
-    
+
     Request options can be used to customize the factchecking process, such as
     setting minimum check-worthiness thresholds or limiting the domains of interest.
     """,
     response_description="Factchecking results with verdicts for identified claims",
 )
 async def factcheck(
-    request: FactcheckRequest, api_request: Request, api_key: APIKey = Security(get_api_key)
+    request: FactcheckRequest,
+    api_request: Request,
+    api_key: APIKey = None
 ):
     """Factcheck claims in the provided text.
 
     Args:
         request: The factchecking request containing text and options
-        api_request: FastAPI request object
+        api_request: FastAPI request objec
         api_key: Validated API key
 
     Returns:
@@ -213,6 +215,10 @@ async def factcheck(
         ValidationError: If input validation fails
         PipelineError: If processing fails
     """
+    # Get API key if not provided
+    if api_key is None:
+        api_key = await get_api_key()
+
     # Check rate limits
     check_rate_limit(api_key)
 
@@ -225,7 +231,7 @@ async def factcheck(
         request_id = getattr(api_request.state, "request_id", str(uuid.uuid4()))
 
         try:
-            # Sanitize and validate input text
+            # Sanitize and validate input tex
             text = sanitize_text(request.text)
             validate_text_length(text)
 
@@ -240,7 +246,7 @@ async def factcheck(
             # Process the text through the pipeline
             verdicts = await pipeline.process_text(text)
 
-            # Convert verdicts to standard format
+            # Convert verdicts to standard forma
             processed_verdicts = [
                 convert_verdict_for_response(v.dict() if hasattr(v, "dict") else v)
                 for v in verdicts
@@ -273,7 +279,7 @@ async def factcheck(
                 }
                 db_client.store_factcheck_result(factcheck_data)
             except Exception as db_error:
-                # Log error but don't fail the request
+                # Log error but don't fail the reques
                 logger.error(f"Failed to store factcheck result: {str(db_error)}")
 
             return response
@@ -313,7 +319,7 @@ async def factcheck(
     description="""
     Start an asynchronous factchecking process. This endpoint returns immediately with a job ID
     that can be used to check the status of the factchecking process and retrieve results when complete.
-    
+
     This is useful for factchecking large documents or when the client doesn't want to keep a connection open.
     """,
 )
@@ -321,14 +327,14 @@ async def factcheck_async(
     request: FactcheckRequest,
     background_tasks: BackgroundTasks,
     api_request: Request,
-    api_key: APIKey = Security(get_api_key),
+    api_key: APIKey = None,
 ):
     """Start an asynchronous factchecking job.
 
     Args:
         request: The factchecking request containing text and options
         background_tasks: FastAPI background tasks manager
-        api_request: FastAPI request object
+        api_request: FastAPI request objec
         api_key: Validated API key
 
     Returns:
@@ -337,6 +343,10 @@ async def factcheck_async(
     Raises:
         ValidationError: If input validation fails
     """
+    # Get API key if not provided
+    if api_key is None:
+        api_key = await get_api_key()
+
     # Check rate limits
     check_rate_limit(api_key)
 
@@ -344,7 +354,7 @@ async def factcheck_async(
     track_api_call("factcheck_async", api_key)
 
     try:
-        # Sanitize and validate input text
+        # Sanitize and validate input tex
         text = sanitize_text(request.text)
         validate_text_length(text)
 
@@ -388,19 +398,12 @@ async def factcheck_async(
     Check the status of an asynchronous factchecking job and retrieve results if available.
     """,
 )
-async def get_job_status(job_id: str, api_key: APIKey = Security(get_api_key)):
-    """Get the status of a factchecking job.
+async def get_job_status(job_id: str, api_key: APIKey = None):
+    """Get the status of an asynchronous factchecking job."""
+    # Get API key if not provided
+    if api_key is None:
+        api_key = await get_api_key()
 
-    Args:
-        job_id: The job ID to check
-        api_key: Validated API key
-
-    Returns:
-        Job status and results if complete
-
-    Raises:
-        HTTPException: If job not found
-    """
     # Track API call
     track_api_call("get_job_status", api_key)
 
@@ -442,20 +445,13 @@ async def get_factchecks(
     offset: int = Query(0, ge=0),
     domain: str | None = None,
     verdict_type: str | None = None,
-    api_key: APIKey = Security(get_api_key),
+    api_key: APIKey = None,
 ):
-    """Get recent factchecks with pagination and filtering.
+    """Get recent factchecks with optional filtering."""
+    # Get API key if not provided
+    if api_key is None:
+        api_key = await get_api_key()
 
-    Args:
-        limit: Maximum number of results to return
-        offset: Number of results to skip for pagination
-        domain: Filter by domain/category
-        verdict_type: Filter by verdict type
-        api_key: Validated API key
-
-    Returns:
-        List of factchecks with metadata
-    """
     # Check rate limits
     check_rate_limit(api_key)
 
@@ -467,12 +463,12 @@ async def get_factchecks(
             limit=limit, offset=offset, domain=domain, verdict_type=verdict_type
         )
         return results
-    except Exception as e:
-        logger.error(f"Error retrieving factchecks: {str(e)}", exc_info=True)
+    except Exception as err:
+        logger.error(f"Failed to retrieve factchecks: {err}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve factchecks: {str(e)}",
-        )
+            detail="Failed to retrieve factchecks",
+        ) from err
 
 
 @router.get(
@@ -481,19 +477,12 @@ async def get_factchecks(
     description="Retrieve a specific factcheck by its ID.",
     response_model=dict[str, Any],
 )
-async def get_factcheck(factcheck_id: str, api_key: APIKey = Security(get_api_key)):
-    """Get a specific factcheck by ID.
+async def get_factcheck(factcheck_id: str, api_key: APIKey = None):
+    """Get a specific factcheck by ID."""
+    # Get API key if not provided
+    if api_key is None:
+        api_key = await get_api_key()
 
-    Args:
-        factcheck_id: The ID of the factcheck to retrieve
-        api_key: Validated API key
-
-    Returns:
-        Factcheck details
-
-    Raises:
-        HTTPException: If factcheck not found
-    """
     # Check rate limits
     check_rate_limit(api_key)
 
@@ -509,12 +498,12 @@ async def get_factcheck(factcheck_id: str, api_key: APIKey = Security(get_api_ke
         return result
     except HTTPException:
         raise
-    except Exception as e:
-        logger.error(f"Error retrieving factcheck: {str(e)}", exc_info=True)
+    except Exception as err:
+        logger.error(f"Failed to retrieve factcheck {factcheck_id}: {err}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve factcheck: {str(e)}",
-        )
+            detail=f"Failed to retrieve factcheck with ID {factcheck_id}",
+        ) from err
 
 
 @with_async_retry(max_attempts=3, initial_delay=1.0)
@@ -523,7 +512,7 @@ async def _run_factcheck_job(job_id: str, request: FactcheckRequest, request_id:
 
     Args:
         job_id: Unique job identifier
-        request: The factchecking request
+        request: The factchecking reques
         request_id: Original request ID
         api_key: API key for tracking
     """
@@ -555,7 +544,7 @@ async def _run_factcheck_job(job_id: str, request: FactcheckRequest, request_id:
             verdicts = await pipeline.process_text(text)
             processing_time = time.time() - start_time
 
-            # Convert verdicts to standard format
+            # Convert verdicts to standard forma
             processed_verdicts = [
                 convert_verdict_for_response(v.dict() if hasattr(v, "dict") else v)
                 for v in verdicts

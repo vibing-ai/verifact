@@ -1,4 +1,4 @@
-"""VeriFact Retry Utilities
+"""VeriFact Retry Utilities.
 
 This module provides utilities for implementing retry logic
 for handling recoverable errors in the VeriFact system.

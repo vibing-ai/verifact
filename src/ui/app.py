@@ -1,4 +1,4 @@
-"""VeriFact Chainlit UI Entry Point
+"""VeriFact Chainlit UI Entry Point.
 
 This module serves as the main entry point for the VeriFact Chainlit web interface.
 It initializes a Chainlit chat application with the three main agents:

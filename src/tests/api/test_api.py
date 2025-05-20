@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""API Testing Script for VeriFact
+"""API Testing Script for VeriFact.
 
 This script tests the VeriFact API endpoints to ensure they're working correctly.
 """
@@ -128,7 +128,7 @@ def test_endpoint(method, url, **kwargs):
                 result["response_sample"] = response_data[:2]
             else:
                 result["response_sample"] = str(response_data)[:200]
-        except:
+        except json.JSONDecodeError:
             # Not JSON, store a snippet of the text
             result["response_sample"] = response.text[:200]
 

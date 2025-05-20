@@ -1,4 +1,4 @@
-"""VeriFact Batch Factchecking API
+"""VeriFact Batch Factchecking API.
 
 This module provides API endpoints for batch factchecking of multiple claims.
 """
@@ -24,7 +24,6 @@ from fastapi.security.api_key import APIKey, APIKeyHeader
 from src.models.factcheck import (
     BatchClaimStatus,
     BatchFactcheckRequest,
-    BatchFactcheckResponse,
     BatchProcessingProgress,
     Claim,
     FactcheckJob,
@@ -45,6 +44,12 @@ from src.utils.validation import (
     validate_model,
 )
 
+
+# Define CancelledError class for job cancellation
+class CancelledError(Exception):
+    """Exception raised when a batch factcheck job is cancelled by the user."""
+    pass
+
 # Setup logging
 logger = logging.getLogger(__name__)
 
@@ -58,7 +63,7 @@ batch_rate_limit_cache = Cache(max_size=1000, ttl_seconds=3600)
 API_KEY_NAME = "X-API-Key"
 api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
 
-# Create database client
+# Create database clien
 db_client = SupabaseClient()
 
 # Initialize router
@@ -111,7 +116,7 @@ def check_rate_limit(api_key: str, limit: int = 5, window: int = 60):
     """Check if the request exceeds rate limits.
 
     Args:
-        api_key: API key from authenticated request
+        api_key: API key from authenticated reques
         limit: Maximum number of requests in time window
         window: Time window in seconds
 
@@ -150,7 +155,7 @@ async def create_pipeline_config(options: dict[str, Any]) -> PipelineConfig:
         PipelineConfig instance
     """
     try:
-        # Add configuration options from the request
+        # Add configuration options from the reques
         config_dict = {
             # Default PipelineConfig fields
             "claim_detection_threshold": options.get("min_check_worthiness", 0.5),
@@ -169,10 +174,10 @@ async def create_pipeline_config(options: dict[str, Any]) -> PipelineConfig:
         # Validate options against PipelineConfig model
         return validate_model(config_dict, PipelineConfig)
     except ValidationError as e:
-        # Re-raise with more context
+        # Re-raise with more contex
         raise ValidationError(
             message=f"Invalid pipeline configuration: {e.message}", details=e.details
-        )
+        ) from e
 
 
 async def process_single_claim(claim_text: str, options: dict[str, Any]) -> Verdict:
@@ -204,7 +209,7 @@ async def process_single_claim(claim_text: str, options: dict[str, Any]) -> Verd
         if not verdicts:
             raise PipelineError("No verdict generated for the claim")
 
-        # Return the first (and likely only) verdict
+        # Return the first (and likely only) verdic
         return verdicts[0]
     except Exception as e:
         logger.error(f"Error processing claim: {str(e)}", exc_info=True)
@@ -222,7 +227,7 @@ def convert_to_batch_claim_status(
         status: Current status
 
     Returns:
-        BatchClaimStatus object
+        BatchClaimStatus objec
     """
     return BatchClaimStatus(claim_id=claim_id, status=status, claim_text=claim_text)
 
@@ -248,24 +253,16 @@ def send_webhook_notification(url: str, data: dict[str, Any]) -> bool:
 
     Args:
         url: URL to send notification to
-        data: Data to send
+        data: Data to send in notification
 
     Returns:
-        True if notification was sent successfully, False otherwise
+        bool: Whether notification was sent successfully
     """
     try:
-        headers = {"Content-Type": "application/json", "User-Agent": "VeriFact-Batch-Processor/1.0"}
-
-        response = requests.post(url, json=data, headers=headers, timeout=10)
-
-        if response.ok:
-            logger.info(f"Webhook notification sent successfully to {url}")
-            return True
-        else:
-            logger.warning(f"Webhook notification failed: {response.status_code} {response.text}")
-            return False
-    except Exception as e:
-        logger.error(f"Error sending webhook notification: {str(e)}")
+        response = requests.post(url, json=data, timeout=10)
+        return response.status_code >= 200 and response.status_code < 300
+    except Exception:
+        logger.exception(f"Failed to send webhook notification to {url}")
         return False
 
 
@@ -275,11 +272,11 @@ def send_webhook_notification(url: str, data: dict[str, Any]) -> bool:
     summary="Process multiple claims in a batch",
     description="""
     Start an asynchronous batch processing job for multiple claims.
-    
+
     This endpoint accepts a list of claims and processes them concurrently
     based on priority and available resources. The response includes a job ID
     that can be used to check the status and retrieve results when complete.
-    
+
     Options can be used to control concurrency, timeouts, and other aspects
     of the batch processing.
     """,
@@ -288,84 +285,81 @@ async def batch_factcheck(
     request: BatchFactcheckRequest,
     background_tasks: BackgroundTasks,
     api_request: Request,
-    api_key: APIKey = Security(get_api_key),
+    api_key: APIKey = None,
 ):
-    """Process multiple claims in a batch.
+    """Start a batch factchecking job for multiple claims.
 
     Args:
-        request: Batch factchecking request with claims and options
-        background_tasks: FastAPI background tasks
-        api_request: FastAPI request object
+        request: The batch factchecking reques
+        background_tasks: FastAPI background tasks manager
+        api_request: FastAPI request objec
         api_key: Validated API key
 
     Returns:
-        Job information including job ID
+        Dict with job ID for status checking
     """
+    # Get API key if not provided
+    if api_key is None:
+        api_key = await get_api_key()
+
     # Check rate limits
     check_rate_limit(api_key)
 
     # Track API call
     track_api_call("batch_factcheck", api_key)
 
-    # Generate job ID
-    job_id = str(uuid.uuid4())
-    request_id = getattr(api_request.state, "request_id", str(uuid.uuid4()))
+    try:
+        # Validate inpu
+        if not request.claims:
+            raise ValidationError(message="No claims provided")
 
-    # Extract options
-    options = request.options or {}
-    max_concurrent = options.get("max_concurrent", 3)
-    detect_related = options.get("detect_related_claims", True)
-    webhook_notification = options.get("webhook_notification", False)
+        # Generate a unique job ID
+        job_id = f"batch_{int(time.time())}_{hash(str(request.claims)) % 10000}"
+        request_id = getattr(api_request.state, "request_id", str(uuid.uuid4()))
 
-    # Initialize job status tracker
-    claim_statuses = {}
-    for i, claim in enumerate(request.claims):
-        # Generate claim ID if not provided
-        claim_id = claim.id or f"{job_id}-claim-{i + 1}"
+        # Get processing options
+        max_concurrent = request.options.get("max_concurrent", 3)
+        detect_related = request.options.get("detect_related_claims", True)
+        webhook_url = request.options.get("webhook_url")
 
-        # Create status entry
-        claim_statuses[claim_id] = convert_to_batch_claim_status(
-            claim_id=claim_id, claim_text=claim.text, status=JobStatus.QUEUED
+        # Create job record
+        job = FactcheckJob(
+            job_id=job_id,
+            status=JobStatus.QUEUED,
+            metadata={
+                "total_claims": len(request.claims),
+                "webhook_url": webhook_url,
+            },
         )
 
-    # Create job object
-    job = FactcheckJob(
-        job_id=job_id,
-        status=JobStatus.QUEUED,
-        is_batch=True,
-        progress=BatchProcessingProgress(
-            total_claims=len(request.claims),
-            processed_claims=0,
-            pending_claims=len(request.claims),
-            failed_claims=0,
-            success_rate=1.0,
-        ),
-        claim_statuses=claim_statuses,
-    )
+        # Store job in memory
+        _batch_jobs[job_id] = job
 
-    # Store job
-    _batch_jobs[job_id] = job
+        # Start factchecking in background
+        background_tasks.add_task(
+            _run_batch_factcheck_job,
+            job_id,
+            request,
+            request_id,
+            api_key,
+            max_concurrent,
+            detect_related,
+            webhook_url,
+        )
 
-    # Start processing in background
-    background_tasks.add_task(
-        _run_batch_factcheck_job,
-        job_id=job_id,
-        request=request,
-        request_id=request_id,
-        api_key=api_key,
-        max_concurrent=max_concurrent,
-        detect_related_claims=detect_related,
-        webhook_url=request.callback_url if webhook_notification else None,
-    )
-
-    # Return job information
-    return {
-        "job_id": job_id,
-        "status": job.status,
-        "total_claims": len(request.claims),
-        "created_at": job.created_at.isoformat(),
-        "message": "Batch factchecking job started",
-    }
+        return {
+            "job_id": job_id,
+            "status": job.status,
+            "created_at": job.created_at.isoformat(),
+            "message": f"Batch factchecking job started with {len(request.claims)} claims",
+            "request_id": request_id,
+        }
+    except ValidationError as e:
+        logger.warning(f"Validation error in batch request: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
+    except Exception as e:
+        logger.error(f"Error in batch request: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)) from e
 
 
 @router.get(
@@ -374,7 +368,7 @@ async def batch_factcheck(
     summary="Get status of a batch factchecking job",
     description="""
     Check the status of a batch factchecking job and retrieve results if available.
-    
+
     This endpoint returns detailed information about the job, including:
     - Overall job status
     - Progress information (claims processed, pending, failed)
@@ -388,71 +382,61 @@ async def get_batch_job_status(
     include_verdicts: bool = Query(
         True, description="Whether to include full verdicts in the response"
     ),
-    api_key: APIKey = Security(get_api_key),
+    api_key: APIKey = None,
 ):
-    """Get status and results of a batch factchecking job.
+    """Get the status of a batch factchecking job.
 
     Args:
-        job_id: ID of the batch job
-        include_verdicts: Whether to include verdict details in the response
+        job_id: The job ID to check
+        include_verdicts: Whether to include full verdicts in response
         api_key: Validated API key
 
     Returns:
-        Job status and results if available
+        Dict with job status and results if available
     """
-    # Check if job exists
+    # Get API key if not provided
+    if api_key is None:
+        api_key = await get_api_key()
+
+    # Track API call
+    track_api_call("get_batch_job_status", api_key)
+
     if job_id not in _batch_jobs:
+        # Try to find in database
+        try:
+            job_data = db_client.get_factcheck_by_id(job_id)
+            if job_data:
+                return job_data
+        except Exception as e:
+            logger.error(f"Error retrieving job from database: {str(e)}")
+
+        # If not found, raise error
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Batch job with ID {job_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Batch job not found: {job_id}"
         )
 
-    # Get job
-    job = _batch_jobs[job_id]
+    job_data = _batch_jobs[job_id].dict()
 
-    # Prepare response
-    response = {
-        "job_id": job.job_id,
-        "status": job.status,
-        "created_at": job.created_at.isoformat(),
-        "updated_at": job.updated_at.isoformat() if job.updated_at else None,
-        "is_batch": job.is_batch,
-    }
+    # Convert datetime objects to ISO strings
+    if isinstance(job_data.get("created_at"), datetime):
+        job_data["created_at"] = job_data["created_at"].isoformat()
+    if isinstance(job_data.get("updated_at"), datetime):
+        job_data["updated_at"] = job_data["updated_at"].isoformat()
+    if isinstance(job_data.get("completed_at"), datetime):
+        job_data["completed_at"] = job_data["completed_at"].isoformat()
 
-    # Add progress information
-    if job.progress:
-        response["progress"] = job.progress.dict()
+    # If no verdicts requested, filter them out to reduce response size
+    if not include_verdicts and "results" in job_data and job_data["results"]:
+        for claim in job_data["results"]:
+            if "verdict" in claim:
+                # Keep only basic verdict information
+                verdict = claim["verdict"]
+                claim["verdict"] = {
+                    "verdict": verdict.get("verdict"),
+                    "confidence": verdict.get("confidence"),
+                }
 
-    # Add claim statuses
-    if job.claim_statuses:
-        if include_verdicts:
-            response["claim_statuses"] = {
-                claim_id: status.dict() for claim_id, status in job.claim_statuses.items()
-            }
-        else:
-            # Exclude verdict details to reduce response size
-            response["claim_statuses"] = {
-                claim_id: {k: v for k, v in status.dict().items() if k != "verdict"}
-                for claim_id, status in job.claim_statuses.items()
-            }
-
-    # Add result if job is completed
-    if job.status in [JobStatus.COMPLETED, JobStatus.PARTIALLY_COMPLETED] and job.result:
-        if include_verdicts:
-            response["result"] = job.result.dict()
-        else:
-            # Just include summary information
-            response["result_summary"] = {
-                "total_claims": job.result.total_claims,
-                "successful_claims": job.result.successful_claims,
-                "processing_time": job.result.processing_time,
-                "completed_at": job.completed_at.isoformat() if job.completed_at else None,
-            }
-
-    # Add error if job failed
-    if job.status == JobStatus.FAILED and job.error:
-        response["error"] = job.error
-
-    return response
+    return job_data
 
 
 @router.post(
@@ -461,51 +445,50 @@ async def get_batch_job_status(
     summary="Cancel a batch factchecking job",
     description="Cancel a running batch factchecking job.",
 )
-async def cancel_batch_job(job_id: str, api_key: APIKey = Security(get_api_key)):
+async def cancel_batch_job(job_id: str, api_key: APIKey = None):
     """Cancel a batch factchecking job.
 
     Args:
-        job_id: ID of the job to cancel
+        job_id: The job ID to cancel
         api_key: Validated API key
 
     Returns:
-        Status of the cancelation request
+        Dict with cancellation resul
     """
-    # Check if job exists
-    if job_id not in _batch_jobs:
-        from fastapi import status as status_codes
+    # Get API key if not provided
+    if api_key is None:
+        api_key = await get_api_key()
 
+    # Track API call
+    track_api_call("cancel_batch_job", api_key)
+
+    if job_id not in _batch_jobs:
         raise HTTPException(
-            status_code=status_codes.HTTP_404_NOT_FOUND,
-            detail=f"Batch job with ID {job_id} not found",
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Batch job not found: {job_id}"
         )
 
-    # Get job
     job = _batch_jobs[job_id]
 
-    # Check if job can be canceled
-    if job.status not in [JobStatus.QUEUED, JobStatus.PROCESSING]:
+    # Only cancel if still in progress
+    if job.status not in (JobStatus.QUEUED, JobStatus.PROCESSING):
         return {
             "job_id": job_id,
             "status": job.status,
-            "message": f"Cannot cancel job with status {job.status}",
+            "message": f"Job is already in {job.status} state, cannot cancel",
+            "success": False,
         }
 
-    # Update job status
-    job.status = JobStatus.CANCELED
-    job.updated_at = datetime.now()
-    job.completed_at = datetime.now()
-
-    # Update claim statuses for queued claims
-    if job.claim_statuses:
-        for claim_id, status in job.claim_statuses.items():
-            if status.status == JobStatus.QUEUED:
-                status.status = JobStatus.CANCELED
-
-    # Store updated job
+    # Mark job as cancelled
+    job.status = JobStatus.CANCELLED
+    job.updated_at = datetime.utcnow()
     _batch_jobs[job_id] = job
 
-    return {"job_id": job_id, "status": job.status, "message": "Job canceled successfully"}
+    return {
+        "job_id": job_id,
+        "status": job.status,
+        "message": "Job cancelled successfully",
+        "success": True,
+    }
 
 
 @with_async_retry(max_attempts=3, initial_delay=1.0)
@@ -518,246 +501,177 @@ async def _run_batch_factcheck_job(
     detect_related_claims: bool = True,
     webhook_url: str | None = None,
 ):
-    """Run a batch factchecking job.
+    """Run a batch factchecking job in the background.
 
     Args:
-        job_id: ID of the job
-        request: Batch factchecking request
-        request_id: Request ID for tracking
-        api_key: API key for authentication
-        max_concurrent: Maximum number of concurrent claim processing tasks
-        detect_related_claims: Whether to detect related claims
-        webhook_url: URL to send notification when processing completes
+        job_id: Unique job identifier
+        request: The batch factchecking reques
+        request_id: Original request ID
+        api_key: API key for tracking
+        max_concurrent: Maximum concurrent claims to process
+        detect_related_claims: Whether to detect and merge related claims
+        webhook_url: Optional URL to send job completion notification
     """
     try:
-        # Start timer
-        start_time = time.time()
+        # Get job from store
+        if job_id not in _batch_jobs:
+            logger.error(f"Job {job_id} not found")
+            return
 
-        # Get job
         job = _batch_jobs[job_id]
 
-        # Update job status
+        # Update job status to processing
         job.status = JobStatus.PROCESSING
-        job.updated_at = datetime.now()
+        job.updated_at = datetime.utcnow()
         _batch_jobs[job_id] = job
 
-        logger.info(f"Starting batch factchecking job {job_id} with {len(request.claims)} claims")
+        # Prepare the claims for processing
+        claims = []
+        claim_statuses = {}
 
-        # Prepare list of claims with metadata
-        claims_to_process = []
-        claim_map = {}  # Map claim IDs to position in the list
+        # Extract claim texts from reques
+        for i, claim_data in enumerate(request.claims):
+            # Generate a unique ID for this claim
+            # If the claim already has an ID, use it, otherwise generate one
+            if isinstance(claim_data, dict):
+                claim_id = claim_data.get("id", f"{job_id}_claim_{i}")
+                claim_text = claim_data.get("text", "")
+            else:
+                claim_id = f"{job_id}_claim_{i}"
+                claim_text = claim_data
 
-        for i, batch_claim in enumerate(request.claims):
-            # Generate claim ID if not provided
-            claim_id = batch_claim.id or f"{job_id}-claim-{i + 1}"
+            # Create a Claim object and add to processing lis
+            claim = Claim(id=claim_id, text=claim_text)
+            claims.append(claim)
 
-            # Create claim object
-            claim_obj = Claim(
-                text=batch_claim.text,
-                context=batch_claim.context or "",
-                checkworthy=True,  # Assume all batch claims are check-worthy
-                domain=batch_claim.domain,
-                entities=[],  # Will be populated during processing
+            # Initialize status for this claim
+            claim_statuses[claim_id] = convert_to_batch_claim_status(
+                claim_id, claim_text, JobStatus.QUEUED
             )
 
-            # Add to list
-            claims_to_process.append(claim_obj)
+        # Update job with initial claim statuses
+        job.claims = list(claim_statuses.values())
+        _batch_jobs[job_id] = job
 
-            # Update map
-            claim_map[i] = claim_id
-
-            # Update status to show position in queue
-            if job.claim_statuses and claim_id in job.claim_statuses:
-                job.claim_statuses[claim_id].position = i + 1
-
-        # Extract options
+        # Initialize results collector
+        results = {}
         options = request.options or {}
 
-        # Define processing function
+        # For each processed claim_id, track the corresponding verdic
         async def process_claim(claim: Claim) -> Verdict:
             return await process_single_claim(claim.text, options)
 
-        # Define progress callback
+        # Progress callback to update job status
         def progress_callback(progress: ProcessingProgress) -> None:
             # Log progress
             log_job_progress(job_id, progress)
 
-            # Update job progress
-            if job.progress:
-                job.progress.processed_claims = progress.processed_items
-                job.progress.pending_claims = progress.pending_items
-                job.progress.failed_claims = progress.failed_items
-                job.progress.success_rate = progress.success_rate
-                job.progress.estimated_time_remaining = progress.estimated_time_remaining
-                job.progress.avg_processing_time = progress.avg_processing_time
-                job.progress.last_update_time = datetime.now()
+            # Get the job from store
+            if job_id in _batch_jobs:
+                batch_job = _batch_jobs[job_id]
 
-                if not job.progress.start_time and progress.start_time:
-                    job.progress.start_time = datetime.fromtimestamp(progress.start_time)
+                # Check if job was cancelled
+                if batch_job.status == JobStatus.CANCELLED:
+                    raise CancelledError("Job was cancelled")
 
-            # Update job in store
+                # Update progress information
+                batch_progress = BatchProcessingProgress(
+                    total_claims=progress.total_items,
+                    processed_claims=progress.processed_items,
+                    pending_claims=progress.pending_items,
+                    failed_claims=progress.failed_items,
+                    success_rate=progress.success_rate,
+                    estimated_time_remaining=progress.estimated_time_remaining,
+                    average_processing_time=progress.average_processing_time,
+                )
+
+                batch_job.progress = batch_progress
+
+                # If webhook URL specified and progress reaches certain thresholds,
+                # send progress notification
+                if webhook_url and progress.progress_percent % 20 == 0:
+                    notification_data = {
+                        "job_id": job_id,
+                        "status": "in_progress",
+                        "progress": progress.progress_percent,
+                        "processed_claims": progress.processed_items,
+                        "total_claims": progress.total_items,
+                    }
+                    send_webhook_notification(webhook_url, notification_data)
+
+                # Update job in store
+                _batch_jobs[job_id] = batch_job
+
+        # Setup claim processor to handle concurrency and status tracking
+        processor = AsyncClaimProcessor(
+            claims=claims,
+            process_func=process_claim,
+            progress_callback=progress_callback,
+            max_concurrent=max_concurrent,
+        )
+
+        # Process all claims
+        await processor.process_all()
+
+        # Get all processing results
+        for _i, (claim_id, result) in enumerate(processor.results.items()):
+            if result.success:
+                # Store the verdic
+                results[claim_id] = {
+                    "verdict": result.result.dict()
+                    if hasattr(result.result, "dict")
+                    else result.result,
+                    "processing_time": result.processing_time,
+                }
+                # Update claim status
+                claim_statuses[claim_id].status = JobStatus.COMPLETED
+            else:
+                # Store error information
+                results[claim_id] = {
+                    "error": str(result.error),
+                    "processing_time": result.processing_time,
+                }
+                # Update claim status
+                claim_statuses[claim_id].status = JobStatus.FAILED
+
+        # Update job with final status
+        if job_id in _batch_jobs:
+            job = _batch_jobs[job_id]
+            job.status = JobStatus.COMPLETED
+            job.claims = list(claim_statuses.values())
+            job.results = results
+            job.completed_at = datetime.utcnow()
+            job.updated_at = datetime.utcnow()
             _batch_jobs[job_id] = job
 
-        # Create async processor
-        processor = AsyncClaimProcessor(
-            process_func=process_claim,
-            max_concurrency=max_concurrent,
-            timeout_seconds=options.get("timeout_per_claim", 120),
-            retry_attempts=1,
-            min_check_worthiness=options.get("min_check_worthiness", 0.5),
-            max_batch_size=max_concurrent,
-            allow_duplicate_claims=False,
-        )
-
-        # Process claims
-        results = await processor.process_items(
-            items=claims_to_process, progress_callback=progress_callback, wait_for_completion=True
-        )
-
-        # Calculate processing time
-        processing_time = time.time() - start_time
-
-        # Process results
-        verdicts = {}
-        failed_claims = {}
-
-        for i, result in enumerate(results):
-            # Get claim ID
-            claim_id = claim_map[i]
-
-            # Update claim status
-            if job.claim_statuses and claim_id in job.claim_statuses:
-                status = job.claim_statuses[claim_id]
-
-                if result.success:
-                    # Successful processing
-                    status.status = JobStatus.COMPLETED
-                    status.verdict = result.result
-                    status.processing_time = result.processing_time
-                    status.completed_at = datetime.now()
-
-                    # Add to verdicts
-                    verdicts[claim_id] = result.result
-                else:
-                    # Failed processing
-                    status.status = JobStatus.FAILED
-                    status.error = result.error
-                    status.completed_at = datetime.now()
-
-                    # Add to failed claims
-                    failed_claims[claim_id] = {
-                        "error": result.error,
-                        "claim_text": status.claim_text,
-                    }
-
-        # Detect related claims if requested
-        related_claims = None
-        if detect_related_claims and len(verdicts) > 1:
-            processor.set_result_relationships()
-
-            # Convert relationship data to a map of claim IDs
-            related_claims = {}
-
-            for claim_id in verdicts.keys():
-                claim_obj = claims_to_process[
-                    list(claim_map.keys())[list(claim_map.values()).index(claim_id)]
-                ]
-                related = processor.get_related_claims(claim_obj)
-
-                if related:
-                    related_ids = []
-                    for _, related_item, _ in related:
-                        # Find the claim ID for this item
-                        for idx, item in enumerate(claims_to_process):
-                            if item == related_item:
-                                related_ids.append(claim_map[idx])
-                                break
-
-                    if related_ids:
-                        related_claims[claim_id] = related_ids
-
-                        # Also update claim statuses
-                        if job.claim_statuses and claim_id in job.claim_statuses:
-                            job.claim_statuses[claim_id].related_claims = related_ids
-
-        # Create batch response
-        response = BatchFactcheckResponse(
-            verdicts=verdicts,
-            failed_claims=failed_claims,
-            metadata={
-                "processing_time": f"{processing_time:.1f}s",
-                "request_id": request_id,
-                "job_id": job_id,
-                "max_concurrent": max_concurrent,
-                "detect_related_claims": detect_related_claims,
-            },
-            request_id=request_id,
-            total_claims=len(request.claims),
-            successful_claims=len(verdicts),
-            processing_time=processing_time,
-            related_claims=related_claims,
-        )
-
-        # Update job status
-        if len(failed_claims) == 0:
-            job.status = JobStatus.COMPLETED
-        elif len(verdicts) > 0:
-            job.status = JobStatus.PARTIALLY_COMPLETED
-        else:
-            job.status = JobStatus.FAILED
-            job.error = {"message": "All claims failed processing"}
-
-        job.result = response
-        job.updated_at = datetime.now()
-        job.completed_at = datetime.now()
-
-        # Update job in store
-        _batch_jobs[job_id] = job
-
-        logger.info(
-            f"Completed batch factchecking job {job_id}: "
-            f"{len(verdicts)}/{len(request.claims)} successful, "
-            f"{len(failed_claims)} failed, "
-            f"processing time: {processing_time:.1f}s"
-        )
-
-        # Send webhook notification if requested
-        if webhook_url:
-            notification_data = {
-                "job_id": job_id,
-                "status": job.status,
-                "total_claims": len(request.claims),
-                "successful_claims": len(verdicts),
-                "failed_claims": len(failed_claims),
-                "processing_time": processing_time,
-                "completed_at": job.completed_at.isoformat() if job.completed_at else None,
-            }
-
-            send_webhook_notification(webhook_url, notification_data)
+            # Send final webhook notification if URL specified
+            if webhook_url:
+                notification_data = {
+                    "job_id": job_id,
+                    "status": "completed",
+                    "total_claims": len(claims),
+                    "processed_claims": len(results),
+                    "success_count": sum(1 for r in results.values() if "verdict" in r),
+                    "failure_count": sum(1 for r in results.values() if "error" in r),
+                }
+                send_webhook_notification(webhook_url, notification_data)
 
     except Exception as e:
-        # Update job status on error
+        logger.error(f"Error in batch job {job_id}: {str(e)}", exc_info=True)
+
+        # Store error state
         if job_id in _batch_jobs:
             job = _batch_jobs[job_id]
             job.status = JobStatus.FAILED
-            job.error = {
-                "message": f"Batch processing failed: {str(e)}",
-                "error_type": type(e).__name__,
-            }
-            job.updated_at = datetime.now()
-            job.completed_at = datetime.now()
+            job.error = {"message": str(e), "type": e.__class__.__name__}
+            job.updated_at = datetime.utcnow()
             _batch_jobs[job_id] = job
 
-        logger.error(f"Error in batch processing job {job_id}: {str(e)}", exc_info=True)
-
-        # Send webhook notification if requested
-        if webhook_url:
-            notification_data = {
-                "job_id": job_id,
-                "status": "failed",
-                "error": str(e),
-                "error_type": type(e).__name__,
-                "completed_at": datetime.now().isoformat(),
-            }
-
-            send_webhook_notification(webhook_url, notification_data)
+            # Send error webhook notification if URL specified
+            if webhook_url:
+                notification_data = {
+                    "job_id": job_id,
+                    "status": "failed",
+                    "error": str(e),
+                }
+                send_webhook_notification(webhook_url, notification_data)

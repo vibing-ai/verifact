@@ -72,6 +72,7 @@ class SerperSearchTool(Tool):
 
         Args:
             params: Dictionary containing search parameters
+            **kwargs: Additional arguments passed to the tool
 
         Returns:
             List of search results with information about each hit

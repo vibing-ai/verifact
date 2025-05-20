@@ -34,6 +34,7 @@ def get_pool_config() -> dict[str, Any]:
 
 async def init_db_pool():
     """Initialize the database connection pool.
+
     Should be called during application startup.
     """
     global _pool
@@ -41,7 +42,7 @@ async def init_db_pool():
         logger.warning("Database pool already initialized")
         return
 
-    # Get database URL from environment
+    # Get database URL from environmen
     db_url = os.getenv("SUPABASE_DB_URL")
     if not db_url:
         raise ValueError("SUPABASE_DB_URL environment variable is not set")
@@ -73,6 +74,7 @@ async def init_db_pool():
 
 async def close_db_pool():
     """Close the database connection pool.
+
     Should be called during application shutdown.
     """
     global _pool

@@ -22,6 +22,7 @@ db_client = SupabaseClient()
 @cl.password_auth_callback
 def auth_callback(username: str, password: str):
     """Handle password-based authentication.
+
     This is a simple implementation for demonstration.
     In production, you should use secure password storage and verification.
     """

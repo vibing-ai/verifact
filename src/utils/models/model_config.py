@@ -78,6 +78,23 @@ CACHE_SIZE = int(os.getenv("MODEL_CACHE_SIZE", "1000"))
 # Flag to enable/disable caching
 ENABLE_CACHING = os.getenv("ENABLE_MODEL_CACHING", "True").lower() == "true"
 
+# Module-level cache to avoid memory leaks
+@lru_cache(maxsize=1000)  # Default cache size
+def _cached_completion_store(cache_key: str, model: str) -> dict[str, Any]:
+    """LRU cache for model completions.
+
+    This is just a placeholder that will never be called directly,
+    as all access will be through the cache.
+
+    Args:
+        cache_key: Cache key for the model completion
+        model: The model name
+
+    Returns:
+        Cached completion result
+    """
+    return {}
+
 
 class ModelError(Exception):
     """Base exception class for model-related errors."""
@@ -89,6 +106,13 @@ class ModelRequestError(ModelError):
     """Exception raised for errors in API requests."""
 
     def __init__(self, message, status_code=None, request_id=None):
+        """Initialize a model request error.
+
+        Args:
+            message: Error message
+            status_code: HTTP status code from the API
+            request_id: Request ID for tracking purposes
+        """
         self.status_code = status_code
         self.request_id = request_id
         super().__init__(message)
@@ -110,6 +134,12 @@ class ModelRateLimitError(ModelError):
     """Exception raised when hitting rate limits."""
 
     def __init__(self, message, retry_after=None):
+        """Initialize a rate limit error.
+
+        Args:
+            message: Error message
+            retry_after: Seconds to wait before retrying
+        """
         self.retry_after = retry_after
         super().__init__(message)
 
@@ -166,7 +196,7 @@ class ModelManager:
 
         # Try to load agent-specific parameters first, fall back to general
         # parameters
-        for param, default in DEFAULT_PARAMETERS.items():
+        for param, _default in DEFAULT_PARAMETERS.items():
             env_var = f"{prefix}MODEL_{param.upper()}"
             general_env_var = f"MODEL_{param.upper()}"
 
@@ -347,45 +377,34 @@ class ModelManager:
     def _generate_cache_key(
         self, messages: list[dict[str, str]], parameters: dict[str, Any]
     ) -> str:
-        """Generate a cache key from messages and parameters.
+        """Generate a cache key for the model completion.
 
         Args:
-            messages: List of message dictionaries
-            parameters: Dictionary of model parameters
+            messages: The messages to send to the model
+            parameters: The parameters to use for the completion
 
         Returns:
-            Cache key string
+            Cache key for the model completion
         """
-        # Create a stable representation of messages and parameters
-        cache_dict = {
-            "messages": messages,
-            "parameters": {
-                k: v for k, v in parameters.items() if k != "stream" and k != "request_timeout"
-            },
-        }
+        # Create a string representation of the messages and parameters
+        cache_str = json.dumps((messages, parameters), sort_keys=True)
 
-        # Convert to a stable string and hash
-        cache_str = json.dumps(cache_dict, sort_keys=True)
+        # Generate an MD5 hash of the string representation
         return hashlib.md5(cache_str.encode(), usedforsecurity=False).hexdigest()
 
-    @lru_cache(maxsize=CACHE_SIZE)
-    def _cached_completion(self, cache_key: str, model: str) -> dict[str, Any]:
-        """LRU cache for model completions.
+    # Cache used through the module-level function to avoid memory leaks
 
-        This is a placeholder function that never gets called directly
-        but is used to store cached results keyed by cache_key and model.
-        The real implementation is in the completion method.
+    def _cached_completion(self, cache_key: str, model: str) -> dict[str, Any]:
+        """Get cached completion result.
 
         Args:
-            cache_key: Hash of the request messages and parameters
-            model: Model name
+            cache_key: Cache key for the model completion
+            model: The model name
 
         Returns:
             Cached completion result
         """
-        # This will never be called directly, it's just for the lru_cache
-        # decorator
-        pass
+        return _cached_completion_store(cache_key, model)
 
     def _handle_error_response(self, response: httpx.Response) -> None:
         """Handle error responses from the API.
@@ -492,7 +511,7 @@ class ModelManager:
             ModelError: If all models in the fallback chain fail
         """
         # Create a unique request ID for this completion
-        with request_context(component=self.agent_type or "general") as request_id:
+        with request_context(component=self.agent_type or "general"):
             # Add request context
             logger.info(
                 "Starting async model completion request",
@@ -680,7 +699,7 @@ class ModelManager:
             ModelError: If all models in the fallback chain fail
         """
         # Create a unique request ID for this completion
-        with request_context(component=self.agent_type or "general") as request_id:
+        with request_context(component=self.agent_type or "general"):
             # Add request context
             logger.info(
                 "Starting model completion request",
@@ -918,7 +937,6 @@ class ModelManager:
         """
         try:
             from openai import OpenAI
-            from openai._base_client import DEFAULT_MAX_RETRIES
             from openai._client import _configure_transport
 
             # Get headers for OpenRouter
@@ -948,10 +966,10 @@ class ModelManager:
 
             return client
 
-        except ImportError:
+        except ImportError as e:
             raise ImportError(
                 "OpenAI package is required. Install with 'pip install openai>=1.0.0'."
-            )
+            ) from e
 
     def configure_openai_for_agent(self):
         """Configure the OpenAI library and Agent SDK to use this model manager's settings.
@@ -984,10 +1002,10 @@ class ModelManager:
 
             logger.info("OpenAI configured to use " + self.model_name + " via OpenRouter")
 
-        except ImportError:
+        except ImportError as e:
             raise ImportError(
                 "OpenAI package is required. Install with 'pip install openai>=1.0.0'."
-            )
+            ) from e
 
     def get_agent_client(self):
         """Get a properly configured client for the Agent SDK.

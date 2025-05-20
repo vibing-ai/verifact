@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""VeriFact End-to-End Testing Script
+"""VeriFact End-to-End Testing Script.
 
 This script executes a comprehensive testing plan for the VeriFact factchecking platform,
 verifying all components are correctly implemented and functioning together.

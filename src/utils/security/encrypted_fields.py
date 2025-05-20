@@ -15,10 +15,26 @@ class EncryptedStr(str):
 
     @classmethod
     def __get_validators__(cls):
+        """Return validators for the Pydantic model field.
+
+        Returns:
+            Generator of validator methods
+        """
         yield cls.validate
 
     @classmethod
     def validate(cls, v):
+        """Validate and convert value to EncryptedStr.
+
+        Args:
+            v: Value to validate
+
+        Returns:
+            The validated value
+
+        Raises:
+            TypeError: If value is not a string
+        """
         if v is None:
             return v
         if not isinstance(v, str):
@@ -26,6 +42,11 @@ class EncryptedStr(str):
         return v
 
     def __repr__(self):
+        """Return a string representation that masks the actual value.
+
+        Returns:
+            str: Masked representation of the encrypted string
+        """
         return "EncryptedStr('***')"
 
 

@@ -88,7 +88,7 @@ class VerdictWriter(IVerdictWriter):
             instructions=f"""
             You are a verdict writing agent. Your job is to analyze evidence and determine
             the accuracy of a claim, providing a detailed explanation and citing sources.
-            
+
             Your verdict should:
             1. Classify the claim as true, false, partially true, or unverifiable
             2. Assign a confidence score (0-1)
@@ -96,7 +96,7 @@ class VerdictWriter(IVerdictWriter):
             4. Cite all sources used
             5. Summarize key evidence
             {"6. Present alternative perspectives" if include_alternative_perspectives else ""}
-            
+
             Guidelines for evidence assessment:
             - Base your verdict solely on the provided evidence
             - Weigh contradicting evidence according to source credibility and relevance
@@ -105,31 +105,31 @@ class VerdictWriter(IVerdictWriter):
             - Evaluate stance ("supporting", "contradicting", "neutral") for each piece of evidence
             - When sources conflict, prefer more credible, more recent, and more directly relevant sources
             - Identify consensus among multiple independent sources as especially strong evidence
-            
+
             Guidelines for confidence scoring:
             - Assign high confidence (0.8-1.0) only when evidence is consistent, highly credible, and comprehensive
             - Use medium confidence (0.5-0.79) when evidence is mixed or from fewer sources
             - Use low confidence (0-0.49) when evidence is minimal, outdated, or from less credible sources
             - When evidence is insufficient, label as "unverifiable" with appropriate confidence based on limitations
             - For partially true claims, explain precisely which parts are true and which are false
-            
+
             Guidelines for explanations (current detail level: {explanation_detail}):
             - Brief: Provide a 1-2 sentence summary focusing on core evidence only
             - Standard: Write several paragraphs covering main evidence and reasoning
             - Detailed: Give a comprehensive explanation with all evidence, alternative views, and nuanced analysis
-            
+
             Citation guidelines (current style: {citation_style}):
             - Inline: Cite sources directly in the explanation text (e.g., "According to [Source], ...")
             - Footnote: Use numbered references in the explanation with full citations in the sources list
             - Academic: Use formal citation format with author, publication, date in the sources list
-            
+
             Your explanation must be:
             - Clear and accessible to non-experts
             - Factual rather than judgmental
             - Politically neutral and unbiased
             - Properly cited with all sources attributed
             - Transparent about limitations and uncertainty
-            
+
             When evidence is mixed or contradictory, clearly present the different perspectives
             and explain how you reached your conclusion based on the balance of evidence.
             """,
@@ -266,7 +266,7 @@ class VerdictWriter(IVerdictWriter):
                 from urllib.parse import urlparse
 
                 domain = urlparse(source).netloc
-            except:
+            except Exception:
                 domain = source
 
             if style == "inline":
@@ -383,28 +383,24 @@ class VerdictWriter(IVerdictWriter):
         # Format citations
         citations = self._format_citations(evidence, citation_style)
 
-        # Create the prompt for verdict generation
+        # Create a prompt that provides context and guidance to the LLM
         prompt = f"""
         CLAIM: {claim.text}
-        
-        EVIDENCE:
+
         {formatted_evidence}
-        
-        GUIDELINES:
-        - Explanation detail level: {explanation_detail}
-        - Citation style: {citation_style}
-        - Include alternative perspectives: {"Yes" if include_alternative_perspectives else "No"}
+
+        Your task is to analyze this evidence and generate a verdict.
+        - Provide a verdict of "true", "false", "partially true", or "unverifiable"
         - Assign a confidence score around {confidence_score:.2f} unless you have strong reasons to change it
-        
-        Based on the evidence above, determine if the claim is true, false, partially true, or unverifiable.
-        Provide a {"brief" if explanation_detail == "brief" else "detailed"} explanation with appropriate citations.
+        - Write a detailed explanation with proper citations
         """
 
         logger.info(f"Generating verdict for claim: {claim.text[:50]}...")
 
         try:
-            # Execute the agent
-            result = await Runner.run(self.agent, prompt)
+            runner = Runner()
+            # Use the Agent to run the analysis
+            result = await runner.run(self.agent, prompt)
 
             # Get the output verdict
             verdict = result.output
@@ -423,6 +419,13 @@ class VerdictWriter(IVerdictWriter):
 
             return verdict
 
-        except Exception as e:
-            logger.error(f"Error generating verdict: {str(e)}", exc_info=True)
-            raise
+        except Exception as err:
+            logger.error(f"Error running the verdict agent: {err}")
+            # Fall back to a basic verdict if the agent run fails
+            return Verdict(
+                claim=claim.text,
+                verdict="unverifiable",
+                confidence=confidence_score,
+                explanation="Failed to generate a verdict due to processing error.",
+                sources=[e.source for e in evidence],
+            )

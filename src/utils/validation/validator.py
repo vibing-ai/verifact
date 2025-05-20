@@ -1,4 +1,4 @@
-"""Input Validation Utilities
+"""Input Validation Utilities.
 
 This module provides functions for validating and sanitizing input data.
 """

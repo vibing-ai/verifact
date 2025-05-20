@@ -37,7 +37,7 @@ def evidence_hunter():
     """Create an EvidenceHunter instance for testing."""
     with patch("src.utils.search_tools.get_search_tool") as mock_get_search_tool:
         mock_get_search_tool.return_value = "mock_search_tool"
-        with patch("src.agents.evidence_hunter.hunter.Agent") as mock_agent:
+        with patch("src.agents.evidence_hunter.hunter.Agent"):
             return EvidenceHunter(model_name="test/model")
 
 
