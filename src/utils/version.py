@@ -38,5 +38,6 @@ def get_version_info() -> Dict[str, Any]:
     except (subprocess.SubprocessError, FileNotFoundError):
         # Not a git repository or git not available
         pass
-    
-    return version_info 
+
+    return version_info
+
