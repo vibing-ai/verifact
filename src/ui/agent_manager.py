@@ -152,7 +152,7 @@ async def process_claims(
         # Process claims concurrently in batches
         all_tasks = []
         for i in range(0, len(claims), max_concurrent):
-            batch = claims[i:i + max_concurrent]
+            batch = claims[i : i + max_concurrent]
             tasks = [process_claim(claim) for claim in batch]
             await asyncio.gather(*tasks)
             all_tasks.extend(tasks)

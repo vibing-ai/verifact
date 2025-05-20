@@ -134,10 +134,10 @@ class BenchmarkResults:
                 "min": min(self.pipeline_times) if self.pipeline_times else 0,
                 "max": max(self.pipeline_times) if self.pipeline_times else 0,
                 "claim_counts": (
-                    self.claim_counts[-len(self.pipeline_times):] if self.pipeline_times else []
+                    self.claim_counts[-len(self.pipeline_times) :] if self.pipeline_times else []
                 ),
                 "evidence_counts": (
-                    self.evidence_counts[-len(self.pipeline_times):] if self.pipeline_times else []
+                    self.evidence_counts[-len(self.pipeline_times) :] if self.pipeline_times else []
                 ),
                 "verdict_counts": self.verdict_counts,
             },

@@ -526,7 +526,7 @@ class AsyncClaimProcessor(AsyncProcessor[T, R]):
             item1 = result1.item
 
             # Compare with other items
-            for item_id2 in processed_ids[i + 1:]:
+            for item_id2 in processed_ids[i + 1 :]:
                 result2 = self._results.get(item_id2)
                 if not result2 or not result2.success:
                     continue
