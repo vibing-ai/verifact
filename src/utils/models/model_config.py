@@ -78,6 +78,7 @@ CACHE_SIZE = int(os.getenv("MODEL_CACHE_SIZE", "1000"))
 # Flag to enable/disable caching
 ENABLE_CACHING = os.getenv("ENABLE_MODEL_CACHING", "True").lower() == "true"
 
+
 # Module-level cache to avoid memory leaks
 @lru_cache(maxsize=1000)  # Default cache size
 def _cached_completion_store(cache_key: str, model: str) -> dict[str, Any]:

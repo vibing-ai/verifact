@@ -48,7 +48,9 @@ from src.utils.validation import (
 # Define CancelledError class for job cancellation
 class CancelledError(Exception):
     """Exception raised when a batch factcheck job is cancelled by the user."""
+
     pass
+
 
 # Setup logging
 logger = logging.getLogger(__name__)

@@ -12,8 +12,4 @@ from .test_factcheck_pipeline import TestFactcheckPipeline
 from .test_pipeline_integration import TestPipelineIntegration
 
 # Export test classes
-__all__ = [
-    "TestDBIntegration",
-    "TestFactcheckPipeline",
-    "TestPipelineIntegration"
-]
+__all__ = ["TestDBIntegration", "TestFactcheckPipeline", "TestPipelineIntegration"]

@@ -23,12 +23,4 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from . import agents, api, integration, models, performance, system, utils
 
 # Export all test packages
-__all__ = [
-    "agents",
-    "api",
-    "integration",
-    "models",
-    "performance",
-    "system",
-    "utils"
-]
+__all__ = ["agents", "api", "integration", "models", "performance", "system", "utils"]

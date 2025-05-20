@@ -12,8 +12,4 @@ from .test_model_config import TestModelConfig
 from .test_search_tools import TestSearchTools
 
 # Export test classes
-__all__ = [
-    "TestDBUtils",
-    "TestModelConfig",
-    "TestSearchTools"
-]
+__all__ = ["TestDBUtils", "TestModelConfig", "TestSearchTools"]

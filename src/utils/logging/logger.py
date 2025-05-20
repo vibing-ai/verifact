@@ -144,9 +144,7 @@ try:
     # Context variables for tracking request context across async boundaries
     request_id_var: ContextVar[str] = ContextVar("request_id", default="")
     component_var: ContextVar[str] = ContextVar("component", default="")
-    context_data_var: ContextVar[dict[str, Any]] = ContextVar(
-        "context_data", default=None
-    )
+    context_data_var: ContextVar[dict[str, Any]] = ContextVar("context_data", default=None)
 except ImportError:
     # Fallback for older Python versions
     request_id_var = None

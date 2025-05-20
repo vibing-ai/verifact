@@ -224,4 +224,6 @@ def try_parse_json(json_str: str) -> dict[str, Any]:
     try:
         return json.loads(json_str)
     except json.JSONDecodeError as e:
-        raise ValidationError(message=f"Invalid JSON: {str(e)}", details={"json_error": str(e)}) from e
+        raise ValidationError(
+            message=f"Invalid JSON: {str(e)}", details={"json_error": str(e)}
+        ) from e

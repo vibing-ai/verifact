@@ -196,11 +196,7 @@ async def get_pipeline_config(request: FactcheckRequest) -> PipelineConfig:
     """,
     response_description="Factchecking results with verdicts for identified claims",
 )
-async def factcheck(
-    request: FactcheckRequest,
-    api_request: Request,
-    api_key: APIKey = None
-):
+async def factcheck(request: FactcheckRequest, api_request: Request, api_key: APIKey = None):
     """Factcheck claims in the provided text.
 
     Args:

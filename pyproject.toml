@@ -87,6 +87,8 @@ disallow_incomplete_defs = false
 # Enable Black-compatible formatting
 line-length = 100
 target-version = "py310"
+
+[tool.ruff.lint]
 select = [
     "E",    # pycodestyle errors
     "F",    # pyflakes
@@ -111,17 +113,17 @@ unfixable = []
 # Allow unused variables when underscore-prefixed.
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
 line-ending = "auto"
 docstring-code-format = true
-
-[tool.ruff.pydocstyle]
-convention = "google"
-
-[tool.ruff.isort]
-known-first-party = ["src"]
 
 [tool.coverage.run]
 source = ["src"]

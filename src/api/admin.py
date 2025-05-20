@@ -135,10 +135,7 @@ async def require_admin(request: Request) -> dict[str, Any]:
     The API key will be returned only once, so make sure to store it securely.
     """,
 )
-async def create_key(
-    request: ApiKeyRequest = None,
-    admin: dict[str, Any] = None
-):
+async def create_key(request: ApiKeyRequest = None, admin: dict[str, Any] = None):
     """Create a new API key."""
     if request is None:
         request = Body()
@@ -301,8 +298,7 @@ async def list_keys(user_id: str, admin: dict[str, Any] = None):
     """,
 )
 async def invalidate_cache(
-        request: InvalidateCacheRequest = None,
-    admin: dict[str, Any] = None
+    request: InvalidateCacheRequest = None, admin: dict[str, Any] = None
 ) -> dict[str, Any]:
     """Invalidate cache entries."""
     if request is None:
@@ -402,8 +398,7 @@ async def cache_status(admin: dict[str, Any] = None) -> dict[str, Any]:
     """,
 )
 async def cache_metrics(
-    namespace: str | None = None,
-    admin: dict[str, Any] = None
+    namespace: str | None = None, admin: dict[str, Any] = None
 ) -> dict[str, Any]:
     """Get cache metrics."""
     if admin is None:

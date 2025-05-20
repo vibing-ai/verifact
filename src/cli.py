@@ -301,12 +301,14 @@ def format_results_as_text(verdicts, stats, use_color: bool = True):
             panel_content.append(f"\nSources:\n{source_list}")
 
         # Create and add panel to output
-        panel_str = str(Panel(
-            "\n".join(panel_content),
-            title=f"Claim {i}: {claim_text}",
-            expand=False,
-            padding=(1, 2),
-        ))
+        panel_str = str(
+            Panel(
+                "\n".join(panel_content),
+                title=f"Claim {i}: {claim_text}",
+                expand=False,
+                padding=(1, 2),
+            )
+        )
         output.append(panel_str)
 
     # Return formatted output
@@ -542,6 +544,7 @@ async def run_test(
 
         # Create a request object using our Pydantic model
         from src.models.factcheck import FactcheckRequest
+
         request = FactcheckRequest(
             text=claim,
             options={
@@ -889,7 +892,9 @@ async def run_factcheck_command(args):
             try:
                 input_text = fetch_url_content(args.url)
             except ValueError as e:
-                raise ValidationError(code="URL_ERROR", message=str(e), details={"url": args.url}) from e
+                raise ValidationError(
+                    code="URL_ERROR", message=str(e), details={"url": args.url}
+                ) from e
 
         # Validate input text
         if not input_text or not input_text.strip():
