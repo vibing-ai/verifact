@@ -1441,8 +1441,7 @@ class SupabaseClient:
                     result[field] = encrypt_value(str(result[field]))
                 except EncryptionError as e:
                     logger.warning(
-                        f"Failed to encrypt field {field}: {
-                            str(e)}")
+                        f"Failed to encrypt field {field}: {str(e)}")
 
         return result
 
@@ -1466,8 +1465,7 @@ class SupabaseClient:
                     result[field] = decrypt_value(str(result[field]))
                 except EncryptionError as e:
                     logger.warning(
-                        f"Failed to decrypt field {field}: {
-                            str(e)}")
+                        f"Failed to decrypt field {field}: {str(e)}")
 
         return result
 
