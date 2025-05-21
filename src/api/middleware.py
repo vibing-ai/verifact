@@ -47,8 +47,8 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 
 # Get API key settings
-REQUIRE_API_KEY = settings.require_api_key
-API_KEY_HEADER_NAME = settings.api_key_header_name or "X-API-Key"
+REQUIRE_API_KEY = os.environ.get("API_KEY_ENABLED", "true").lower() == "true"
+API_KEY_HEADER_NAME = os.environ.get("API_KEY_HEADER_NAME", "X-API-Key")
 API_KEY_HEADER = Depends(lambda request: request.headers.get(API_KEY_HEADER_NAME))
 
 # Path patterns that are exempt from API key authentication

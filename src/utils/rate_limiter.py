@@ -76,10 +76,11 @@ class MemoryRateLimitStore(RateLimitStore):
         """Initialize the in-memory rate limit store.
 
         Args:
-            max_size: Maximum number of keys to store
+            max_size: Maximum number of keys to store (ignored, kept for backward compatibility)
             ttl_seconds: Time-to-live in seconds for cache entries
         """
-        self.cache = Cache(max_size=max_size, ttl_seconds=ttl_seconds)
+        self.cache = Cache(namespace="rate_limits")
+        self.cache.ttl = ttl_seconds  # Set TTL directly on the cache instance
 
     async def increment(self, key: str, window_seconds: int) -> tuple[int, list[float]]:
         """Increment request count for a key and return the count and timestamps.
