@@ -122,12 +122,3 @@ async def on_chat_resume():
         content=f"Welcome back to VeriFact, {user.identifier}! Your previous chat session has been restored.",
         author="VeriFact",
     ).send()
-
-
-@cl.on_element_change
-async def on_element_change(element, input_value):
-    """Handle changes to UI elements like sliders and switches."""
-    settings = cl.user_session.get("settings")
-    if settings:
-        settings[element.id] = input_value
-        cl.user_session.set("settings", settings)

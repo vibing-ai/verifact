@@ -42,6 +42,7 @@ from src.verifact_agents.interfaces import IEvidenceHunter
 from src.utils.cache.cache import evidence_cache
 from src.utils.logger import get_component_logger
 from src.utils.model_config import ModelManager
+from agents import ModelSettings
 from src.utils.search.search_tools import get_search_tool
 
 # Create a logger for this module
@@ -131,7 +132,13 @@ class EvidenceHunter(IEvidenceHunter):
             output_type=list[Evidence],
             tools=[search_tool],
             model=self.model_manager.model_name,
-            **self.model_manager.parameters,
+            model_settings=ModelSettings(
+                temperature=self.model_manager.parameters.get("temperature", 0.0),
+                top_p=self.model_manager.parameters.get("top_p", 1.0),
+                frequency_penalty=self.model_manager.parameters.get("frequency_penalty", 0.0),
+                presence_penalty=self.model_manager.parameters.get("presence_penalty", 0.0),
+                max_tokens=self.model_manager.parameters.get("max_tokens", 4000),
+            ),
         )
 
     async def gather_evidence(self, claim: Claim) -> list[Evidence]:

@@ -37,7 +37,6 @@ VeriFact is under active development. Here's the current status of key features:
 | FastAPI Backend        | Implemented | RESTful API for factchecking                           |
 | Supabase Integration   | Implemented | Vector storage, user auth, and session persistence     |
 | PGVector Integration   | Implemented | For semantic search and embeddings storage             |
-| Docker Deployment      | Implemented | Full containerization with docker-compose              |
 | Redis Caching          | Implemented | For model responses and evidence caching               |
 | Multi-claim Processing | In Progress | Parallel processing implementation underway            |
 | Multilingual Support   | In Progress | Basic support implemented, expanding language coverage |
@@ -52,7 +51,6 @@ VeriFact is under active development. Here's the current status of key features:
 - **Web Interface**: Chainlit for interactive UI
 - **API Framework**: FastAPI
 - **Caching**: Redis for model and evidence caching
-- **Containerization**: Docker and Docker Compose
 - **Language**: Python 3.10+
 
 ## Setup and Installation
@@ -61,7 +59,8 @@ VeriFact is under active development. Here's the current status of key features:
 
 - Python 3.10+
 - pip or poetry for package management
-- Docker & Docker Compose (optional, for containerized deployment)
+- PostgreSQL (for database features)
+- Redis (for caching, optional)
 
 ### Installation
 
@@ -107,16 +106,12 @@ VeriFact is under active development. Here's the current status of key features:
 
 5. Start the application:
 
-   With Docker (recommended for full stack):
-
    ```bash
-   docker-compose up
-   ```
+   # Start the Chainlit UI
+   chainlit run app.py  # Access at http://localhost:8501
 
-   Or run components separately:
-
-   ```bash
-   chainlit run app.py  # For the UI (http://localhost:8501)
+   # For the API (in a separate terminal)
+   uvicorn src.main:app --host 0.0.0.0 --port 8000
    ```
 
 ## Model Configuration
@@ -209,11 +204,23 @@ SUPABASE_KEY=your_supabase_key_here
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=secure_password_here  # Change for security
 POSTGRES_DB=postgres
-POSTGRES_HOST=localhost  # Use "verifact-db" with Docker
+POSTGRES_HOST=localhost
 POSTGRES_PORT=5432
 ```
 
 ⚠️ **SECURITY WARNING**: Never use default database credentials in production.
+
+## Redis Configuration
+
+For Redis caching (optional but recommended for performance):
+
+```
+# Redis Configuration
+REDIS_ENABLED=true
+REDIS_URL=redis://:${REDIS_PASSWORD:-}@localhost:6379/0
+REDIS_PASSWORD=your-redis-password
+REDIS_CACHE_TTL=86400
+```
 
 ## Advanced Configuration
 
@@ -269,69 +276,6 @@ from src.config import settings
 db_url = settings.database.url
 api_port = settings.api.port
 ```
-
-## Docker Deployment
-
-VeriFact includes optimized Docker configurations for both development and production environments.
-
-### Development Setup
-
-To start all services in development mode:
-
-```bash
-docker-compose up -d
-```
-
-This will start:
-
-- VeriFact API on port 8000
-- VeriFact UI on port 8501
-- PostgreSQL database with pgvector extension
-- Redis for caching
-
-### Production Setup
-
-For production deployment, use both compose files:
-
-```bash
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-```
-
-The production configuration includes:
-
-- Optimized resource limits
-- Health checks for all services
-- Nginx for SSL termination and load balancing
-- Certbot for automatic SSL certificate renewal
-
-### Helper Script
-
-A helper script is provided to simplify Docker operations:
-
-```bash
-# Start in development mode
-./scripts/docker-compose-helper.sh up
-
-# Start in production mode
-./scripts/docker-compose-helper.sh -e prod up
-
-# View logs
-./scripts/docker-compose-helper.sh logs
-
-# Check service health
-./scripts/docker-compose-helper.sh health
-```
-
-Run `./scripts/docker-compose-helper.sh --help` for more options.
-
-### Container Security
-
-The Docker setup implements security best practices:
-
-- Multi-stage builds for smaller images
-- Non-root user for running applications
-- Health checks for all services
-- Resource limitations to prevent container abuse
 
 ## Contributing
 

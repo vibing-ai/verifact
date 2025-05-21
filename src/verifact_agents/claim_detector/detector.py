@@ -44,6 +44,11 @@ from src.utils.metrics import claim_detector_metrics
 from src.utils.model_config import ModelManager
 
 
+class DetectionError(Exception):
+    """Exception raised when claim detection fails."""
+    pass
+
+
 class ClaimDetector(IClaimDetector):
     """Agent for detecting factual claims in text."""
 
@@ -103,18 +108,6 @@ class ClaimDetector(IClaimDetector):
                 1:
             ]
             self.logger.info("Using custom model", extra={"model_name": model_name})
-            # Default model is qwen/qwen3-8b:free, which excels at structured output
-            if "qwen" in self.model_manager.model_name.lower():
-                self.logger.info(
-                    "Using Qwen model with optimized parameters",
-                    extra={
-                        "model": "qwen3-8b",
-                        "optimization": "structured output",
-                        "temperature": 0.1,
-                    },
-                )
-                # Use lower temperature for more consistent structured output
-                self.model_manager.set_parameter("temperature", 0.1)
         else:
             self.logger.info(
                 "Using default model", extra={"model_name": self.model_manager.model_name}
@@ -189,7 +182,6 @@ class ClaimDetector(IClaimDetector):
                 presence_penalty=self.model_manager.parameters.get("presence_penalty", 0.0),
                 max_tokens=self.model_manager.parameters.get("max_tokens", 4000),
             ),
-            output_schema_strict=False,
         )
 
         # Log agent creation time
@@ -240,7 +232,6 @@ class ClaimDetector(IClaimDetector):
                 presence_penalty=self.model_manager.parameters.get("presence_penalty", 0.0),
                 max_tokens=self.model_manager.parameters.get("max_tokens", 2000),
             ),
-            output_schema_strict=False,
         )
 
         # Log entity agent creation time

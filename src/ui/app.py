@@ -171,10 +171,10 @@ async def main(message: cl.Message):
         cl.logger.error(f"Error in VeriFact pipeline: {str(e)}")
 
 
-@cl.on_button_click
-async def on_button_click(button):
+@cl.on_click
+async def on_button_click(event: cl.ClickEvent):
     """Handle button clicks for claim processing."""
-    if button.id == "process_claims_button":
+    if event.id == "process_claims_button":
         # Get settings
         settings = cl.user_session.get("settings")
         if not settings:
@@ -185,9 +185,12 @@ async def on_button_click(button):
         await handle_selected_claims(settings)
 
 
-@cl.action_callback("export_results")
+@cl.on_action
 async def on_export(action):
     """Handle export button click to download results as JSON."""
+    if action.name != "export_results":
+        return
+
     # Get the fact-check history
     factcheck_history = cl.user_session.get("factcheck_history", [])
 
@@ -211,9 +214,12 @@ async def on_export(action):
     ).send()
 
 
-@cl.action_callback("view_history")
+@cl.on_action
 async def on_view_history(action):
     """Display the user's fact-check history."""
+    if action.name != "view_history":
+        return
+
     # Get the fact-check history
     factcheck_history = cl.user_session.get("factcheck_history", [])
 
@@ -254,167 +260,168 @@ async def on_view_history(action):
         else:
             timestamp_str = "Unknown time"
 
-        history_content += f"## {i + 1}. {rating_emoji} {rating} - {timestamp_str}\n\n"
-        history_content += f"**Claim:** {claim_text}\n\n"
-
-        if "explanation" in verdict:
-            history_content += f"**Verdict:** {verdict['explanation']}\n\n"
-
+        # Add the fact-check item
+        history_content += f"## {i+1}. {rating_emoji} {claim_text}\n\n"
+        history_content += f"**Verdict:** {rating}\n\n"
+        history_content += f"**Time:** {timestamp_str}\n\n"
+        history_content += f"**Confidence:** {verdict.get('confidence', 'N/A')}\n\n"
         history_content += "---\n\n"
 
-    # Send the history message
     await cl.Message(content=history_content).send()
 
 
-@cl.action_callback("feedback_*")
+@cl.on_action
 async def on_feedback(action):
     """Handle feedback submission."""
-    # Extract fact-check ID from action ID
-    fact_check_id = action.id.replace("feedback_", "")
+    # Check if this is a feedback action
+    if not action.name.startswith("feedback_"):
+        return
 
-    # Get values from UI elements
-    accuracy_value = cl.user_session.get(f"accuracy_{fact_check_id}")
-    helpfulness_value = cl.user_session.get(f"helpfulness_{fact_check_id}")
-    comments_value = cl.user_session.get(f"comments_{fact_check_id}", "")
+    # Extract the rating from the action name
+    try:
+        action_parts = action.name.split("_")
+        if len(action_parts) < 3:
+            return
 
-    # Prepare feedback data
-    feedback_data = {
-        "accuracy": accuracy_value,
-        "helpfulness": helpfulness_value,
-        "comments": comments_value,
-    }
+        rating_type = action_parts[1]  # e.g., "accuracy" or "helpfulness"
+        rating_value = action_parts[2]  # e.g., "very_good", "good", etc.
+        claim_id = "_".join(action_parts[3:]) if len(action_parts) > 3 else None
 
-    # Save feedback
-    success = await save_feedback(fact_check_id, feedback_data)
+        if not claim_id:
+            return
 
-    if success:
-        await cl.Message(
-            content="Thank you for your feedback! It helps us improve VeriFact."
-        ).send()
-    else:
-        await cl.Message(
-            content="There was an error saving your feedback. Please try again later."
-        ).send()
+        # Add the feedback to the database
+        await save_feedback(claim_id, rating_type, rating_value, action.value)
+
+        # Send a confirmation message
+        await cl.Message(content=f"Thank you for your {rating_type} feedback!").send()
+
+    except Exception as e:
+        cl.logger.error(f"Error processing feedback: {str(e)}")
+        await cl.Message(content="Error saving feedback. Please try again.").send()
 
 
-@cl.action_callback("view_feedback_admin")
+@cl.on_action
 async def on_view_feedback_admin(action):
-    """Display feedback statistics for admin users."""
-    # Check if user is admin
-    user = cl.user_session.get("user")
-    if not user or getattr(user, "identifier", "") != os.environ.get(
-        "VERIFACT_ADMIN_USER", "admin"
-    ):
-        await cl.Message(content="You don't have permission to view feedback statistics").send()
+    """Handle admin view of feedback statistics."""
+    if action.name != "view_feedback_admin":
         return
 
-    # Get feedback statistics
-    stats = await get_feedback_stats()
+    # Check if user has admin rights
+    user = cl.user_session.get("user")
+    if not user or user.metadata.get("role") != "admin":
+        await cl.Message(content="You don't have permission to view feedback statistics.").send()
+        return
 
-    # Create feedback statistics message
-    feedback_content = "# Feedback Statistics\n\n"
+    try:
+        # Get feedback statistics
+        stats = await get_feedback_stats()
 
-    # Total feedback
-    feedback_content += f"**Total feedback submissions:** {stats.total_feedback}\n\n"
+        if not stats or (
+            stats.get("accuracy_counts", {}) == {} and stats.get("helpfulness_counts", {}) == {}
+        ):
+            await cl.Message(content="No feedback data available yet.").send()
+            return
 
-    # Accuracy ratings
-    feedback_content += "## Accuracy Ratings\n\n"
-    for rating, count in stats.accuracy_ratings.items():
-        percent = (count / stats.total_feedback * 100) if stats.total_feedback > 0 else 0
-        feedback_content += f"- **{rating}:** {count} ({percent:.1f}%)\n"
+        # Create a message with the statistics
+        stats_content = "# Feedback Statistics\n\n"
 
-    feedback_content += "\n"
+        # Add accuracy stats
+        stats_content += "## Accuracy Ratings\n\n"
+        accuracy_counts = stats.get("accuracy_counts", {})
+        if accuracy_counts:
+            total_accuracy = sum(accuracy_counts.values())
+            stats_content += f"Total ratings: {total_accuracy}\n\n"
+            for rating, count in sorted(
+                accuracy_counts.items(), key=lambda x: (x[0] != "excellent", x[0])
+            ):
+                percentage = (count / total_accuracy) * 100 if total_accuracy > 0 else 0
+                stats_content += f"- **{rating.replace('_', ' ').title()}**: {count} ({percentage:.1f}%)\n"
+        else:
+            stats_content += "No accuracy ratings yet.\n"
 
-    # Helpfulness ratings
-    feedback_content += "## Helpfulness Ratings\n\n"
-    for rating, count in stats.helpfulness_ratings.items():
-        percent = (count / stats.total_feedback * 100) if stats.total_feedback > 0 else 0
-        feedback_content += f"- **{rating}:** {count} ({percent:.1f}%)\n"
+        # Add helpfulness stats
+        stats_content += "\n## Helpfulness Ratings\n\n"
+        helpfulness_counts = stats.get("helpfulness_counts", {})
+        if helpfulness_counts:
+            total_helpfulness = sum(helpfulness_counts.values())
+            stats_content += f"Total ratings: {total_helpfulness}\n\n"
+            for rating, count in sorted(
+                helpfulness_counts.items(), key=lambda x: (x[0] != "very_helpful", x[0])
+            ):
+                percentage = (count / total_helpfulness) * 100 if total_helpfulness > 0 else 0
+                stats_content += (
+                    f"- **{rating.replace('_', ' ').title()}**: {count} ({percentage:.1f}%)\n"
+                )
+        else:
+            stats_content += "No helpfulness ratings yet.\n"
 
-    feedback_content += "\n"
+        # Add recent comments
+        stats_content += "\n## Recent Comments\n\n"
+        recent_comments = stats.get("recent_comments", [])
+        if recent_comments:
+            for comment in recent_comments:
+                timestamp = comment.get("created_at", "")
+                try:
+                    if timestamp:
+                        dt = datetime.datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+                        timestamp_str = dt.strftime("%Y-%m-%d %H:%M")
+                    else:
+                        timestamp_str = "Unknown time"
+                except Exception:
+                    timestamp_str = str(timestamp)
 
-    # Recent feedback
-    feedback_content += "## Recent Feedback\n\n"
-    for i, feedback in enumerate(stats.recent_feedback):
-        feedback_content += f"### Feedback {i + 1}\n\n"
-        feedback_content += f"**Accuracy:** {feedback.get('accuracy_rating', 'N/A')}\n"
-        feedback_content += f"**Helpfulness:** {feedback.get('helpfulness_rating', 'N/A')}\n"
+                stats_content += f"### {timestamp_str}\n"
+                stats_content += f"**Rating**: {comment.get('rating_type', '')} - {comment.get('rating_value', '').replace('_', ' ').title()}\n"
+                stats_content += f"**Comment**: {comment.get('comment', 'No comment')}\n\n"
+                stats_content += "---\n\n"
+        else:
+            stats_content += "No comments yet.\n"
 
-        if feedback.get("comments"):
-            feedback_content += f"**Comments:** {feedback.get('comments')}\n"
+        await cl.Message(content=stats_content).send()
 
-        # Format timestamp
-        timestamp = feedback.get("timestamp", "")
-        if timestamp:
-            try:
-                if isinstance(timestamp, str):
-                    dt = datetime.datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
-                else:
-                    dt = timestamp
-                timestamp_str = dt.strftime("%Y-%m-%d %H:%M:%S")
-            except Exception:
-                timestamp_str = str(timestamp)
-
-            feedback_content += f"**Time:** {timestamp_str}\n"
-
-        feedback_content += "\n---\n\n"
-
-    # Add export button
-    export_button = cl.Action(name="Export Feedback", value="export_feedback", id="export_feedback")
-
-    # Send the feedback statistics message
-    await cl.Message(content=feedback_content, actions=[export_button]).send()
+    except Exception as e:
+        cl.logger.error(f"Error retrieving feedback stats: {str(e)}")
+        await cl.Message(content=f"Error retrieving feedback statistics: {str(e)}").send()
 
 
-@cl.action_callback("export_feedback")
+@cl.on_action
 async def on_export_feedback(action):
-    """Export feedback data as JSON for admin users."""
-    # Check if user is admin
+    """Handle export of feedback data."""
+    if action.name != "export_feedback":
+        return
+
+    # Check if user has admin rights
     user = cl.user_session.get("user")
-    if not user or getattr(user, "identifier", "") != os.environ.get(
-        "VERIFACT_ADMIN_USER", "admin"
-    ):
-        await cl.Message(content="You don't have permission to export feedback data").send()
+    if not user or user.metadata.get("role") != "admin":
+        await cl.Message(content="You don't have permission to export feedback data.").send()
         return
 
-    # Get feedback statistics
-    stats = await get_feedback_stats()
+    try:
+        # Get feedback statistics
+        stats = await get_feedback_stats(include_all=True)
 
-    if stats.total_feedback == 0:
-        await cl.Message(content="No feedback data to export").send()
-        return
-
-    # Get all feedback data
-    db_client = SupabaseClient()
-
-    if db_client.is_connected():
-        try:
-            all_feedback = await db_client.get_all_feedback()
-        except Exception as e:
-            cl.logger.error(f"Error getting feedback data: {str(e)}")
-            await cl.Message(content=f"Error retrieving feedback data: {str(e)}").send()
-            return
-    else:
-        # Fall back to local file
-        feedback_file = os.path.join(os.getcwd(), "data", "feedback.json")
-        if not os.path.exists(feedback_file):
-            await cl.Message(content="No feedback data found").send()
+        if not stats:
+            await cl.Message(content="No feedback data available for export.").send()
             return
 
-        with open(feedback_file) as f:
-            all_feedback = json.load(f)
+        # Convert to JSON
+        feedback_json = json.dumps(stats, indent=2)
 
-    # Convert to JSON
-    feedback_json = json.dumps(all_feedback, indent=2)
+        # Generate a filename with timestamp
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"verifact_feedback_{timestamp}.json"
 
-    # Generate filename with timestamp
-    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"verifact_feedback_{timestamp}.json"
+        # Create a downloadable file
+        await cl.Message(
+            content="Your feedback data is ready for download.",
+            attachments=[
+                cl.Attachment(
+                    name=filename, content=feedback_json.encode(), mime="application/json"
+                )
+            ],
+        ).send()
 
-    # Create a downloadable file
-    await cl.Message(
-        content="Feedback data export is ready for download.",
-        attachments=[
-            cl.Attachment(name=filename, content=feedback_json.encode(), mime="application/json")
-        ],
-    ).send()
+    except Exception as e:
+        cl.logger.error(f"Error exporting feedback: {str(e)}")
+        await cl.Message(content=f"Error exporting feedback data: {str(e)}").send()

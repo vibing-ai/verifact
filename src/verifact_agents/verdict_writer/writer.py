@@ -35,6 +35,7 @@ from src.verifact_agents.evidence_hunter.hunter import Evidence
 from src.verifact_agents.interfaces import IVerdictWriter
 from src.utils.logger import get_component_logger
 from src.utils.model_config import ModelManager
+from agents import ModelSettings
 
 # Create a logger for this module
 logger = get_component_logger("verdict_writer")
@@ -160,7 +161,13 @@ class VerdictWriter(IVerdictWriter):
             """,
             output_type=Verdict,
             model=self.model_manager.model_name,
-            **self.model_manager.parameters,
+            model_settings=ModelSettings(
+                temperature=self.model_manager.parameters.get("temperature", 0.0),
+                top_p=self.model_manager.parameters.get("top_p", 1.0),
+                frequency_penalty=self.model_manager.parameters.get("frequency_penalty", 0.0),
+                presence_penalty=self.model_manager.parameters.get("presence_penalty", 0.0),
+                max_tokens=self.model_manager.parameters.get("max_tokens", 4000),
+            ),
         )
 
     def _assess_evidence_quality(self, evidence: Evidence) -> float:

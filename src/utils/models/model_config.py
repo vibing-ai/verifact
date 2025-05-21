@@ -44,8 +44,9 @@ load_dotenv()
 # Format: "provider/model" - e.g., "qwen/qwen3-8b:free",
 # "meta-llama/llama-3.3-8b-instruct:free"
 DEFAULT_MODELS = {
-    # Qwen 3-8b: Optimized for structured JSON output and entity extraction
-    "claim_detector": "qwen/qwen3-8b:free",
+    # Use models supported by OpenAI Agents SDK:
+    # Changed from qwen/qwen3-8b:free which is not supported
+    "claim_detector": "meta-llama/llama-3.3-8b-instruct:free",
     # Google Gemma 3-27b-it: Optimized for RAG with 128k context window
     "evidence_hunter": "google/gemma-3-27b-it:free",
     # DeepSeek Chat: Best reasoning capabilities for evidence synthesis

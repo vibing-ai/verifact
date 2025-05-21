@@ -35,7 +35,8 @@ There are many ways to contribute to VeriFact:
 - pip or uv for package management
 - OpenRouter API key for model access (register at [openrouter.ai](https://openrouter.ai))
 - Git for version control
-- Docker & Docker Compose (optional, for containerized development)
+- PostgreSQL database (optional, for data persistence)
+- Redis (optional, for caching)
 
 ### Setting up the development environment
 
@@ -60,7 +61,7 @@ There are many ways to contribute to VeriFact:
 5. Copy the environment template and configure it with your API keys:
 
    ```
-   cp configs/env.template .env
+   cp .env-example .env
    ```
 
    At minimum, add your OpenRouter API key to the `.env` file:
@@ -145,15 +146,7 @@ When creating a new issue:
 
 ## Running the Application
 
-### Using Docker (Recommended for Full Stack)
-
-```bash
-docker-compose up
-```
-
-This will start all necessary services including the Chainlit UI, FastAPI backend, and database.
-
-### Running Components Separately (Local Development)
+### Running Components Separately
 
 For the Chainlit UI:
 

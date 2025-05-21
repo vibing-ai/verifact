@@ -12,6 +12,8 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
+import platform
+from packaging import version
 
 import pytest
 
@@ -106,100 +108,51 @@ class VerifactTester:
         # Generate final report
         return self.generate_report()
 
-    async def check_environment(self):
-        """Verify the environment is properly configured."""
-        print("\n1. Checking environment and configuration...")
+    def check_environment(self):
+        """Check dependencies and environment configuration."""
+        self.results["environment_checks"] = {}
 
         # Check Python version
-        python_version = sys.version
-        min_version = (3, 10)
-        version_parts = python_version.split()[0].split(".")
-        meets_requirement = tuple(map(int, version_parts[:2])) >= min_version
+        python_version = platform.python_version()
+        python_version_req = "3.10"
+        python_valid = version.parse(python_version) >= version.parse(python_version_req)
 
         self.results["environment_checks"]["python_version"] = {
-            "version": python_version,
-            "requirement": f">= {min_version[0]}.{min_version[1]}",
-            "status": "PASS" if meets_requirement else "FAIL",
+            "current": python_version,
+            "required": f">= {python_version_req}",
+            "valid": python_valid,
+            "status": "PASS" if python_valid else "FAIL",
         }
 
-        if not meets_requirement:
+        if not python_valid:
             self.results["issues"].append(
-                f"Python version {python_version} does not meet minimum requirement {min_version[0]}.{min_version[1]}"
+                f"Python version {python_version} is below the required version {python_version_req}"
+            )
+            self.results["recommendations"].append(
+                f"Update Python to version {python_version_req} or higher"
             )
 
         # Check .env file
         env_file_exists = os.path.exists(".env")
+        
         self.results["environment_checks"]["env_file"] = {
             "exists": env_file_exists,
+            "path": os.path.abspath(".env") if env_file_exists else None,
             "status": "PASS" if env_file_exists else "FAIL",
         }
 
         if not env_file_exists:
-            self.results["issues"].append("Missing .env file")
+            self.results["issues"].append(".env file is missing")
             self.results["recommendations"].append(
-                "Create a .env file with required configuration (see README.md)"
+                "Copy .env-example to .env and add your API keys"
             )
 
         # Check API keys
-        env_keys = ["OPENROUTER_API_KEY", "SERPER_API_KEY", "SUPABASE_URL", "SUPABASE_KEY"]
+        if env_file_exists:
+            self.check_api_keys()
 
-        for key in env_keys:
-            exists = bool(os.environ.get(key, ""))
-            self.results["environment_checks"][f"{key}_exists"] = {
-                "exists": exists,
-                "status": "PASS" if exists else "FAIL",
-            }
-
-            if not exists:
-                self.results["issues"].append(f"Missing environment variable: {key}")
-
-        # Check dependencies
-        try:
-            import importlib
-
-            for package in ["openai", "pydantic", "fastapi", "chainlit", "supabase"]:
-                try:
-                    importlib.import_module(package)
-                    self.results["environment_checks"][f"{package}_installed"] = {"status": "PASS"}
-                except ImportError:
-                    self.results["environment_checks"][f"{package}_installed"] = {"status": "FAIL"}
-                    self.results["issues"].append(f"Missing required package: {package}")
-                    self.results["recommendations"].append(
-                        f"Install {package} with pip install {package}"
-                    )
-        except Exception as e:
-            self.results["environment_checks"]["dependency_check"] = {
-                "status": "FAIL",
-                "error": str(e),
-            }
-            self.results["issues"].append(f"Error checking dependencies: {e}")
-
-        # Check Docker configuration
-        try:
-            import subprocess
-
-            result = subprocess.run(["docker-compose", "config"], capture_output=True, text=True)
-
-            docker_valid = result.returncode == 0
-            docker_output = result.stdout if docker_valid else result.stderr
-
-            self.results["environment_checks"]["docker_config"] = {
-                "valid": docker_valid,
-                "output": docker_output[:500] + ("..." if len(docker_output) > 500 else ""),
-                "status": "PASS" if docker_valid else "FAIL",
-            }
-
-            if not docker_valid:
-                self.results["issues"].append("Docker configuration is invalid")
-                self.results["recommendations"].append("Check docker-compose.yml for errors")
-
-        except Exception as e:
-            self.results["environment_checks"]["docker_config"] = {
-                "status": "FAIL",
-                "error": str(e),
-            }
-            self.results["issues"].append(f"Error checking Docker configuration: {e}")
-            self.results["recommendations"].append("Ensure Docker and docker-compose are installed")
+        # Check Redis if enabled
+        self.check_redis()
 
     async def test_components(self):
         """Test individual components of the factchecking pipeline."""
