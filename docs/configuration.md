@@ -27,7 +27,7 @@ OPENROUTER_SITE_URL=https://yourdomain.com
 OPENROUTER_SITE_NAME=YourAppName
 ```
 
-A template `.env` file is provided in `configs/env.template`.
+A template `.env` file is provided in `.env-example`.
 
 ## Chainlit Configuration
 

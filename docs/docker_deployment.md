@@ -24,7 +24,7 @@ This document provides detailed instructions for deploying VeriFact using Docker
 2. Configure the environment:
 
    ```bash
-   cp configs/env.template .env
+   cp .env-example .env
    # Edit .env with your preferred text editor
    ```
 

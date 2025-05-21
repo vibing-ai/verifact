@@ -60,7 +60,7 @@ There are many ways to contribute to VeriFact:
 5. Copy the environment template and configure it with your API keys:
 
    ```
-   cp configs/env.template .env
+   cp .env-example .env
    ```
 
    At minimum, add your OpenRouter API key to the `.env` file:

@@ -86,7 +86,7 @@ VeriFact is under active development. Here's the current status of key features:
 3. Copy the environment template and configure it:
 
    ```bash
-   cp configs/env.template .env
+   cp .env-example .env
    ```
 
 4. At minimum, configure the following in your `.env` file:
@@ -195,7 +195,7 @@ POSTGRES_PORT=5432
 
 ## Advanced Configuration
 
-See `configs/env.template` for additional configuration options:
+See `.env-example` for additional configuration options:
 
 - Redis caching settings
 - Embedding model configuration
@@ -209,10 +209,10 @@ VeriFact uses a centralized configuration system based on environment variables.
 
 ### Environment Variables
 
-A template environment file is provided at `configs/env.template`. Copy this file to create your own configuration:
+A template environment file is provided at `.env-example`. Copy this file to create your own configuration:
 
 ```bash
-cp configs/env.template .env
+cp .env-example .env
 ```
 
 At minimum, set the following variables in your `.env` file:

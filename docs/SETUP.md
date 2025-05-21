@@ -78,7 +78,7 @@ pre-commit install
 Copy the template environment file and configure it with your API keys:
 
 ```bash
-cp configs/env.template .env
+cp .env-example .env
 ```
 
 Edit the `.env` file and add at minimum:
@@ -211,20 +211,23 @@ If you want to use Supabase for database features:
 #### Supabase Security Best Practices
 
 1. **Row Level Security (RLS)**: Always enable and configure RLS policies on your tables
+
    ```sql
    -- Example RLS policy for user-specific data
    ALTER TABLE your_table ENABLE ROW LEVEL SECURITY;
-   
+
    CREATE POLICY "Users can view their own data" ON your_table
      FOR SELECT USING (auth.uid() = user_id);
    ```
 
 2. **API Key Management**:
+
    - Never expose your Service Role Key in client-side code
    - Use the Anon Key for public-facing applications
    - Store the Service Role Key securely in environment variables
 
 3. **Database Password Security**:
+
    - Use a unique, complex password for the database
    - Change default credentials (postgres/postgres) immediately
    - Rotate credentials periodically for enhanced security
@@ -653,7 +656,7 @@ For a quick setup to test the system:
 2. Set up minimal environment variables:
 
    ```bash
-   cp configs/env.template .env
+   cp .env-example .env
    # Edit .env and add your OpenRouter API key at minimum
    ```
 
