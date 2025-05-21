@@ -4,17 +4,4 @@ This module is responsible for extracting check-worthy factual claims
 from user-submitted text.
 """
 
-from src.verifact_agents.claim_detector.detector import ClaimDetector
-from src.verifact_agents.claim_detector.domain_classifier import DomainClassifier
-from src.verifact_agents.claim_detector.entity_extractor import EntityExtractor
-from src.verifact_agents.claim_detector.models import Claim, ClaimDomain, Entity, EntityType
-
-__all__ = [
-    "ClaimDetector",
-    "Claim",
-    "Entity",
-    "EntityType",
-    "ClaimDomain",
-    "DomainClassifier",
-    "EntityExtractor",
-]
+# Placeholder for future implementation
