@@ -11,14 +11,15 @@ from typing import Any
 from dotenv import load_dotenv
 from pydantic import (
     BaseModel,
-    BaseSettings,
     Field,
     HttpUrl,
     PostgresDsn,
     RedisDsn,
     root_validator,
     validator,
+    ValidationError,
 )
+from pydantic_settings import BaseSettings
 
 # Load .env file if it exists
 load_dotenv()
