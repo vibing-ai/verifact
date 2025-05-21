@@ -1,9 +1,10 @@
 """Validation utilities for VeriFact.
 
-This module provides validation tools and custom exceptions for data validation and error handling.
+This module provides functions for validating inputs and sanitizing data.
 """
 
-from src.utils.validation.exceptions import ApiError, DataFormatError, ValidationError
-from src.utils.validation.validation import validate_input, validate_response
+from src.utils.validation.exceptions import ValidationError
+from src.utils.validation.sanitizer import sanitize_content, extract_text_from_file
+from src.utils.validation.validation import validate_input
 
-__all__ = ["validate_input", "validate_response", "ValidationError", "ApiError", "DataFormatError"]
+__all__ = ["ValidationError", "sanitize_content", "extract_text_from_file", "validate_input"]

@@ -118,8 +118,7 @@ There are many ways to contribute to VeriFact:
 - Include docstrings for all functions, classes, and modules
 - Keep functions focused on a single responsibility
 - Use type hints to improve code readability and tooling support
-- Format code with `black` and run `flake8` before committing
-- Use `isort` to organize imports (compatible with black settings)
+- Use `ruff` for linting and formatting your code before committing
 - Use `mypy` for static type checking where applicable
 
 ## Testing Guidelines

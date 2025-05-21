@@ -18,10 +18,10 @@ from typing import Any, TypeVar
 
 from pydantic import BaseModel, Field
 
-from src.agents.claim_detector.models import Claim
-from src.agents.evidence_hunter.hunter import Evidence
-from src.agents.interfaces import IClaimDetector, IEvidenceHunter, IVerdictWriter
-from src.agents.verdict_writer.writer import Verdict
+from src.verifact_agents.claim_detector.models import Claim
+from src.verifact_agents.evidence_hunter.hunter import Evidence
+from src.verifact_agents.interfaces import IClaimDetector, IEvidenceHunter, IVerdictWriter
+from src.verifact_agents.verdict_writer.writer import Verdict
 from src.utils.logger import (
     get_component_logger,
     performance_timer,
@@ -556,9 +556,9 @@ def create_default_pipeline(config: PipelineConfig | None = None) -> FactcheckPi
     Returns:
         FactcheckPipeline: A pipeline with default agent implementations
     """
-    from src.agents.claim_detector.detector import ClaimDetector
-    from src.agents.evidence_hunter.hunter import EvidenceHunter
-    from src.agents.verdict_writer.writer import VerdictWriter
+    from src.verifact_agents.claim_detector.detector import ClaimDetector
+    from src.verifact_agents.evidence_hunter.hunter import EvidenceHunter
+    from src.verifact_agents.verdict_writer.writer import VerdictWriter
 
     # Create configuration with defaults if not provided
     config = config or PipelineConfig()

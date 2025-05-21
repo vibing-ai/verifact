@@ -178,8 +178,8 @@ class ModelManager:
             agent_type: Optional type of agent (claim_detector, evidence_hunter, verdict_writer)
         """
         self.agent_type = agent_type
-        self.parameters = self._load_parameters()
-        self.model_name = self._get_model_name()
+        self.model_name = self._get_model_name()  # Set model_name first
+        self.parameters = self._load_parameters()  # Now load parameters which may need model_name
         self.fallback_models = self._get_fallback_chain()
         self.token_usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
         self.httpx_client = httpx.Client(timeout=self.parameters["request_timeout"])
@@ -979,12 +979,20 @@ class ModelManager:
         """
         try:
             import openai
+            import agents
 
             # Set the API key
             openai.api_key = self.get_api_key("openrouter")
+            # For agents, we also need to set the API key
+            agents.set_default_openai_key(self.get_api_key("openrouter"))
 
             # Set the base URL to OpenRouter's endpoint
             openai.base_url = OPENROUTER_API_ENDPOINT
+            # Configure the agents base URL via the OpenAI client
+            agents.set_default_openai_client(openai.Client(
+                base_url=OPENROUTER_BASE_URL,
+                api_key=self.get_api_key("openrouter")
+            ))
 
             # Set the default headers
             headers = self.get_request_headers()
@@ -995,17 +1003,14 @@ class ModelManager:
             }
 
             openai.default_headers = custom_headers
+            # Agents package doesn't have a direct way to set default headers,
+            # they're set via the client
 
-            # If using the agent SDK, we should also set these parameters
-            if hasattr(openai, "Agent"):
-                # Check if there are any additional agent settings to apply
-                pass
-
-            logger.info("OpenAI configured to use " + self.model_name + " via OpenRouter")
+            logger.info("OpenAI and Agents configured to use " + self.model_name + " via OpenRouter")
 
         except ImportError as e:
             raise ImportError(
-                "OpenAI package is required. Install with 'pip install openai>=1.0.0'."
+                "Agents package is required. Install with 'pip install openai-agents'."
             ) from e
 
     def get_agent_client(self):

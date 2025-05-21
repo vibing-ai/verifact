@@ -1,0 +1,18 @@
+{
+  "test_mode": true,
+  "claim_detector": {
+    "min_check_worthiness": 0.5,
+    "max_claims": 3
+  },
+  "evidence_hunter": {
+    "max_evidence": 3,
+    "use_mock_search": true
+  },
+  "verdict_writer": {
+    "confidence_threshold": 0.7
+  },
+  "logging": {
+    "level": "DEBUG",
+    "json_output": false
+  }
+}

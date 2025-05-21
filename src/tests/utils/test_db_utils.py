@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.db.models import Claim, Evidence, Verdict
+from src.models.factcheck import Claim, Evidence, Verdict
 from src.db.utils import (
     get_claim_by_id,
     get_claim_stats,

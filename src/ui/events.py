@@ -9,9 +9,9 @@ import uuid
 
 import chainlit as cl
 
-from src.agents.claim_detector import ClaimDetector
-from src.agents.evidence_hunter import EvidenceHunter
-from src.agents.verdict_writer import VerdictWriter
+from src.verifact_agents.claim_detector import ClaimDetector
+from src.verifact_agents.evidence_hunter import EvidenceHunter
+from src.verifact_agents.verdict_writer import VerdictWriter
 from src.utils.db import SupabaseClient
 
 # Initialize database client

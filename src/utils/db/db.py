@@ -1443,3 +1443,50 @@ class SupabaseClient:
 
 # Create a singleton instance
 db = SupabaseClient()
+
+# Global convenience functions that delegate to the client
+def store_factcheck_result(
+    claim: Claim | dict[str, Any],
+    evidence_list: list[Evidence | dict[str, Any]],
+    verdict: Verdict | dict[str, Any],
+) -> dict[str, Any]:
+    """Store a complete factcheck result.
+
+    This function stores a claim, evidence list, and verdict as a complete
+    factcheck result, establishing all the necessary relationships.
+
+    Args:
+        claim: The claim object or dictionary
+        evidence_list: List of evidence objects or dictionaries
+        verdict: The verdict object or dictionary
+
+    Returns:
+        Dict containing IDs for the stored entities
+
+    Raises:
+        QueryError: If storage fails
+    """
+    return db.store_factcheck_result(claim, evidence_list, verdict)
+
+
+def get_recent_factchecks(
+    limit: int = 10,
+    offset: int = 0,
+    domain: str | None = None,
+    verdict_type: str | None = None,
+) -> dict[str, Any]:
+    """Get recent factcheck results with optional filtering.
+
+    Args:
+        limit: Maximum number of results to return
+        offset: Number of results to skip
+        domain: Optional domain to filter by
+        verdict_type: Optional verdict type to filter by
+
+    Returns:
+        Dict containing factcheck results and pagination info
+
+    Raises:
+        QueryError: If retrieval fails
+    """
+    return db.get_recent_factchecks(limit, offset, domain, verdict_type)

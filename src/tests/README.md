@@ -156,7 +156,7 @@ When writing new tests:
 1. Place the test in the appropriate subdirectory
 2. Use fixtures from the most specific conftest.py file
 3. Follow the existing naming conventions
-4. Import application code using absolute imports (e.g., `from src.agents.claim_detector import ...`)
+4. Import application code using absolute imports (e.g., `from src.verifact_agents.claim_detector import ...`)
 5. Add appropriate markers to categorize the test
 
 ## Testing Strategy

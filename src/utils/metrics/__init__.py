@@ -4,5 +4,13 @@ This module provides classes and functions for tracking and reporting performanc
 """
 
 from src.utils.metrics.db_metrics import ConnectionPoolMetrics
+from src.utils.logging.metrics import ClaimDetectorMetrics
 
-__all__ = ["ConnectionPoolMetrics"]
+# Create metrics instances
+claim_detector_metrics = ClaimDetectorMetrics()
+
+__all__ = [
+    "ConnectionPoolMetrics",
+    "ClaimDetectorMetrics",
+    "claim_detector_metrics",
+]

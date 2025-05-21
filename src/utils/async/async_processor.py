@@ -15,7 +15,7 @@ from typing import Any, Generic, TypeVar
 from ..logging.logger import get_component_logger
 
 # Import using relative imports to avoid 'async' in import path
-from ..priority_queue import (
+from .priority_queue import (
     ClaimPriorityQueue,
     PrioritizedItem,
     PriorityQueue,

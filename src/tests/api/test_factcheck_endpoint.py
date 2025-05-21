@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-from src.agents.verdict_writer.writer import Verdict
+from src.verifact_agents.verdict_writer.writer import Verdict
 from src.main import app
 from src.pipeline.factcheck_pipeline import FactcheckPipeline
 

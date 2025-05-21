@@ -5,6 +5,7 @@ security vulnerabilities like XSS, SQL injection, etc.
 """
 
 import html
+import os
 import re
 import unicodedata
 from typing import Any
@@ -231,3 +232,62 @@ def validate_email_format(email: str) -> bool:
     email_pattern = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
 
     return bool(email_pattern.match(email))
+
+
+def sanitize_content(content: str | dict[str, Any] | list[Any]) -> Any:
+    """Sanitize content based on its type.
+    
+    This function acts as a dispatcher for different types of content.
+    
+    Args:
+        content: Content to sanitize
+        
+    Returns:
+        Sanitized content of the same type
+    """
+    if isinstance(content, str):
+        return sanitize_text(content)
+    elif isinstance(content, dict):
+        return sanitize_dict(content)
+    elif isinstance(content, list):
+        return sanitize_list(content)
+    else:
+        # Return unchanged for types that don't need sanitization
+        return content
+
+
+def extract_text_from_file(file_path: str, max_size: int = 10 * 1024 * 1024) -> str:
+    """Extract text content from a file.
+    
+    Args:
+        file_path: Path to the file
+        max_size: Maximum file size to process in bytes
+        
+    Returns:
+        Extracted text content
+        
+    Raises:
+        ValueError: If file is too large or cannot be processed
+    """
+    if not os.path.exists(file_path):
+        raise ValueError(f"File not found: {file_path}")
+        
+    if os.path.getsize(file_path) > max_size:
+        raise ValueError(f"File too large (max {max_size} bytes)")
+        
+    # Simple extension-based handling
+    _, ext = os.path.splitext(file_path)
+    ext = ext.lower()
+    
+    try:
+        if ext in ['.txt', '.md', '.py', '.js', '.html', '.css', '.json', '.csv']:
+            # Text files
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            return sanitize_text(content)
+            
+        else:
+            # Unsupported file type
+            return f"Unsupported file type: {ext}"
+    except Exception as e:
+        raise ValueError(f"Error processing file: {str(e)}")

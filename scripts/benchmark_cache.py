@@ -17,8 +17,8 @@ from typing import Any
 # Add the project root to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.agents.claim_detector.detector import Claim
-from src.agents.evidence_hunter.hunter import EvidenceHunter
+from src.verifact_agents.claim_detector.detector import Claim
+from src.verifact_agents.evidence_hunter.hunter import EvidenceHunter
 from src.utils.cache.cache import evidence_cache
 from src.utils.logger import get_component_logger
 from src.utils.metrics import evidence_metrics

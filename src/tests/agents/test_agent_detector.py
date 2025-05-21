@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.agents.claim_detector.detector import (
+from src.verifact_agents.claim_detector.detector import (
     Claim,
     ClaimDetector,
     ClaimDomain,

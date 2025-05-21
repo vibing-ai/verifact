@@ -12,8 +12,8 @@ request_id_var: ContextVar[str] = ContextVar("request_id", default="")
 user_id_var: ContextVar[str | None] = ContextVar("user_id", default=None)
 correlation_id_var: ContextVar[str] = ContextVar("correlation_id", default="")
 session_id_var: ContextVar[str | None] = ContextVar("session_id", default=None)
-component_var: ContextVar[str] = ContextVar("component", default="")
-operation_var: ContextVar[str] = ContextVar("operation", default="")
+_component_context: ContextVar[str] = ContextVar("component", default="")
+_operation_context: ContextVar[str] = ContextVar("operation", default="")
 
 # Global application metadata
 HOSTNAME = socket.gethostname()
@@ -22,23 +22,58 @@ APP_VERSION = os.getenv("APP_VERSION", "0.1.0")
 
 
 class StructuredLogRecord(logging.LogRecord):
-    """Extended LogRecord class that includes structured context data."""
+    """Custom LogRecord class that handles structured extra data."""
 
-    def __init__(self, *args, **kwargs):
-        """Initialize a structured log record with context data.
+    def __init__(
+        self,
+        name,
+        level,
+        pathname,
+        lineno,
+        msg,
+        args,
+        exc_info,
+        func=None,
+        sinfo=None,
+        **kwargs
+    ):
+        """Initialize the structured log record.
 
         Args:
-            *args: Arguments passed to the parent LogRecord constructor
-            **kwargs: Keyword arguments passed to the parent LogRecord constructor
+            name: The logger name.
+            level: The logging level.
+            pathname: The pathname of the source file.
+            lineno: The line number in the source file.
+            msg: The log message.
+            args: The log message arguments.
+            exc_info: Exception information.
+            func: The function name.
+            sinfo: Stack info.
+            kwargs: Additional keyword arguments.
         """
-        super().__init__(*args, **kwargs)
+        # Fix for Python 3.13 compatibility
+        if len(args) > 0 and isinstance(args[0], dict) and "extra" in args[0]:
+            # Extract extra from args if present in a dict
+            extra_data = args[0].pop("extra", {})
+            kwargs.update(extra_data)
+            
+        # Python 3.13 can pass an additional argument - extract only the ones we need
+        parent_args = [name, level, pathname, lineno, msg, args, exc_info]
+        if func is not None:
+            parent_args.append(func)
+        if sinfo is not None:
+            parent_args.append(sinfo)
+            
+        # Call parent class with the correct number of arguments
+        super().__init__(*parent_args)
+
         # Add context data to log record
         self.request_id = request_id_var.get()
         self.user_id = user_id_var.get()
         self.correlation_id = correlation_id_var.get()
         self.session_id = session_id_var.get()
-        self.component = component_var.get()
-        self.operation = operation_var.get()
+        self.component = _component_context.get()
+        self.operation = _operation_context.get()
 
         # Add environment metadata
         self.hostname = HOSTNAME
@@ -52,17 +87,47 @@ class StructuredLogRecord(logging.LogRecord):
 class StructuredLogger(logging.Logger):
     """Logger subclass that creates StructuredLogRecord instances."""
 
-    def makeRecord(self, *args, **kwargs):
-        """Create a StructuredLogRecord instance.
+    def makeRecord(
+        self, name, level, fn, lno, msg, args, exc_info, func=None, extra=None, sinfo=None, **kwargs
+    ):
+        """Create a structured log record.
 
         Args:
-            *args: Arguments passed to the LogRecord constructor
-            **kwargs: Keyword arguments passed to the LogRecord constructor
+            name: The logger name.
+            level: The logging level.
+            fn: The filename.
+            lno: The line number.
+            msg: The log message.
+            args: The log message arguments.
+            exc_info: Exception information.
+            func: The function name.
+            extra: Extra information to be added to the record.
+            sinfo: Stack information.
+            kwargs: Additional keyword arguments.
 
         Returns:
-            StructuredLogRecord: A log record with added context data
+            StructuredLogRecord: A structured log record.
         """
-        return StructuredLogRecord(*args, **kwargs)
+        # Combine extra with kwargs
+        if extra is not None:
+            kwargs.update(extra)
+
+        # Add component context if available
+        if _component_context.get():
+            if "component" not in kwargs:
+                kwargs["component"] = _component_context.get()
+        if _operation_context.get():
+            if "operation" not in kwargs:
+                kwargs["operation"] = _operation_context.get()
+
+        # Create the structured log record
+        record_args = [name, level, fn, lno, msg, args, exc_info]
+        if func is not None:
+            record_args.append(func)
+        if sinfo is not None:
+            record_args.append(sinfo)
+        
+        return StructuredLogRecord(*record_args, **kwargs)
 
     def process_success(self, message: str, duration_ms: float | None = None, **kwargs):
         """Log a successful operation with timing information."""
@@ -150,9 +215,9 @@ class LoggingContext:
             elif key == "session_id" and value:
                 self.tokens.append((session_id_var, session_id_var.set(value)))
             elif key == "component" and value:
-                self.tokens.append((component_var, component_var.set(value)))
+                self.tokens.append((_component_context, _component_context.set(value)))
             elif key == "operation" and value:
-                self.tokens.append((operation_var, operation_var.set(value)))
+                self.tokens.append((_operation_context, _operation_context.set(value)))
         return self.logger
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -169,16 +234,7 @@ class LoggingContext:
 
 
 class JSONFormatter(logging.Formatter):
-    """Formatter that converts log records to JSON."""
-
-    def __init__(self, include_traceback: bool = True):
-        """Initialize the JSON formatter.
-
-        Args:
-            include_traceback: Whether to include exception tracebacks in the logs
-        """
-        super().__init__()
-        self.include_traceback = include_traceback
+    """Format log records as JSON."""
 
     def format(self, record):
         """Format the log record as JSON."""
@@ -203,67 +259,57 @@ class JSONFormatter(logging.Formatter):
         if hasattr(record, "user_id") and record.user_id:
             log_data["user_id"] = record.user_id
 
-        if hasattr(record, "correlation_id") and record.correlation_id:
-            log_data["correlation_id"] = record.correlation_id
-
-        if hasattr(record, "session_id") and record.session_id:
-            log_data["session_id"] = record.session_id
-
         if hasattr(record, "component") and record.component:
             log_data["component"] = record.component
 
         if hasattr(record, "operation") and record.operation:
             log_data["operation"] = record.operation
 
-        # Add exception info if available
-        if record.exc_info and self.include_traceback:
-            log_data["exception"] = {
-                "type": record.exc_info[0].__name__,
-                "message": str(record.exc_info[1]),
-                "traceback": self.formatException(record.exc_info),
-            }
+        # Add any extra data from the record
+        if hasattr(record, "extra") and isinstance(record.extra, dict):
+            log_data.update(record.extra)
 
-        # Add custom fields from extra
-        for key, value in record.__dict__.items():
-            if key not in (
-                "args",
-                "asctime",
-                "created",
-                "exc_info",
-                "exc_text",
-                "filename",
-                "funcName",
-                "id",
-                "levelname",
-                "levelno",
-                "lineno",
-                "module",
-                "msecs",
-                "message",
-                "msg",
-                "name",
-                "pathname",
-                "process",
-                "processName",
-                "relativeCreated",
-                "stack_info",
-                "thread",
-                "threadName",
-                "timestamp_ms",
-                "request_id",
-                "user_id",
-                "correlation_id",
-                "session_id",
-                "component",
-                "operation",
-                "hostname",
-                "environment",
-                "app_version",
-            ) and not key.startswith("_"):
-                log_data[key] = value
+        # Exception handling
+        if record.exc_info:
+            log_data["exception"] = self.formatException(record.exc_info)
 
-        # Convert to JSON
-        return json.dumps(log_data)
+        # Handle Python 3.13 stack_info change - it's now potentially a dict instead of a string
+        if hasattr(record, "stack_info"):
+            if isinstance(record.stack_info, dict):
+                # Convert stack_info dict to string format
+                log_data["stack_info"] = str(record.stack_info)
+            elif record.stack_info:
+                # Handle traditional string stack_info
+                log_data["stack_info"] = record.stack_info
+
+        # Return formatted JSON
+        return json.dumps(log_data, ensure_ascii=False)
+
+
+class CustomStreamHandler(logging.StreamHandler):
+    """A custom stream handler that handles the Python 3.13 stack_info change"""
+    
+    def __init__(self, stream=None):
+        super().__init__(stream)
+    
+    def format(self, record):
+        """Format the record handling Python 3.13 compatibility issues"""
+        # Check if we're using a standard formatter or our custom JSON formatter
+        if isinstance(self.formatter, JSONFormatter):
+            return self.formatter.format(record)
+        
+        # For standard formatters, handle special cases for Python 3.13
+        if hasattr(record, 'stack_info') and isinstance(record.stack_info, dict):
+            # Create a copy of the record to avoid modifying the original
+            record_copy = logging.LogRecord(
+                record.name, record.levelno, record.pathname, record.lineno,
+                record.msg, record.args, record.exc_info, record.funcName
+            )
+            # Convert the stack_info dict to a string representation
+            record_copy.stack_info = str(record.stack_info)
+            return self.formatter.format(record_copy)
+        
+        return self.formatter.format(record)
 
 
 def get_structured_logger(name: str) -> StructuredLogger:
@@ -297,10 +343,10 @@ def set_request_context(
 
 def set_component_context(component: str, operation: str | None = None):
     """Set component and operation context for the current async context."""
-    component_var.set(component)
+    _component_context.set(component)
 
     if operation:
-        operation_var.set(operation)
+        _operation_context.set(operation)
 
 
 def clear_request_context():
@@ -313,8 +359,8 @@ def clear_request_context():
 
 def clear_component_context():
     """Clear component context for the current async context."""
-    component_var.set("")
-    operation_var.set("")
+    _component_context.set("")
+    _operation_context.set("")
 
 
 def configure_logging(
@@ -337,8 +383,8 @@ def configure_logging(
         for handler in log_handlers:
             root_logger.addHandler(handler)
     else:
-        # Create console handler
-        console_handler = logging.StreamHandler()
+        # Create custom console handler
+        console_handler = CustomStreamHandler()
         console_handler.setLevel(level)
 
         if json_output:
@@ -354,7 +400,7 @@ def configure_logging(
 
         # Add file handler if specified
         if log_file:
-            file_handler = logging.FileHandler(log_file)
+            file_handler = CustomStreamHandler(open(log_file, 'a'))
             file_handler.setLevel(level)
 
             if json_output:

@@ -208,7 +208,7 @@ class VerifactTester:
         # Test ClaimDetector
         print("  Testing ClaimDetector...")
         try:
-            from src.agents.claim_detector.detector import ClaimDetector
+            from src.verifact_agents.claim_detector.detector import ClaimDetector
 
             detector = ClaimDetector()
             test_text = "The Earth is approximately 4.54 billion years old. Water covers about 71% of the Earth's surface."
@@ -235,8 +235,8 @@ class VerifactTester:
         # Test EvidenceHunter
         print("  Testing EvidenceHunter...")
         try:
-            from src.agents.claim_detector.detector import Claim
-            from src.agents.evidence_hunter.hunter import EvidenceHunter
+            from src.verifact_agents.claim_detector.detector import Claim
+            from src.verifact_agents.evidence_hunter.hunter import EvidenceHunter
 
             hunter = EvidenceHunter()
             test_claim = Claim(
@@ -267,8 +267,8 @@ class VerifactTester:
         # Test VerdictWriter
         print("  Testing VerdictWriter...")
         try:
-            from src.agents.evidence_hunter.hunter import Evidence
-            from src.agents.verdict_writer.writer import VerdictWriter
+            from src.verifact_agents.evidence_hunter.hunter import Evidence
+            from src.verifact_agents.verdict_writer.writer import VerdictWriter
 
             writer = VerdictWriter()
             test_claim = Claim(

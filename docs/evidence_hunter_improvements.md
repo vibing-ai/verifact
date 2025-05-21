@@ -62,7 +62,7 @@ A new module `src/utils/search_tools.py` implements search provider functionalit
 
 ### EvidenceHunter Enhancements
 
-The EvidenceHunter agent in `src/agents/evidence_hunter/hunter.py` has been updated with:
+The EvidenceHunter agent in `src/verifact_agents/evidence_hunter/hunter.py` has been updated with:
 
 1. **Improved Agent Instructions**
 

@@ -46,6 +46,7 @@ VeriFact is under active development. Here's the current status of key features:
 ## Tech Stack
 
 - **Agent Framework**: OpenAI Agent SDK
+- **Internal Agent System**: Renamed from `src.agents` to `src.verifact_agents` to avoid namespace conflicts
 - **Model Access**: OpenRouter (for accessing models from OpenAI, Anthropic, Mistral, etc.)
 - **Database**: Supabase with PGVector for vector storage
 - **Web Interface**: Chainlit for interactive UI
@@ -86,7 +87,7 @@ VeriFact is under active development. Here's the current status of key features:
 3. Copy the environment template and configure it:
 
    ```bash
-   cp configs/env.template .env
+   cp .env-example .env
    ```
 
 4. At minimum, configure the following in your `.env` file:
@@ -135,6 +136,27 @@ CLAIM_DETECTOR_MODEL=qwen/qwen3-8b:free
 EVIDENCE_HUNTER_MODEL=google/gemma-3-27b-it:free
 VERDICT_WRITER_MODEL=deepseek/deepseek-chat:free
 ```
+
+## OpenAI Agents SDK Integration
+
+VeriFact now integrates the OpenAI Agents SDK, which provides additional agent capabilities alongside our specialized factchecking agents:
+
+```bash
+# Set your OpenAI API key for OpenAI Agents SDK
+export OPENAI_API_KEY=your_openai_api_key_here
+```
+
+The project's internal agent module has been renamed from `src.agents` to `src.verifact_agents` to avoid namespace conflicts. This allows you to:
+
+```python
+# Import OpenAI Agents SDK
+from agents import Agent as OpenAIAgent
+
+# Import VeriFact agents
+from src.verifact_agents import ClaimDetector
+```
+
+For more details, see the [OpenAI Agents Integration Guide](docs/agents/openai_agents_integration.md).
 
 ## Using OpenRouter
 
@@ -195,7 +217,7 @@ POSTGRES_PORT=5432
 
 ## Advanced Configuration
 
-See `configs/env.template` for additional configuration options:
+See `.env-example` for additional configuration options:
 
 - Redis caching settings
 - Embedding model configuration
@@ -209,10 +231,10 @@ VeriFact uses a centralized configuration system based on environment variables.
 
 ### Environment Variables
 
-A template environment file is provided at `configs/env.template`. Copy this file to create your own configuration:
+A template environment file is provided at `.env-example`. Copy this file to create your own configuration:
 
 ```bash
-cp configs/env.template .env
+cp .env-example .env
 ```
 
 At minimum, set the following variables in your `.env` file:

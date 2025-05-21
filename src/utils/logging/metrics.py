@@ -309,3 +309,156 @@ class MetricsTracker:
 claim_detector_metrics = MetricsTracker("claim_detector")
 evidence_hunter_metrics = MetricsTracker("evidence_hunter")
 fact_checker_metrics = MetricsTracker("fact_checker")
+
+class ClaimDetectorMetrics(MetricsTracker):
+    """Metrics tracker specific to the claim detector agent."""
+    
+    def __init__(self):
+        """Initialize a metrics tracker for the claim detector component."""
+        super().__init__("claim_detector")
+        
+    def track_claim_detection_batch(
+        self,
+        batch_results: list[dict[str, Any]]
+    ) -> dict[str, float]:
+        """Track a batch of claim detection results.
+        
+        Args:
+            batch_results: List of dictionaries with detection results
+                Each dict should have 'detected_claims', 'expected_claims', and optional 'text'
+                
+        Returns:
+            Aggregated metrics across the batch
+        """
+        all_metrics = []
+        
+        for result in batch_results:
+            detected = result.get("detected_claims", [])
+            expected = result.get("expected_claims", [])
+            text = result.get("text", "")
+            
+            metrics = self.track_claim_detection(detected, expected, text)
+            all_metrics.append(metrics)
+            
+        # Aggregate metrics
+        if not all_metrics:
+            return {"precision": 0, "recall": 0, "f1": 0}
+            
+        agg_metrics = {
+            "precision": statistics.mean([m["precision"] for m in all_metrics]),
+            "recall": statistics.mean([m["recall"] for m in all_metrics]),
+            "f1": statistics.mean([m["f1"] for m in all_metrics]),
+            "batch_size": len(all_metrics)
+        }
+        
+        return agg_metrics
+        
+    def track_check_worthiness_batch(
+        self,
+        batch_results: list[dict[str, Any]]
+    ) -> dict[str, float]:
+        """Track a batch of check-worthiness scoring results.
+        
+        Args:
+            batch_results: List of dictionaries with prediction results
+                Each dict should have 'predictions' and 'ground_truths' lists
+                
+        Returns:
+            Aggregated metrics across the batch
+        """
+        all_metrics = []
+        
+        for result in batch_results:
+            predictions = result.get("predictions", [])
+            ground_truths = result.get("ground_truths", [])
+            
+            if predictions and ground_truths and len(predictions) == len(ground_truths):
+                metrics = self.track_check_worthiness(predictions, ground_truths)
+                all_metrics.append(metrics)
+            
+        # Aggregate metrics
+        if not all_metrics:
+            return {"mae": 0, "rmse": 0, "correlation": 0}
+            
+        agg_metrics = {
+            "mae": statistics.mean([m["mae"] for m in all_metrics]),
+            "rmse": statistics.mean([m["rmse"] for m in all_metrics]),
+            "correlation": statistics.mean([m["correlation"] for m in all_metrics]),
+            "batch_size": len(all_metrics)
+        }
+        
+        return agg_metrics
+
+
+def create_performance_report(
+    component: str = None,
+    metrics: list[str] = None,
+    start_time: str = None,
+    end_time: str = None
+) -> dict[str, Any]:
+    """Create a performance report for specified components and metrics.
+    
+    Args:
+        component: Optional filter for specific component
+        metrics: Optional list of specific metrics to include
+        start_time: Optional start time filter (ISO format)
+        end_time: Optional end time filter (ISO format)
+        
+    Returns:
+        Dict with performance report data
+    """
+    # Get all available components if not specified
+    if not component:
+        # Extract unique components from cache keys
+        all_keys = metrics_cache.get_keys("*")
+        components = set(k.split('.')[0] for k in all_keys if '.' in k)
+    else:
+        components = [component]
+        
+    report = {}
+    
+    # Create tracker for each component
+    for comp in components:
+        tracker = MetricsTracker(comp)
+        
+        # Get all metrics for this component
+        comp_metrics = {}
+        
+        # Get metric names for this component if not specified
+        if not metrics:
+            comp_keys = metrics_cache.get_keys(f"{comp}.*")
+            metric_names = [k.split('.')[1] for k in comp_keys]
+        else:
+            metric_names = metrics
+            
+        # Get each metric
+        for metric in metric_names:
+            data = tracker.get_metrics(metric, start_time, end_time, aggregate=True)
+            comp_metrics[metric] = data
+            
+        report[comp] = comp_metrics
+        
+    return report
+
+
+def reset_metrics(component: str = None, metrics: list[str] = None) -> None:
+    """Reset (clear) metrics data.
+    
+    Args:
+        component: Optional specific component to reset, or all if None
+        metrics: Optional list of specific metrics to reset, or all if None
+    """
+    if component and metrics:
+        # Reset specific metrics for a component
+        for metric in metrics:
+            metrics_cache.delete(f"{component}.{metric}")
+    elif component:
+        # Reset all metrics for a component
+        keys = metrics_cache.get_keys(f"{component}.*")
+        for key in keys:
+            metrics_cache.delete(key)
+    else:
+        # Reset all metrics
+        keys = metrics_cache.get_keys("*")
+        for key in keys:
+            metrics_cache.delete(key)

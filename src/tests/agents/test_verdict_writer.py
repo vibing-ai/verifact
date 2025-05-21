@@ -9,10 +9,10 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from src.agents.claim_detector import Claim
-from src.agents.evidence_hunter.hunter import Evidence as StandaloneEvidence
-from src.agents.verdict_writer import VerdictWriter
-from src.agents.verdict_writer.writer import VerdictWriter as StandaloneVerdictWriter
+from src.verifact_agents.claim_detector import Claim
+from src.verifact_agents.evidence_hunter.hunter import Evidence as StandaloneEvidence
+from src.verifact_agents.verdict_writer import VerdictWriter
+from src.verifact_agents.verdict_writer.writer import VerdictWriter as StandaloneVerdictWriter
 from src.models.factcheck import Evidence, Verdict
 
 

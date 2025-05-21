@@ -4,7 +4,7 @@ This package contains full system tests for the complete VeriFact application.
 """
 
 # Import test modules for discovery
-from .test_verifact import TestVerifact
+from .test_verifact import VerifactTester
 
 # Export test classes
-__all__ = ["TestVerifact"]
+__all__ = ["VerifactTester"]

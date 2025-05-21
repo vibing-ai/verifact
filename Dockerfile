@@ -14,6 +14,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     python3-dev \
     curl \
+    build-essential \
+    libssl-dev \
+    libffi-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -28,21 +31,39 @@ WORKDIR /app
 # Python dependencies installation stage
 FROM base AS dependencies
 
-# Copy only requirements needed for installing dependencies
-COPY pyproject.toml ./
+# Install virtualenv
+RUN pip install --no-cache-dir virtualenv
 
-# Install dependencies
+# Create and activate virtual environment
+RUN virtualenv /venv
+ENV PATH="/venv/bin:$PATH"
+
+# Copy only requirements needed for installing dependencies
+COPY requirements.txt ./
+
+# Install dependencies in the virtual environment
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir cryptography>=41.0.0
+
+# If openai-agents is needed, install it separately with a compatible version
+RUN pip install --no-cache-dir "openai-agents>=0.0.15"
+
+# Copy application code
 COPY . .
 RUN mkdir -p /app/src 
 RUN touch /app/src/__init__.py
-RUN pip install --no-cache-dir -e . && pip install --no-cache-dir psutil chainlit==0.7.700 openai~=1.30.0
+# Install package in development mode without dependencies
+RUN pip install --no-cache-dir --no-deps -e .
 
 # Final stage
 FROM base
 
-# Copy installed dependencies from the dependencies stage
-COPY --from=dependencies /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
-COPY --from=dependencies /usr/local/bin /usr/local/bin
+# Copy virtual environment from dependencies stage
+COPY --from=dependencies /venv /venv
+ENV PATH="/venv/bin:$PATH"
+
+# Verify cryptography is installed
+RUN /venv/bin/pip list | grep cryptography || /venv/bin/pip install --no-cache-dir cryptography>=41.0.0
 
 # Copy application code
 COPY --chown=verifact:verifact . .

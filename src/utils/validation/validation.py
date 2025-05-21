@@ -12,9 +12,61 @@ from pydantic import BaseModel
 from pydantic import ValidationError as PydanticValidationError
 
 from src.models.factcheck import Claim, Evidence, Verdict
-from src.utils.validation.exceptions import InputTooLongError, ValidationError
+from src.utils.validation.exceptions import DataFormatError, InputTooLongError, ValidationError
 
 T = TypeVar("T", bound=BaseModel)
+
+
+def validate_input(data: Any, schema: dict[str, Any] = None, max_length: int = None) -> Any:
+    """Validate the input data against a schema.
+    
+    This is a general-purpose validation function that handles text and structured data.
+    
+    Args:
+        data: The data to validate
+        schema: Optional JSON Schema to validate against
+        max_length: Maximum length for text input
+        
+    Returns:
+        The validated (and possibly sanitized) data
+        
+    Raises:
+        ValidationError: If validation fails
+    """
+    # Sanitize text input
+    if isinstance(data, str):
+        data = sanitize_text(data)
+        
+        # Check length limits
+        if max_length is not None:
+            data = validate_text_length(data, max_length)
+    
+    # Validate against schema if provided
+    if schema is not None:
+        try:
+            # Simple validation - in practice, use a proper JSON Schema validator
+            if isinstance(data, dict):
+                for key, value_schema in schema.get("properties", {}).items():
+                    if key in data:
+                        if value_schema.get("type") == "string" and not isinstance(data[key], str):
+                            raise DataFormatError(
+                                message=f"Field '{key}' should be a string",
+                                field=key
+                            )
+                        elif value_schema.get("type") == "number" and not isinstance(data[key], (int, float)):
+                            raise DataFormatError(
+                                message=f"Field '{key}' should be a number",
+                                field=key
+                            )
+        except Exception as e:
+            if not isinstance(e, ValidationError):
+                raise ValidationError(
+                    message=f"Schema validation failed: {str(e)}",
+                    details={"schema": schema}
+                ) from e
+            raise
+    
+    return data
 
 
 def validate_model(data: dict[str, Any], model_class: type[T]) -> T:

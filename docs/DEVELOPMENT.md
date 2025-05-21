@@ -13,7 +13,7 @@ This document provides guidelines for developing and contributing to the VeriFac
 
 The VeriFact codebase is organized into modules based on functionality:
 
-- `src/agents/`: Contains the agent implementations
+- `src/verifact_agents/`: Contains the agent implementations
   - `claim_detector/`: Identifies factual claims in text
   - `evidence_hunter/`: Gathers evidence for claims
   - `verdict_writer/`: Generates verdicts based on evidence
@@ -123,7 +123,7 @@ We use semantic versioning:
 
 VeriFact follows [PEP 8](https://www.python.org/dev/peps/pep-0008/) for code style with the following specifics:
 
-- **Line Length**: Maximum 88 characters (following Black's default)
+- **Line Length**: Maximum 100 characters (following Ruff's default)
 - **Indentation**: 4 spaces (no tabs)
 - **Naming Conventions**:
   - Classes: `CamelCase`
@@ -140,14 +140,14 @@ VeriFact follows [PEP 8](https://www.python.org/dev/peps/pep-0008/) for code sty
 
 ### Automatic Formatting
 
-We use [Black](https://black.readthedocs.io/) for automatic code formatting and [isort](https://pycqa.github.io/isort/) for import sorting:
+We use [Ruff](https://docs.astral.sh/ruff/) for automatic code linting and formatting:
 
 ```bash
-# Format code with Black
-black src tests
+# Lint code with Ruff
+ruff check src tests
 
-# Sort imports
-isort src tests
+# Format code with Ruff
+ruff format src tests
 ```
 
 ### Type Annotations

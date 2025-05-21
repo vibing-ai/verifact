@@ -4,7 +4,7 @@ This package contains tests for all API endpoints and functionality.
 """
 
 # Import test modules for discovery
-from .test_api import TestAPI
+from . import test_api
 
-# Export test classes
-__all__ = ["TestAPI"]
+# Export test modules
+__all__ = ["test_api"]

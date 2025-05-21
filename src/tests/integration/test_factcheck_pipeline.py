@@ -8,7 +8,7 @@ import time
 
 import pytest
 
-from src.agents.verdict_writer.writer import Verdict
+from src.verifact_agents.verdict_writer.writer import Verdict
 from src.pipeline.factcheck_pipeline import (
     FactcheckPipeline,
     PipelineConfig,

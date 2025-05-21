@@ -10,8 +10,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from src.agents.claim_detector.detector import ClaimDetector
-from src.agents.claim_detector.models import Claim, ClaimDomain, Entity
+from src.verifact_agents.claim_detector.detector import ClaimDetector
+from src.verifact_agents.claim_detector.models import Claim, ClaimDomain, Entity
 
 # -- Test Data Fixtures -- #
 

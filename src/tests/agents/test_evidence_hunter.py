@@ -9,8 +9,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from src.agents.claim_detector.detector import Claim
-from src.agents.evidence_hunter.hunter import Evidence, EvidenceHunter
+from src.verifact_agents.claim_detector.detector import Claim
+from src.verifact_agents.evidence_hunter.hunter import Evidence, EvidenceHunter
 
 
 @pytest.fixture

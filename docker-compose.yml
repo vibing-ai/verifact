@@ -62,11 +62,19 @@ services:
 
   # VeriFact API service (FastAPI)
   verifact-api:
-    <<: *app-dev
+    build:
+      context: .
+      dockerfile: Dockerfile.simple
+    restart: unless-stopped
     command: api
     ports:
       - "8000:8000"
+    volumes:
+      - ./configs:/app/configs
+    env_file:
+      - .env
     environment:
+      - ENVIRONMENT=development
       - HOST=0.0.0.0
       - PORT=8000
       - REDIS_URL=redis://:${REDIS_PASSWORD:-}@verifact-redis:6379/0
@@ -76,6 +84,9 @@ services:
       - DB_POOL_MAX_SIZE=10
       - DB_POOL_MAX_IDLE_TIME=300
       - DB_COMMAND_TIMEOUT=60.0
+    depends_on:
+      verifact-redis:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s

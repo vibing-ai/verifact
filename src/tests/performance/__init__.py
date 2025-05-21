@@ -1,10 +1,10 @@
-"""Performance and benchmark tests.
+"""Performance benchmarks for VeriFact.
 
-This package contains performance and benchmark tests.
+This package contains benchmarks for measuring performance and scalability.
 """
 
 # Import test modules for discovery
-from .test_benchmark_pipeline import TestBenchmarkPipeline
+from . import test_benchmark_pipeline
 
-# Export test classes
-__all__ = ["TestBenchmarkPipeline"]
+# Export test modules
+__all__ = ["test_benchmark_pipeline"]

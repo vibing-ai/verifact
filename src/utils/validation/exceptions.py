@@ -64,6 +64,31 @@ class ValidationError(VerifactError):
         super().__init__(message=message, code=code, status_code=400, details=details)
 
 
+class DataFormatError(ValidationError):
+    """Exception raised when data is in an incorrect format."""
+
+    def __init__(
+        self,
+        message: str = "Data format is incorrect",
+        expected_format: str | None = None,
+        details: dict[str, Any] | None = None,
+        field: str | None = None,
+    ):
+        """Initialize a data format error.
+
+        Args:
+            message: Description of the format error
+            expected_format: Description of the expected format
+            details: Additional error details
+            field: Name of the specific field with incorrect format
+        """
+        details = details or {}
+        if expected_format:
+            details["expected_format"] = expected_format
+
+        super().__init__(message=message, details=details, field=field)
+
+
 class InputTooLongError(ValidationError):
     """Exception raised when input text exceeds maximum allowed length."""
 
@@ -303,7 +328,7 @@ class UnauthorizedError(AuthError):
 
 
 class APIError(VerifactError):
-    """Base exception for API related errors."""
+    """Base exception for API-related errors."""
 
     def __init__(
         self,
@@ -323,6 +348,10 @@ class APIError(VerifactError):
             details["endpoint"] = endpoint
 
         super().__init__(message=message, code="API_ERROR", status_code=500, details=details)
+
+
+# Add an alias for backward compatibility with old code that uses ApiError
+ApiError = APIError
 
 
 class RequestTimeoutError(APIError):

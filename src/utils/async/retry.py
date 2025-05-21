@@ -12,11 +12,30 @@ from collections.abc import Callable
 from functools import wraps
 from typing import Any, TypeVar, cast
 
-from src.utils.exceptions import (
-    ExternalServiceError,
-    RateLimitError,
-    ResourceUnavailableError,
-)
+# Define exception classes locally instead of importing from missing module
+class VerifactError(Exception):
+    """Base class for VeriFact-specific exceptions."""
+    
+    def __init__(self, message: str, details: dict[str, Any] | None = None):
+        """Initialize with a message and optional details."""
+        self.message = message
+        self.details = details or {}
+        super().__init__(message)
+
+
+class ExternalServiceError(VerifactError):
+    """Exception raised when an external service fails."""
+    pass
+
+
+class RateLimitError(ExternalServiceError):
+    """Exception raised when an external service enforces rate limits."""
+    pass
+
+
+class ResourceUnavailableError(ExternalServiceError):
+    """Exception raised when a resource is temporarily unavailable."""
+    pass
 
 logger = logging.getLogger("verifact.retry")
 

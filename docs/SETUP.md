@@ -211,20 +211,23 @@ If you want to use Supabase for database features:
 #### Supabase Security Best Practices
 
 1. **Row Level Security (RLS)**: Always enable and configure RLS policies on your tables
+
    ```sql
    -- Example RLS policy for user-specific data
    ALTER TABLE your_table ENABLE ROW LEVEL SECURITY;
-   
+
    CREATE POLICY "Users can view their own data" ON your_table
      FOR SELECT USING (auth.uid() = user_id);
    ```
 
 2. **API Key Management**:
+
    - Never expose your Service Role Key in client-side code
    - Use the Anon Key for public-facing applications
    - Store the Service Role Key securely in environment variables
 
 3. **Database Password Security**:
+
    - Use a unique, complex password for the database
    - Change default credentials (postgres/postgres) immediately
    - Rotate credentials periodically for enhanced security
@@ -330,9 +333,9 @@ Run the tests to verify that everything is set up correctly:
 # Run tests
 pytest
 
-# Verify code formatting
-black --check src tests
-flake8 src tests
+# Verify code formatting and linting
+ruff check src tests
+ruff format src tests
 ```
 
 ## Development Workflow
@@ -349,11 +352,11 @@ flake8 src tests
    pytest
    ```
 
-3. Format your code:
+3. Format and lint your code:
 
    ```bash
-   black src tests
-   isort src tests
+   ruff check src tests
+   ruff format src tests
    ```
 
 4. Commit your changes with a descriptive message:
@@ -631,9 +634,8 @@ If tests are failing, check:
 If pre-commit hooks fail, run the checks manually to understand the errors:
 
 ```bash
-black src tests
-isort src tests
-flake8 src tests
+ruff check src tests
+ruff format src tests
 ```
 
 ### Quick Start Example

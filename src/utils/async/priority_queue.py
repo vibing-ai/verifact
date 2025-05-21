@@ -37,9 +37,9 @@ class PrioritizedItem(Generic[T]):
     """Wrapper class for items in the priority queue."""
 
     priority: float
+    item: T = field(compare=False)
     timestamp: float = field(default_factory=time.time)
     item_id: str = field(default_factory=lambda: str(uuid.uuid4()))
-    item: T = field(compare=False)
     status: JobStatus = field(default=JobStatus.PENDING, compare=False)
     result: Any = field(default=None, compare=False)
     error: str | None = field(default=None, compare=False)

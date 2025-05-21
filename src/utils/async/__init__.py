@@ -4,8 +4,8 @@ This module provides tools for asynchronous processing, task queues, and retry m
 """
 
 # Using relative imports to avoid 'async' keyword issues
-from ..async_processor import AsyncProcessor
-from ..priority_queue import PriorityQueue
-from ..retry import exponential_backoff, retry
+from .async_processor import AsyncProcessor
+from .priority_queue import PriorityQueue
+from .retry import with_retry, with_async_retry, async_retry_context
 
-__all__ = ["AsyncProcessor", "PriorityQueue", "retry", "exponential_backoff"]
+__all__ = ["AsyncProcessor", "PriorityQueue", "with_retry", "with_async_retry", "async_retry_context"]

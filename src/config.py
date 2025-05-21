@@ -11,7 +11,6 @@ from typing import Any
 from dotenv import load_dotenv
 from pydantic import (
     BaseModel,
-    BaseSettings,
     Field,
     HttpUrl,
     PostgresDsn,
@@ -19,6 +18,7 @@ from pydantic import (
     root_validator,
     validator,
 )
+from pydantic_settings import BaseSettings
 
 # Load .env file if it exists
 load_dotenv()

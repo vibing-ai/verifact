@@ -192,7 +192,15 @@ class SensitiveFilter(logging.Filter):
             if isinstance(record.msg, dict):
                 record.msg = self._redact_dict(record.msg)
             else:
-                record.msg = pattern.sub(r"\1*****\3", record.msg)
+                # Safe substitution that uses the correct number of groups
+                # Check which pattern we're using and apply the appropriate replacement
+                if pattern.pattern.count('(') == 3:  # For patterns with 3 groups
+                    record.msg = pattern.sub(r"\1*****\3", record.msg)
+                elif pattern.pattern.count('(') == 2:  # For patterns with 2 groups
+                    record.msg = pattern.sub(r"\1*****", record.msg)
+                else:
+                    # Generic approach - just replace the entire match
+                    record.msg = pattern.sub(lambda m: "*****", record.msg)
 
         return True
 
@@ -696,3 +704,25 @@ def performance_timer(
 
 # Create default logger
 logger = get_logger()
+
+def set_log_level(level: str | int) -> None:
+    """Set the log level for the root logger.
+    
+    Args:
+        level: Log level (debug, info, warning, error, critical) or logging level constant
+    """
+    if isinstance(level, str):
+        level = LOG_LEVELS.get(level.lower(), logging.INFO)
+    
+    # Set level for root logger and all handlers
+    root_logger = logging.getLogger()
+    root_logger.setLevel(level)
+    
+    for handler in root_logger.handlers:
+        handler.setLevel(level)
+    
+    # Also update the default logger
+    logger.setLevel(level)
+    
+    for handler in logger.handlers:
+        handler.setLevel(level)

@@ -4,10 +4,11 @@ This module provides utilities for searching the web for information.
 """
 
 import os
-from typing import Any
+from typing import Any, Dict, List, Literal, Optional
 
 import aiohttp
-from openai.agents.tools import Tool
+from agents.tool import FunctionTool
+from agents import WebSearchTool
 
 from src.utils.logging.logger import get_component_logger
 
@@ -15,73 +16,24 @@ from src.utils.logging.logger import get_component_logger
 logger = get_component_logger("search_tools")
 
 
-class SerperSearchTool(Tool):
-    """Serper.dev search integration for Agent SDK."""
-
-    def __init__(self):
-        """Initialize the SerperSearchTool."""
-        super().__init__(
-            name="serper_search",
-            description="Search the web using Serper.dev API to find current information on any topic",
-            input_schema={
-                "type": "object",
-                "properties": {
-                    "query": {
-                        "type": "string",
-                        "description": "The search query to find information about",
-                    },
-                    "num_results": {
-                        "type": "integer",
-                        "default": 5,
-                        "description": "Number of results to return (1-10)",
-                    },
-                    "search_type": {
-                        "type": "string",
-                        "enum": ["search", "news", "images"],
-                        "default": "search",
-                        "description": "Type of search to perform: general search, news, or images",
-                    },
-                },
-                "required": ["query"],
-            },
-            output_schema={
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "title": {"type": "string"},
-                        "snippet": {"type": "string"},
-                        "url": {"type": "string"},
-                        "position": {"type": "integer"},
-                        "source": {"type": "string"},
-                    },
-                },
-            },
-        )
-
-        # Get API key from environment variable
-        self.api_key = os.getenv("SERPER_API_KEY")
-        if not self.api_key:
-            logger.warning("SERPER_API_KEY not found in environment variables")
-
-        # Set up API parameters
-        self.api_url = "https://google.serper.dev"
-
-    async def call(self, params: dict[str, Any], **kwargs) -> list[dict[str, Any]]:
-        """Call the Serper.dev API to search for information.
-
-        Args:
-            params: Dictionary containing search parameters
-            **kwargs: Additional arguments passed to the tool
-
-        Returns:
-            List of search results with information about each hit
-        """
+def create_serper_search_tool():
+    """Create a Serper.dev search tool for Agent SDK."""
+    # Get API key from environment variable
+    api_key = os.getenv("SERPER_API_KEY")
+    if not api_key:
+        logger.warning("SERPER_API_KEY not found in environment variables")
+        return None
+        
+    # Set up API parameters
+    api_url = "https://google.serper.dev"
+    
+    async def serper_search_call(params: dict[str, Any], **kwargs) -> list[dict[str, Any]]:
+        """Call the Serper.dev API to search for information."""
         query = params.get("query")
         num_results = min(10, max(1, params.get("num_results", 5)))
         search_type = params.get("search_type", "search")
 
-        if not self.api_key:
+        if not api_key:
             return [{"error": "SERPER_API_KEY not set in environment variables"}]
 
         try:
@@ -89,14 +41,14 @@ class SerperSearchTool(Tool):
             endpoint = "/search" if search_type == "search" else f"/{search_type}"
 
             # Set up the request headers and payload
-            headers = {"X-API-KEY": self.api_key, "Content-Type": "application/json"}
+            headers = {"X-API-KEY": api_key, "Content-Type": "application/json"}
 
             payload = {"q": query, "num": num_results}
 
             # Make the API request
             async with aiohttp.ClientSession() as session:
                 async with session.post(
-                    f"{self.api_url}{endpoint}", headers=headers, json=payload
+                    f"{api_url}{endpoint}", headers=headers, json=payload
                 ) as response:
                     if response.status != 200:
                         error_text = await response.text()
@@ -154,6 +106,34 @@ class SerperSearchTool(Tool):
         except Exception as e:
             logger.error(f"Error in SerperSearchTool: {str(e)}")
             return [{"error": f"Error performing search: {str(e)}"}]
+    
+    # Create a FunctionTool
+    return FunctionTool(
+        name="serper_search",
+        description="Search the web using Serper.dev API to find current information on any topic",
+        input_schema={
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "The search query to find information about",
+                },
+                "num_results": {
+                    "type": "integer",
+                    "default": 5,
+                    "description": "Number of results to return (1-10)",
+                },
+                "search_type": {
+                    "type": "string",
+                    "enum": ["search", "news", "images"],
+                    "default": "search",
+                    "description": "Type of search to perform: general search, news, or images",
+                },
+            },
+            "required": ["query"],
+        },
+        function=serper_search_call
+    )
 
 
 # Factory function to get the configured search tool
@@ -167,10 +147,11 @@ def get_search_tool():
 
     if use_serper:
         logger.info("Using SerperSearchTool for web searches")
-        return SerperSearchTool()
-    else:
-        # Fall back to OpenAI's WebSearchTool
-        from openai.agents.tools import WebSearchTool
-
-        logger.info("Using WebSearchTool for web searches")
-        return WebSearchTool()
+        serper_tool = create_serper_search_tool()
+        if serper_tool:
+            return serper_tool
+        logger.warning("Failed to create SerperSearchTool, falling back to WebSearchTool")
+        
+    # Fall back to OpenAI's WebSearchTool
+    logger.info("Using WebSearchTool for web searches")
+    return WebSearchTool()
