@@ -53,15 +53,15 @@ Each agent is designed to perform its specialized task efficiently while maintai
    cd verifact
    ```
 
-2. Initialize virutal environment and obtain dependencies
+2. Initialize virtual environment and install dependencies
 
    ```bash
    uv sync
    ```
 
-`uv` is a powerful and preferred modern python package manager. This command synchronizes the virtual environment with the dependencies specified in the lockfile (`uv.lock`). If the environment or lockfile doesn't exist, uv will create them automatically. It also installs the project as an editable package by default.
+`uv` is a powerful and preferred modern python package manager. This command synchronizes the virtual environment with the dependencies specified in the lockfile (`uv.lock`). If the environment or lockfile doesn't exist, `uv` will create them automatically. It also installs the project as an editable package by default.
 
-If a new package is needed in the project, simply run `uv add <package>`, which will update both virutal environment and update your pyproject.toml and uv.lock files to include the new dependency, ensuring your environment remains reproducible and in sync with your project configuration.
+If a new package is needed in the project, simply run `uv add <package>`, which will both update both virtual environment and update your `pyproject.toml` and `uv.lock` files to include the new dependency, ensuring your environment remains reproducible and in sync with your project configuration.
 
 3. Copy the environment template and configure it:
 
