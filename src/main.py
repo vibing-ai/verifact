@@ -1,5 +1,10 @@
 from fastapi import FastAPI
 from api.factcheck import router as factcheck_router
+from utils.logging.logging_config import setup_logging
+from dotenv import load_dotenv
+
+load_dotenv()
+setup_logging()
 
 app = FastAPI(
     title="Fact Check API",
