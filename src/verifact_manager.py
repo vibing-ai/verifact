@@ -9,12 +9,16 @@ The pipeline handles data transformation between agents, error recovery,
 and provides both synchronous and asynchronous operation modes.
 """
 
+# Configure OpenAI client to use OpenRouter
+from src.utils.openrouter_config import *
+
 import asyncio
+from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field
 from agents import Runner, gen_trace_id, trace
-from verifact_agents.claim_detector import claim_detector_agent, Claim
-from verifact_agents.evidence_hunter import evidence_hunter_agent, Evidence
-from verifact_agents.verdict_writer import verdict_writer_agent, Verdict
+from src.verifact_agents.claim_detector import claim_detector_agent, Claim
+from src.verifact_agents.evidence_hunter import evidence_hunter_agent, Evidence
+from src.verifact_agents.verdict_writer import verdict_writer_agent, Verdict
 import logging
 
 logger = logging.getLogger(__name__)
@@ -23,7 +27,7 @@ class ManagerConfig(BaseModel):
     """Configuration options for the factcheck pipeline."""
 
     min_checkworthiness: float = Field(0.5, ge=0.0, le=1.0)
-    max_claims: int | None = None
+    max_claims: Optional[int] = None
     evidence_per_claim: int = Field(5, ge=1)
     timeout_seconds: float = 120.0
     enable_fallbacks: bool = True
@@ -36,7 +40,7 @@ class VerifactManager:
     def __init__(self, config: ManagerConfig = None):
         self.config = config or ManagerConfig()
 
-    async def run(self, query: str) -> None:
+    async def run(self, query: str) -> List[Verdict]:
         """Process text through the full factchecking pipeline.
 
         Args:
@@ -76,16 +80,16 @@ class VerifactManager:
             logger.info("Factchecking pipeline completed. Generated %d verdicts.", len(verdicts))
             return verdicts
 
-    async def _detect_claims(self, text: str) -> list[Claim]:
+    async def _detect_claims(self, text: str) -> List[Claim]:
         logger.info("Detecting claims...")
         result = await Runner.run(claim_detector_agent, text)
 
-        claims = result.final_output_as(list[Claim])
+        claims = result.final_output_as(List[Claim])
         logger.info(f"Detected {len(claims)} claims")
         logger.info(f"Claims: {claims}")
-        return result.final_output_as(list[Claim])
+        return result.final_output_as(List[Claim])
 
-    async def _gather_evidence_for_claim(self, claim: Claim) -> list[Evidence]:
+    async def _gather_evidence_for_claim(self, claim: Claim) -> List[Evidence]:
         logger.info(f"Gathering evidence for claim {claim.text[:50]}...")
 
         query = f"""
@@ -96,9 +100,9 @@ class VerifactManager:
         result = await Runner.run(evidence_hunter_agent, query)
         logger.info(f"Evidence gathered for claim: {result}")
 
-        return result.final_output_as(list[Evidence])
-        
-    async def _gather_evidence(self, claims: list[Claim]) -> list[tuple[Claim, list[Evidence] | None]]:
+        return result.final_output_as(List[Evidence])
+
+    async def _gather_evidence(self, claims: List[Claim]) -> List[tuple[Claim, Optional[List[Evidence]]]]:
         tasks = [self._gather_evidence_for_claim(claim) for claim in claims]
         results = await asyncio.gather(*tasks, return_exceptions=True)
         claim_evidence_pairs = []
@@ -116,7 +120,7 @@ class VerifactManager:
 
         return claim_evidence_pairs
 
-    async def _generate_verdict_for_claim(self, claim: Claim, evidence: list[Evidence]) -> Verdict:
+    async def _generate_verdict_for_claim(self, claim: Claim, evidence: List[Evidence]) -> Verdict:
         logger.info(f"Generating verdict for claim {claim.text[:50]}...")
         # TODO: add formatting of evidence and citations before creating the prompt
 
@@ -128,7 +132,7 @@ class VerifactManager:
         result = await Runner.run(verdict_writer_agent, prompt)
         return result.final_output_as(Verdict)
 
-    async def _generate_all_verdicts(self, claims_with_evidence: list[tuple[Claim, list[Evidence]]]) -> list[Verdict]:
+    async def _generate_all_verdicts(self, claims_with_evidence: List[tuple[Claim, Optional[List[Evidence]]]]) -> List[Verdict]:
         logger.info("Generating verdicts...")
         verdicts = []
         for claim, evidence in claims_with_evidence:
@@ -136,7 +140,7 @@ class VerifactManager:
             if not evidence:
                 logger.warning(f"Skipping claim - no evidence found")
                 continue
-            
+
             logger.info(f"Evidence: {evidence} | {type(evidence)}")
             logger.info("Generating verdict for claim with %d evidence pieces", len(evidence))
             verdict = await self._generate_verdict_for_claim(claim, evidence)
@@ -145,7 +149,7 @@ class VerifactManager:
             logger.info("Generated verdict: %s", verdict.verdict)
 
         return verdicts
-    
+
 # testing
 if __name__ == "__main__":
     # load env

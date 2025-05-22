@@ -1,0 +1,151 @@
+[run]
+source = src
+omit =
+    */tests/*
+    */venv/*
+    */env/*
+    */site-packages/*
+    */dist-packages/*
+    */docs/*
+    */examples/*
+    */setup.py
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    pass
+    raise ImportError
+    except ImportError
+    raise AssertionError
+    except AssertionError
+    raise ValueError
+    except ValueError
+    raise TypeError
+    except TypeError
+    raise KeyError
+    except KeyError
+    raise IndexError
+    except IndexError
+    raise AttributeError
+    except AttributeError
+    raise NotImplementedError
+    except NotImplementedError
+    raise Exception
+    except Exception
+    raise SystemExit
+    except SystemExit
+    raise StopIteration
+    except StopIteration
+    def __str__
+    def __unicode__
+    def __repr__
+    def __dir__
+    def __format__
+    def __hash__
+    def __eq__
+    def __ne__
+    def __lt__
+    def __le__
+    def __gt__
+    def __ge__
+    def __iter__
+    def __next__
+    def __enter__
+    def __exit__
+    def __call__
+    def __getitem__
+    def __setitem__
+    def __delitem__
+    def __contains__
+    def __len__
+    def __bool__
+    def __nonzero__
+    def __getattr__
+    def __setattr__
+    def __delattr__
+    def __getattribute__
+    def __get__
+    def __set__
+    def __delete__
+    def __new__
+    def __init__
+    def __del__
+    def __reduce__
+    def __reduce_ex__
+    def __getnewargs__
+    def __getinitargs__
+    def __getstate__
+    def __setstate__
+    def __copy__
+    def __deepcopy__
+    def __sizeof__
+    def __instancecheck__
+    def __subclasscheck__
+    def __subclasshook__
+    def __missing__
+    def __index__
+    def __coerce__
+    def __bytes__
+    def __complex__
+    def __int__
+    def __float__
+    def __round__
+    def __trunc__
+    def __floor__
+    def __ceil__
+    def __pos__
+    def __neg__
+    def __abs__
+    def __invert__
+    def __add__
+    def __sub__
+    def __mul__
+    def __truediv__
+    def __floordiv__
+    def __mod__
+    def __divmod__
+    def __pow__
+    def __lshift__
+    def __rshift__
+    def __and__
+    def __xor__
+    def __or__
+    def __radd__
+    def __rsub__
+    def __rmul__
+    def __rtruediv__
+    def __rfloordiv__
+    def __rmod__
+    def __rdivmod__
+    def __rpow__
+    def __rlshift__
+    def __rrshift__
+    def __rand__
+    def __rxor__
+    def __ror__
+    def __iadd__
+    def __isub__
+    def __imul__
+    def __itruediv__
+    def __ifloordiv__
+    def __imod__
+    def __ipow__
+    def __ilshift__
+    def __irshift__
+    def __iand__
+    def __ixor__
+    def __ior__
+    def __matmul__
+    def __rmatmul__
+    def __imatmul__
+    def __await__
+    def __aiter__
+    def __anext__
+    def __aenter__
+    def __aexit__
+
+[html]
+directory = coverage_html_report
