@@ -1,7 +1,8 @@
+from dotenv import load_dotenv
 from fastapi import FastAPI
+
 from api.factcheck import router as factcheck_router
 from utils.logging.logging_config import setup_logging
-from dotenv import load_dotenv
 
 load_dotenv()
 setup_logging()
@@ -11,6 +12,14 @@ app = FastAPI(
     description="API for fact-checking claims in text",
     version="1.0.0"
 )
+
+@app.get("/")
+def read_root():
+    return {"message": "Welcome to VeriFact API!"}
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
 
 app.include_router(factcheck_router)
 

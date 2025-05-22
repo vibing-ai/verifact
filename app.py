@@ -1,6 +1,6 @@
-def main():
-    print("Hello from verifact!")
+import chainlit as cl
 
 
-if __name__ == "__main__":
-    main()
+@cl.on_message
+async def handle_message(message: cl.Message):
+    await cl.Message(content=f"You said: {message.content}").send()
