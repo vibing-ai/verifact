@@ -15,7 +15,7 @@ app = FastAPI(
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to VeriFact API!"}
+    return {"message": "Welcome to VeriFact Fast API!"}
 
 @app.get("/health")
 def health_check():
