@@ -22,36 +22,17 @@ VeriFact uses a pipeline of specialized AI agents to process and verify factual 
 2. **EvidenceHunter**: Searches for and evaluates supporting/contradicting evidence
 3. **VerdictWriter**: Synthesizes evidence to produce verdicts with confidence scores and explanations
 
-Each agent is designed to perform its specialized task efficiently while maintaining transparency in the factchecking process.
-
-## Implementation Status
-
-VeriFact is under active development. Here's the current status of key features:
-
-| Feature                | Status      | Notes                                                  |
-| ---------------------- | ----------- | ------------------------------------------------------ |
-| ClaimDetector Agent    | Implemented | Uses OpenAI Agent SDK with OpenRouter                  |
-| EvidenceHunter Agent   | Implemented | Uses OpenAI Agent SDK with OpenRouter                  |
-| VerdictWriter Agent    | Implemented | Uses OpenAI Agent SDK with OpenRouter                  |
-| Chainlit UI            | Implemented | Interactive chat interface with step visualization     |
-| FastAPI Backend        | Implemented | RESTful API for factchecking                           |
-| Supabase Integration   | Implemented | Vector storage, user auth, and session persistence     |
-| PGVector Integration   | Implemented | For semantic search and embeddings storage             |
-| Docker Deployment      | Implemented | Full containerization with docker-compose              |
-| Redis Caching          | Implemented | For model responses and evidence caching               |
-| Multi-claim Processing | In Progress | Parallel processing implementation underway            |
-| Multilingual Support   | In Progress | Basic support implemented, expanding language coverage |
-| Media Analysis         | Planned     | Text-only factchecking currently                       |
+Each agent is designed to perform its specialized task efficiently while maintaining transparency in the factchecking process. |
 
 ## Tech Stack
 
 - **Agent Framework**: OpenAI Agent SDK
+- **Internal Agent System**: Renamed from `src.agents` to `src.verifact_agents` to avoid namespace conflicts
 - **Model Access**: OpenRouter (for accessing models from OpenAI, Anthropic, Mistral, etc.)
 - **Database**: Supabase with PGVector for vector storage
 - **Web Interface**: Chainlit for interactive UI
 - **API Framework**: FastAPI
 - **Caching**: Redis for model and evidence caching
-- **Containerization**: Docker and Docker Compose
 - **Language**: Python 3.10+
 
 ## Setup and Installation
@@ -60,7 +41,8 @@ VeriFact is under active development. Here's the current status of key features:
 
 - Python 3.10+
 - pip or poetry for package management
-- Docker & Docker Compose (optional, for containerized deployment)
+- PostgreSQL (for database features)
+- Redis (for caching, optional)
 
 ### Installation
 
@@ -71,17 +53,15 @@ VeriFact is under active development. Here's the current status of key features:
    cd verifact
    ```
 
-2. Install the dependencies:
+2. Initialize virtual environment and install dependencies
 
    ```bash
-   pip install -e .
+   uv sync
    ```
 
-   Or with development dependencies:
+`uv` is a powerful and preferred modern python package manager. This command synchronizes the virtual environment with the dependencies specified in the lockfile (`uv.lock`). If the environment or lockfile doesn't exist, `uv` will create them automatically. It also installs the project as an editable package by default.
 
-   ```bash
-   pip install -e ".[dev]"
-   ```
+If a new package is needed in the project, simply run `uv add <package>`, which will both update both virtual environment and update your `pyproject.toml` and `uv.lock` files to include the new dependency, ensuring your environment remains reproducible and in sync with your project configuration.
 
 3. Copy the environment template and configure it:
 
@@ -106,56 +86,57 @@ VeriFact is under active development. Here's the current status of key features:
 
 5. Start the application:
 
-   With Docker (recommended for full stack):
-
    ```bash
-   docker-compose up
-   ```
+   # Start the Chainlit UI
+   chainlit run app.py  # Access at http://localhost:8501
 
-   Or run components separately:
+   # For the API (in a separate terminal)
+   uvicorn src.main:app --host 0.0.0.0 --port 8000
 
-   ```bash
-   chainlit run app.py  # For the UI (http://localhost:8501)
+   # To run a simple multi-agent flow:
+   uv run src/verifact_manager.py
    ```
 
 ## Model Configuration
 
-VeriFact uses specialized models from OpenRouter's free tier, each selected for specific strengths:
+VeriFact uses specialized models from OpenAI, each selected for specific strengths:
 
-- **Claim Detection**: `qwen/qwen3-8b:free` (best for structured JSON output)
-- **Evidence Gathering**: `google/gemma-3-27b-it:free` (optimized for RAG with 128k context)
-- **Verdict Writing**: `deepseek/deepseek-chat:free` (best reasoning for evidence synthesis)
+- **Claim Detection**: `gpt-4o-mini` (fast and affordable, for focused tasks)
+- **Evidence Gathering**: `gpt-4o-mini` (fast and affordable, for focused tasks)
+- **Verdict Writing**: `o4-mini` (reasoning model, fast, and cheap)
 
 You can customize which models are used by editing your `.env` file:
 
+The future plan is to use OpenRouter, for free model offerings and greater model flexibility.
+
 ```
 # Model Selection
-DEFAULT_MODEL=meta-llama/llama-3.3-8b-instruct:free
-CLAIM_DETECTOR_MODEL=qwen/qwen3-8b:free
-EVIDENCE_HUNTER_MODEL=google/gemma-3-27b-it:free
-VERDICT_WRITER_MODEL=deepseek/deepseek-chat:free
+DEFAULT_MODEL=gpt-4o
+CLAIM_DETECTOR_MODEL=gpt-4o-mini
+EVIDENCE_HUNTER_MODEL=gpt-4o-mini
+VERDICT_WRITER_MODEL=o4-mini
 ```
 
-## Using OpenRouter
+## OpenAI Agents SDK Integration
 
-VeriFact uses OpenRouter to access AI models from multiple providers:
+VeriFact now integrates the OpenAI Agents SDK, which provides additional agent capabilities alongside our specialized factchecking agents:
 
-1. Sign up for an account at [OpenRouter](https://openrouter.ai/)
-2. Get your API key from the OpenRouter dashboard
-3. Add to your `.env` file:
-   ```
-   OPENROUTER_API_KEY=your_openrouter_api_key_here
-   OPENROUTER_SITE_URL=https://yourdomain.com  # Optional but recommended
-   OPENROUTER_SITE_NAME=YourAppName            # Optional but recommended
-   ```
+```bash
+# Set your OpenAI API key for OpenAI Agents SDK
+export OPENAI_API_KEY=your_openai_api_key_here
+```
 
-VeriFact supports models from multiple providers through OpenRouter:
+The project's internal agent module has been renamed from `src.agents` to `src.verifact_agents` to avoid namespace conflicts. This allows you to:
 
-- Meta Llama models (e.g., `meta-llama/llama-3.3-8b-instruct:free`)
-- Qwen models (e.g., `qwen/qwen3-8b:free`)
-- Google models (e.g., `google/gemma-3-27b-it:free`)
-- DeepSeek models (e.g., `deepseek/deepseek-chat:free`)
-- And more
+```python
+# Import OpenAI Agents SDK
+from agents import Agent as OpenAIAgent
+
+# Import VeriFact agents
+from src.verifact_agents import ClaimDetector
+```
+
+For more details, see the [OpenAI Agents Integration Guide](docs/agents/openai_agents_integration.md).
 
 ## Authentication
 
@@ -187,11 +168,23 @@ SUPABASE_KEY=your_supabase_key_here
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=secure_password_here  # Change for security
 POSTGRES_DB=postgres
-POSTGRES_HOST=localhost  # Use "verifact-db" with Docker
+POSTGRES_HOST=localhost
 POSTGRES_PORT=5432
 ```
 
 ⚠️ **SECURITY WARNING**: Never use default database credentials in production.
+
+## Redis Configuration
+
+For Redis caching (optional but recommended for performance):
+
+```
+# Redis Configuration
+REDIS_ENABLED=true
+REDIS_URL=redis://:${REDIS_PASSWORD:-}@localhost:6379/0
+REDIS_PASSWORD=your-redis-password
+REDIS_CACHE_TTL=86400
+```
 
 ## Advanced Configuration
 
@@ -247,69 +240,6 @@ from src.config import settings
 db_url = settings.database.url
 api_port = settings.api.port
 ```
-
-## Docker Deployment
-
-VeriFact includes optimized Docker configurations for both development and production environments.
-
-### Development Setup
-
-To start all services in development mode:
-
-```bash
-docker-compose up -d
-```
-
-This will start:
-
-- VeriFact API on port 8000
-- VeriFact UI on port 8501
-- PostgreSQL database with pgvector extension
-- Redis for caching
-
-### Production Setup
-
-For production deployment, use both compose files:
-
-```bash
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-```
-
-The production configuration includes:
-
-- Optimized resource limits
-- Health checks for all services
-- Nginx for SSL termination and load balancing
-- Certbot for automatic SSL certificate renewal
-
-### Helper Script
-
-A helper script is provided to simplify Docker operations:
-
-```bash
-# Start in development mode
-./scripts/docker-compose-helper.sh up
-
-# Start in production mode
-./scripts/docker-compose-helper.sh -e prod up
-
-# View logs
-./scripts/docker-compose-helper.sh logs
-
-# Check service health
-./scripts/docker-compose-helper.sh health
-```
-
-Run `./scripts/docker-compose-helper.sh --help` for more options.
-
-### Container Security
-
-The Docker setup implements security best practices:
-
-- Multi-stage builds for smaller images
-- Non-root user for running applications
-- Health checks for all services
-- Resource limitations to prevent container abuse
 
 ## Contributing
 

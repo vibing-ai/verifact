@@ -35,7 +35,8 @@ There are many ways to contribute to VeriFact:
 - pip or uv for package management
 - OpenRouter API key for model access (register at [openrouter.ai](https://openrouter.ai))
 - Git for version control
-- Docker & Docker Compose (optional, for containerized development)
+- PostgreSQL database (optional, for data persistence)
+- Redis (optional, for caching)
 
 ### Setting up the development environment
 
@@ -118,8 +119,7 @@ There are many ways to contribute to VeriFact:
 - Include docstrings for all functions, classes, and modules
 - Keep functions focused on a single responsibility
 - Use type hints to improve code readability and tooling support
-- Format code with `black` and run `flake8` before committing
-- Use `isort` to organize imports (compatible with black settings)
+- Use `ruff` for linting and formatting your code before committing
 - Use `mypy` for static type checking where applicable
 
 ## Testing Guidelines
@@ -146,15 +146,7 @@ When creating a new issue:
 
 ## Running the Application
 
-### Using Docker (Recommended for Full Stack)
-
-```bash
-docker-compose up
-```
-
-This will start all necessary services including the Chainlit UI, FastAPI backend, and database.
-
-### Running Components Separately (Local Development)
+### Running Components Separately
 
 For the Chainlit UI:
 
