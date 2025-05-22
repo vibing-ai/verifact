@@ -1,3 +1,6 @@
+# Configure OpenAI client to use OpenRouter
+from src.utils.openrouter_config import *
+
 import os
 from agents import Agent
 from pydantic import BaseModel, Field

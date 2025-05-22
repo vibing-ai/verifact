@@ -9,6 +9,9 @@ The pipeline handles data transformation between agents, error recovery,
 and provides both synchronous and asynchronous operation modes.
 """
 
+# Configure OpenAI client to use OpenRouter
+from src.utils.openrouter_config import *
+
 import asyncio
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field
