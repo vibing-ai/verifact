@@ -53,19 +53,39 @@ Each agent is designed to perform its specialized task efficiently while maintai
    cd verifact
    ```
 
-2. Install the dependencies:
+2. Create and activate a virtual environment (recommended):
+
+   **For Mac/Linux:**
+   ```bash
+   uv venv
+   source .venv/bin/activate
+   ```
+
+   **For Windows (Command Prompt):**
+   ```cmd
+   uv venv
+   .venv\Scripts\activate
+   ```
+
+   **For Windows (PowerShell):**
+   ```powershell
+   uv venv
+   .venv\Scripts\Activate.ps1
+   ```
+
+3. Install the dependencies:
 
    ```bash
    uv pip install -e .
    ```
 
-3. Copy the environment template and configure it:
+4. Copy the environment template and configure it:
 
    ```bash
    cp .env-example .env
    ```
 
-4. At minimum, configure the following in your `.env` file:
+5. At minimum, configure the following in your `.env` file:
 
    ```
    # Required: OpenRouter API key for model access
@@ -80,7 +100,7 @@ Each agent is designed to perform its specialized task efficiently while maintai
    SUPABASE_KEY=your_supabase_key_here
    ```
 
-5. Start the application:
+6. Start the application:
 
    ```bash
    # Start the Chainlit UI
