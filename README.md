@@ -53,39 +53,25 @@ Each agent is designed to perform its specialized task efficiently while maintai
    cd verifact
    ```
 
-2. Create and activate a virtual environment (recommended):
+2. Initialize virutal environment and obtain dependencies
 
    **For Mac/Linux:**
-   ```bash
-   uv venv
-   source .venv/bin/activate
-   ```
-
-   **For Windows (Command Prompt):**
-   ```cmd
-   uv venv
-   .venv\Scripts\activate
-   ```
-
-   **For Windows (PowerShell):**
-   ```powershell
-   uv venv
-   .venv\Scripts\Activate.ps1
-   ```
-
-3. Install the dependencies:
 
    ```bash
-   uv pip install -e .
+   uv sync
    ```
 
-4. Copy the environment template and configure it:
+`uv` is a powerful and preferred modern python package manager. This command synchronizes the virtual environment with the dependencies specified in the lockfile (`uv.lock`). If the environment or lockfile doesn't exist, uv will create them automatically. It also installs the project as an editable package by default.
+
+If a new package is needed in the project, simply run `uv add <package>`, which will update both virutal environment and update your pyproject.toml and uv.lock files to include the new dependency, ensuring your environment remains reproducible and in sync with your project configuration.
+
+3. Copy the environment template and configure it:
 
    ```bash
    cp .env-example .env
    ```
 
-5. At minimum, configure the following in your `.env` file:
+4. At minimum, configure the following in your `.env` file:
 
    ```
    # Required: OpenRouter API key for model access
@@ -100,7 +86,7 @@ Each agent is designed to perform its specialized task efficiently while maintai
    SUPABASE_KEY=your_supabase_key_here
    ```
 
-6. Start the application:
+5. Start the application:
 
    ```bash
    # Start the Chainlit UI
