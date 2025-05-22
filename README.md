@@ -63,6 +63,12 @@ Each agent is designed to perform its specialized task efficiently while maintai
 
 If a new package is needed in the project, simply run `uv add <package>`, which will both update both virtual environment and update your `pyproject.toml` and `uv.lock` files to include the new dependency, ensuring your environment remains reproducible and in sync with your project configuration.
 
+If contributing, install development dependencies:
+
+```bash
+uv pip install . --extra dev
+```
+
 3. Copy the environment template and configure it:
 
    ```bash
