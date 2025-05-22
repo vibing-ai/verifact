@@ -22,25 +22,7 @@ VeriFact uses a pipeline of specialized AI agents to process and verify factual 
 2. **EvidenceHunter**: Searches for and evaluates supporting/contradicting evidence
 3. **VerdictWriter**: Synthesizes evidence to produce verdicts with confidence scores and explanations
 
-Each agent is designed to perform its specialized task efficiently while maintaining transparency in the factchecking process.
-
-## Implementation Status
-
-VeriFact is under active development. Here's the current status of key features:
-
-| Feature                | Status      | Notes                                                  |
-| ---------------------- | ----------- | ------------------------------------------------------ |
-| ClaimDetector Agent    | Implemented | Uses OpenAI Agent SDK with OpenRouter                  |
-| EvidenceHunter Agent   | Implemented | Uses OpenAI Agent SDK with OpenRouter                  |
-| VerdictWriter Agent    | Implemented | Uses OpenAI Agent SDK with OpenRouter                  |
-| Chainlit UI            | Implemented | Interactive chat interface with step visualization     |
-| FastAPI Backend        | Implemented | RESTful API for factchecking                           |
-| Supabase Integration   | Implemented | Vector storage, user auth, and session persistence     |
-| PGVector Integration   | Implemented | For semantic search and embeddings storage             |
-| Redis Caching          | Implemented | For model responses and evidence caching               |
-| Multi-claim Processing | In Progress | Parallel processing implementation underway            |
-| Multilingual Support   | In Progress | Basic support implemented, expanding language coverage |
-| Media Analysis         | Planned     | Text-only factchecking currently                       |
+Each agent is designed to perform its specialized task efficiently while maintaining transparency in the factchecking process. |
 
 ## Tech Stack
 
@@ -74,13 +56,7 @@ VeriFact is under active development. Here's the current status of key features:
 2. Install the dependencies:
 
    ```bash
-   pip install -e .
-   ```
-
-   Or with development dependencies:
-
-   ```bash
-   pip install -e ".[dev]"
+   uv pip install -e .
    ```
 
 3. Copy the environment template and configure it:
@@ -112,24 +88,29 @@ VeriFact is under active development. Here's the current status of key features:
 
    # For the API (in a separate terminal)
    uvicorn src.main:app --host 0.0.0.0 --port 8000
+
+   # To run a simple multi-agent flow:
+   uv run src/verifact_manager.py
    ```
 
 ## Model Configuration
 
-VeriFact uses specialized models from OpenRouter's free tier, each selected for specific strengths:
+VeriFact uses specialized models from OpenAI, each selected for specific strengths:
 
-- **Claim Detection**: `qwen/qwen3-8b:free` (best for structured JSON output)
-- **Evidence Gathering**: `google/gemma-3-27b-it:free` (optimized for RAG with 128k context)
-- **Verdict Writing**: `deepseek/deepseek-chat:free` (best reasoning for evidence synthesis)
+- **Claim Detection**: `gpt-4o-mini` (fast and affordable, for focused tasks)
+- **Evidence Gathering**: `gpt-4o-mini` (fast and affordable, for focused tasks)
+- **Verdict Writing**: `o4-mini` (reasoning model, fast, and cheap)
 
 You can customize which models are used by editing your `.env` file:
 
+The future plan is to use OpenRouter, for free model offerings and greater model flexibility.
+
 ```
 # Model Selection
-DEFAULT_MODEL=meta-llama/llama-3.3-8b-instruct:free
-CLAIM_DETECTOR_MODEL=qwen/qwen3-8b:free
-EVIDENCE_HUNTER_MODEL=google/gemma-3-27b-it:free
-VERDICT_WRITER_MODEL=deepseek/deepseek-chat:free
+DEFAULT_MODEL=gpt-4o
+CLAIM_DETECTOR_MODEL=gpt-4o-mini
+EVIDENCE_HUNTER_MODEL=gpt-4o-mini
+VERDICT_WRITER_MODEL=o4-mini
 ```
 
 ## OpenAI Agents SDK Integration
@@ -152,27 +133,6 @@ from src.verifact_agents import ClaimDetector
 ```
 
 For more details, see the [OpenAI Agents Integration Guide](docs/agents/openai_agents_integration.md).
-
-## Using OpenRouter
-
-VeriFact uses OpenRouter to access AI models from multiple providers:
-
-1. Sign up for an account at [OpenRouter](https://openrouter.ai/)
-2. Get your API key from the OpenRouter dashboard
-3. Add to your `.env` file:
-   ```
-   OPENROUTER_API_KEY=your_openrouter_api_key_here
-   OPENROUTER_SITE_URL=https://yourdomain.com  # Optional but recommended
-   OPENROUTER_SITE_NAME=YourAppName            # Optional but recommended
-   ```
-
-VeriFact supports models from multiple providers through OpenRouter:
-
-- Meta Llama models (e.g., `meta-llama/llama-3.3-8b-instruct:free`)
-- Qwen models (e.g., `qwen/qwen3-8b:free`)
-- Google models (e.g., `google/gemma-3-27b-it:free`)
-- DeepSeek models (e.g., `deepseek/deepseek-chat:free`)
-- And more
 
 ## Authentication
 
