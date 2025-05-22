@@ -55,8 +55,6 @@ Each agent is designed to perform its specialized task efficiently while maintai
 
 2. Initialize virutal environment and obtain dependencies
 
-   **For Mac/Linux:**
-
    ```bash
    uv sync
    ```
