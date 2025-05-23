@@ -1,6 +1,9 @@
-from pydantic import BaseModel
-from agents import Agent
 import os
+
+from pydantic import BaseModel
+
+from src.verifact_agents.base import Agent
+
 
 class Claim(BaseModel):
     """A factual claim that requires verification."""
@@ -85,11 +88,17 @@ For each claim, return:
 11. Rank (relative to other claims)
 """
 
-# Could this agent handoff to sub-agents (as tools) to do each of its tasks?
-claim_detector_agent = Agent(
-    name="ClaimDetector",
-    instructions=PROMPT,
-    output_type=list[Claim],
-    tools=[],
-    model=os.getenv("CLAIM_DETECTOR_MODEL"),
-)
+class ClaimDetectorAgent:
+    """Agent that detects factual claims in text."""
+
+    def __init__(self, model=None):
+        """Initialize the ClaimDetectorAgent with an optional model."""
+        self.model = model
+
+    async def process(self, input_data):
+        """Detect factual claims in the input text and return a list of Claim objects."""
+        # TODO: Implement actual claim detection logic
+        # For now, return a dummy claim for testing
+        return [Claim(text="This is a dummy claim.", context=0.0)]
+
+claim_detector_agent = ClaimDetectorAgent(model=os.getenv("CLAIM_DETECTOR_MODEL"))
