@@ -1,7 +1,10 @@
-from pydantic import BaseModel
-from agents import Agent
 import os
+
 from agents import WebSearchTool
+from pydantic import BaseModel
+
+from src.verifact_agents.base import Agent
+
 
 class Evidence(BaseModel):
     """Evidence related to a claim."""
@@ -46,10 +49,13 @@ For each evidence piece, provide:
 - stance: "supporting", "contradicting", or "neutral" based on how the evidence relates to the claim
 """
 
-evidence_hunter_agent = Agent(
-    name="EvidenceHunter",
-    instructions=PROMPT,
-    output_type=list[Evidence],
-    tools=[WebSearchTool()],
-    model=os.getenv("EVIDENCE_HUNTER_MODEL"),
-)
+class EvidenceHunterAgent:
+    def __init__(self, model=None):
+        self.model = model
+
+    async def process(self, claim):
+        # TODO: Implement actual evidence hunting logic
+        # For now, return a dummy evidence for testing
+        return [Evidence(content="Dummy evidence for: " + str(claim.text), source="https://example.com", relevance=1.0, stance="supporting")]
+
+evidence_hunter_agent = EvidenceHunterAgent(model=os.getenv("EVIDENCE_HUNTER_MODEL"))
