@@ -89,10 +89,14 @@ For each claim, return:
 """
 
 class ClaimDetectorAgent:
+    """Agent that detects factual claims in text."""
+
     def __init__(self, model=None):
+        """Initialize the ClaimDetectorAgent with an optional model."""
         self.model = model
 
     async def process(self, input_data):
+        """Detect factual claims in the input text and return a list of Claim objects."""
         # TODO: Implement actual claim detection logic
         # For now, return a dummy claim for testing
         return [Claim(text="This is a dummy claim.", context=0.0)]
