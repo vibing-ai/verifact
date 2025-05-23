@@ -12,7 +12,7 @@ and provides both synchronous and asynchronous operation modes.
 import asyncio
 from pydantic import BaseModel, Field
 from agents import Runner, gen_trace_id, trace
-from verifact_agents.claim_detector import claim_detector_agent, Claim
+from verifact_agents.claim_detector import ClaimDetector, Claim
 from verifact_agents.evidence_hunter import evidence_hunter_agent, Evidence
 from verifact_agents.verdict_writer import verdict_writer_agent, Verdict
 import logging
@@ -35,6 +35,7 @@ class ManagerConfig(BaseModel):
 class VerifactManager:
     def __init__(self, config: ManagerConfig = None):
         self.config = config or ManagerConfig()
+        self.claim_detector = ClaimDetector()
 
     async def run(self, query: str) -> None:
         """Process text through the full factchecking pipeline.
@@ -78,19 +79,27 @@ class VerifactManager:
 
     async def _detect_claims(self, text: str) -> list[Claim]:
         logger.info("Detecting claims...")
-        result = await Runner.run(claim_detector_agent, text)
-
-        claims = result.final_output_as(list[Claim])
+        claims = await self.claim_detector.process(text)
         logger.info(f"Detected {len(claims)} claims")
-        logger.info(f"Claims: {claims}")
-        return result.final_output_as(list[Claim])
+        
+        # Apply filtering based on configuration
+        if self.config.min_checkworthiness > 0:
+            claims = [c for c in claims if c.check_worthiness >= self.config.min_checkworthiness]
+            logger.info(f"After filtering by check-worthiness: {len(claims)} claims")
+            
+        # Limit number of claims if configured
+        if self.config.max_claims and len(claims) > self.config.max_claims:
+            claims = claims[:self.config.max_claims]
+            logger.info(f"Limited to {len(claims)} claims")
+            
+        return claims
 
     async def _gather_evidence_for_claim(self, claim: Claim) -> list[Evidence]:
         logger.info(f"Gathering evidence for claim {claim.text[:50]}...")
 
         query = f"""
         Claim to investigate: {claim.text}
-        Context of the claim: {claim.context if hasattr(claim, "context") and claim.context else "No additional context provided"}
+        Context of the claim: {claim.context if claim.context else "No additional context provided"}
         """
 
         result = await Runner.run(evidence_hunter_agent, query)
