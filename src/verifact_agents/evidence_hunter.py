@@ -50,10 +50,14 @@ For each evidence piece, provide:
 """
 
 class EvidenceHunterAgent:
+    """Agent that gathers evidence for a given claim."""
+
     def __init__(self, model=None):
+        """Initialize the EvidenceHunterAgent with an optional model."""
         self.model = model
 
     async def process(self, claim):
+        """Gather evidence for the provided claim and return a list of Evidence objects."""
         # TODO: Implement actual evidence hunting logic
         # For now, return a dummy evidence for testing
         return [Evidence(content="Dummy evidence for: " + str(claim.text), source="https://example.com", relevance=1.0, stance="supporting")]

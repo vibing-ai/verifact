@@ -12,6 +12,7 @@ T_Output = TypeVar('T_Output')
 class Agent(Protocol, Generic[T_Input, T_Output]):
     """Base protocol for all agents."""
     async def process(self, input_data: T_Input) -> T_Output:
+        """Process the input data and return a result."""
         ...
 
 # Placeholder for future implementation
