@@ -10,7 +10,7 @@ conda activate Verifact
 pip install -e . 
 pip install -e ".[dev]" 
 
-git checkout -b feature/2-web-search-evidence-gathering
+git checkout -b feature/issue-2-web-search
 
 python -m pip install --upgrade pip setuptools wheel
 python -m pip install --force-reinstall chainlit
@@ -22,3 +22,5 @@ chainlit run app.py
 uv run src/verifact_manager.py
 
 git remote set-url origin https://github.com/alkalisoda/verifact.git
+
+git branch -d feature/issue-2-web-search
