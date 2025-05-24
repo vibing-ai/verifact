@@ -1,13 +1,14 @@
+import logging
 import os
 from datetime import datetime
-from typing import Any, Dict, List
+from pathlib import Path
 
 from agents import Agent, WebSearchTool
 from pydantic import BaseModel, Field
 
 from verifact_agents.claim_detector import Claim
 
-
+logger = logging.getLogger(__name__)
 class Evidence(BaseModel):
     """Evidence related to a claim."""
 
@@ -22,27 +23,44 @@ class Evidence(BaseModel):
 def get_trust_sources(path: str):
     """Get the trust sources from the file, skipping empty and comment lines.
 
+    Args:
+        path (str): The path to the trust sources file.
+
     Returns:
         list[str]: A list of trust sources.
     """
-    with open(path, "r", encoding="utf-8") as f:
+    p = Path(path)
+    if not p.exists():
+        logger.warning("Trust sources file not found: %s – returning empty list.", p)
+        return []
+
+    try:
+        lines = p.read_text(encoding="utf-8").splitlines()
         return [
             line.strip()
-            for line in f
+            for line in lines
             if line.strip() and not line.strip().startswith("#")
         ]
+    except OSError as e:
+        logger.error("Error reading trust sources file %s: %s – returning empty list.", p, e)
+        return []
 
 class EvidenceHunter:
-
+    """Agent for gathering and evaluating evidence related to factual claims.
+    
+    This class encapsulates the logic for formulating search queries,
+    evaluating source credibility, and collecting diverse evidence
+    from trusted and untrusted sources.
+    """
     def __init__(self,trust_sources_path: str="data\\trust_sources.txt"):
         """Initialize the evidence hunter with a claim.
         
         Args:
-            claims (list[Claim]): The claims to find evidence for.
+            trust_sources_path (str): The path to the trust sources file.
         """
         self.trust_sources = get_trust_sources(trust_sources_path)
 
-        PROMPT = """
+        PROMPT = f"""
         You are an evidence gathering agent tasked with finding and evaluating evidence related to factual claims.
 
         For each claim:
@@ -53,7 +71,7 @@ class EvidenceHunter:
 
         2. Evaluate search results carefully:
             - Determine source credibility (news organizations, academic sources, government sites are typically more reliable)
-            - Consider the trusted sources in the list: {self.trust_sources}
+            - Consider the trusted sources in the list: {", ".join(self.trust_sources)}
             - Assess relevance to the specific claim
             - Identify the stance (supporting, contradicting, or neutral)
             - Extract specific passages that directly address the claim
