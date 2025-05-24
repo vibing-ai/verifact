@@ -130,20 +130,22 @@ class EvidenceHunter:
             - Extract specific passages that directly address the claim
 
         3. Return a comprehensive set of evidence:
-            - Include both supporting and contradicting evidence when available
+            - Include supporting, neutral, and contradicting evidence when available
             - Include multiple evidences on different aspects of the claim
             - Rank evidence by relevance and credibility (0.0-1.0 scale)
             - Provide full source information for citation
             - Include stance classification for each piece of evidence
+        
 
         Your responsibilities:
         1. Focus on facts and evidence, not opinions
         2. Find multiple sources when possible to corroborate information
-        3. Identify contradictions or nuances in the evidence
-        4. Evaluate source credibility and provide higher relevance to more credible sources
+        3. If no contradicting evidence is found, look for alternative explanations, exceptions, or cases where the claim does not hold.
+        4. Identify contradictions or nuances in the evidence
+        5. Evaluate source credibility and provide higher relevance to more credible sources
 
         For each evidence piece, provide:
-        - content: The relevant text passage that addresses the claim
+        - content:  A direct quote or close paraphrase from a single source that addresses the claim. Do not combine content from multiple sources or add your own explanation.
         - source: The full URL of the source
         - relevance:
             - A score from 0.0 to 1.0 indicating how relevant this evidence is to the claim
@@ -187,11 +189,18 @@ class EvidenceHunter:
         Context of the claim: {claim_context}
 
         Your task:
-        1. Find evidence from credible sources that either supports or contradicts this claim
+        1. Find evidence from credible sources that:
+            - supports the claim: {claim.text}
+            - contradicts the claim: {claim.text}
+            - is neutral to the claim: {claim.text}
+            - Exceptions to the claim: {claim.text}
+            - Alternative explanations for the claim: {claim.text}
+            - Alternative explanations against the claim: {claim.text}
+            - Cases where the claim does not hold: {claim.text}
         2. Consider the trusted sources in the list: {self.trust_sources}
         3. Search for multiple perspectives and authoritative sources
         4. Evaluate the reliability and relevance of each source
-        5. Collect both supporting and contradicting evidence when available.
+        5. Collect supporting, contradicting, and neutral evidence when available.
 
         Return a comprehensive set of evidence pieces in the required format.
         """
