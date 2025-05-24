@@ -105,7 +105,7 @@ def get_trust_sources(path: str):
 
 class EvidenceHunter:
 
-    def __init__(self,trust_sources_path: str="trust_sources.txt"):
+    def __init__(self,trust_sources_path: str="data\\trust_sources.txt"):
         """Initialize the evidence hunter with a claim.
         
         Args:
