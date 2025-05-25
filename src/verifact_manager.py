@@ -10,15 +10,17 @@ and provides both synchronous and asynchronous operation modes.
 """
 
 import asyncio
+import chainlit as cl
 from pydantic import BaseModel, Field
 from agents import Runner, gen_trace_id, trace
-from verifact_agents.claim_detector import claim_detector_agent, Claim
-from verifact_agents.evidence_hunter import evidence_hunter_agent, Evidence
-from verifact_agents.verdict_writer import verdict_writer_agent, Verdict
+from src.verifact_agents.claim_detector import claim_detector_agent, Claim
+from src.verifact_agents.evidence_hunter import evidence_hunter_agent, Evidence
+from src.verifact_agents.verdict_writer import verdict_writer_agent, Verdict
 import logging
 
 logger = logging.getLogger(__name__)
 
+    
 class ManagerConfig(BaseModel):
     """Configuration options for the factcheck pipeline."""
 
@@ -36,11 +38,13 @@ class VerifactManager:
     def __init__(self, config: ManagerConfig = None):
         self.config = config or ManagerConfig()
 
-    async def run(self, query: str) -> None:
+    async def run(self, query: str, progress_callback=None, progress_msg=None) -> None:
         """Process text through the full factchecking pipeline.
 
         Args:
             text: The text to factcheck
+            progress_callback: Optional function to call with progress messages
+            progress_msg: The Chainlit message object to update
 
         Returns:
             List[Verdict]: A list of verdicts for claims in the text
@@ -48,29 +52,65 @@ class VerifactManager:
         trace_id = gen_trace_id()
         with trace("VeriFact trace", trace_id=trace_id):
             logger.info(f"Starting factchecking pipeline for trace {trace_id}...")
+            if progress_callback and progress_msg:
+                await progress_callback(progress_msg, "Starting factchecking pipeline...")
 
             # Step 1: Detect claims
             try:
+                if progress_callback and progress_msg:
+                    await progress_callback(progress_msg, "Detecting factual claims...")
                 claims = await self._detect_claims(query)
                 if not claims:
                     logger.info("No check-worthy claims detected in the text")
+                    if progress_callback and progress_msg:
+                        await progress_callback(progress_msg, "No factual claims detected in your message.")
                     return []
+                if progress_callback and progress_msg:
+                    await progress_callback(progress_msg, f"Detected {len(claims)} claim(s). Gathering evidence...")
             except Exception as e:
                 logger.error("Error in claim detection: %s", str(e), exc_info=True)
+                if progress_callback and progress_msg:
+                    await progress_callback(progress_msg, f"Error in claim detection: {str(e)}")
                 raise
 
             # Step 2: Gather evidence for each claim (with parallelism)
             try:
-                claim_evidence_pairs = await self._gather_evidence(claims)
+                claim_evidence_pairs = []
+                for idx, claim in enumerate(claims):
+                    if progress_callback and progress_msg:
+                        await progress_callback(progress_msg, f"Gathering evidence for claim {idx+1}/{len(claims)}: '{getattr(claim, 'text', str(claim))[:60]}'...")
+                    try:
+                        evidence = await self._gather_evidence_for_claim(claim)
+                    except Exception as e:
+                        evidence = None
+                    claim_evidence_pairs.append((claim, evidence))
+                if progress_callback and progress_msg:
+                    await progress_callback(progress_msg, "Evidence gathering complete. Generating verdicts...")
             except Exception as e:
                 logger.error("Error in evidence gathering: %s", str(e), exc_info=True)
+                if progress_callback and progress_msg:
+                    await progress_callback(progress_msg, f"Error in evidence gathering: {str(e)}")
                 raise
 
             # Step 3: Generate verdicts for each claim
             try:
-                verdicts = await self._generate_all_verdicts(claim_evidence_pairs)
+                verdicts = []
+                for idx, (claim, evidence) in enumerate(claim_evidence_pairs):
+                    if not evidence:
+                        logger.warning(f"Skipping claim - no evidence found")
+                        if progress_callback and progress_msg:
+                            await progress_callback(progress_msg, f"No evidence found for claim {idx+1}: '{getattr(claim, 'text', str(claim))[:60]}'. Skipping verdict.")
+                        continue
+                    if progress_callback and progress_msg:
+                        await progress_callback(progress_msg, f"Generating verdict for claim {idx+1}/{len(claims)}...")
+                    verdict = await self._generate_verdict_for_claim(claim, evidence)
+                    verdicts.append((claim, evidence, verdict))
+                if progress_callback and progress_msg:
+                    await progress_callback(progress_msg, "Factchecking pipeline completed.")
             except Exception as e:
                 logger.error("Error in verdict generation: %s", str(e), exc_info=True)
+                if progress_callback and progress_msg:
+                    await progress_callback(progress_msg, f"Error in verdict generation: {str(e)}")
                 raise
 
             logger.info("Factchecking pipeline completed. Generated %d verdicts.", len(verdicts))
@@ -82,8 +122,8 @@ class VerifactManager:
 
         claims = result.final_output_as(list[Claim])
         logger.info(f"Detected {len(claims)} claims")
-        logger.info(f"Claims: {claims}")
-        return result.final_output_as(list[Claim])
+
+        return claims
 
     async def _gather_evidence_for_claim(self, claim: Claim) -> list[Evidence]:
         logger.info(f"Gathering evidence for claim {claim.text[:50]}...")
@@ -94,7 +134,7 @@ class VerifactManager:
         """
 
         result = await Runner.run(evidence_hunter_agent, query)
-        logger.info(f"Evidence gathered for claim: {result}")
+        logger.info(f"Evidence gathered for claim: {claim.text[:50]}")
 
         return result.final_output_as(list[Evidence])
         
@@ -105,7 +145,7 @@ class VerifactManager:
 
         for claim, result in zip(claims, results):
             if isinstance(result, Exception):
-                logger.error(f"Error gathering evidence for claim: {claim.text[:50]}: {result}", exc_info=True)
+                logger.error(f"Error gathering evidence for claim: {claim.text[:50]}: {result.message}", exc_info=True)
                 claim_evidence_pairs.append((claim, None))
             elif result is None:
                 logger.warning(f"No evidence found for claim: {claim.text[:50]}")

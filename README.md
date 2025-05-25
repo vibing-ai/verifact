@@ -94,7 +94,7 @@ uv pip install . --extra dev
 
    ```bash
    # Start the Chainlit UI
-   chainlit run app.py  # Access at http://localhost:8501
+   chainlit run app.py --host localhost  # Access at http://localhost:8501
 
    # For the API (in a separate terminal)
    uvicorn src.main:app --host 0.0.0.0 --port 8000
