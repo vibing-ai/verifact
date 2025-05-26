@@ -44,23 +44,15 @@ def get_trust_sources(path: str):
     except OSError as e:
         logger.error("Error reading trust sources file %s: %s – returning empty list.", p, e)
         return []
-
-class EvidenceHunter:
-    """Agent for gathering and evaluating evidence related to factual claims.
     
-    This class encapsulates the logic for formulating search queries,
-    evaluating source credibility, and collecting diverse evidence
-    from trusted and untrusted sources.
+def get_prompt(trust_sources: list[str]):
+    """Get the prompt for the evidence hunter.
+    
+    Args:
+        trust_sources (list[str]): The list of trusted sources.
     """
-    def __init__(self,trust_sources_path: str="data\\trust_sources.txt"):
-        """Initialize the evidence hunter with a claim.
-        
-        Args:
-            trust_sources_path (str): The path to the trust sources file.
-        """
-        self.trust_sources = get_trust_sources(trust_sources_path)
 
-        PROMPT = f"""
+    PROMPT = f"""
         You are an evidence gathering agent tasked with finding and evaluating evidence related to factual claims.
 
         For each claim:
@@ -71,7 +63,7 @@ class EvidenceHunter:
 
         2. Evaluate search results carefully:
             - Determine source credibility (news organizations, academic sources, government sites are typically more reliable)
-            - Consider the trusted sources in the list: {", ".join(self.trust_sources)}
+            - Consider the trusted sources in the list: {", ".join(trust_sources)}
             - Assess relevance to the specific claim
             - Identify the stance (supporting, contradicting, or neutral)
             - Extract specific passages that directly address the claim
@@ -82,7 +74,13 @@ class EvidenceHunter:
             - Rank evidence by relevance and credibility (0.0-1.0 scale)
             - Provide full source information for citation
             - Include stance classification for each piece of evidence
-        
+
+        4. If possible, ensure the DIVERSITY of the evidence.
+            - Include evidence from different types of sources (e.g., news, academic, government, reputable websites).
+            - Include evidence from different perspectives, not just supporting but also contradicting, neutral, or exception cases.
+            - If no contradicting evidence is found, look for alternative explanations, exceptions, or cases where the claim does not hold.
+            - If possible, include evidence from different time periods or under different conditions (e.g., exceptions, edge cases, or situations where the claim does not hold).
+            - Do not return multiple pieces of evidence that are essentially the same in content or from the same source. If you cannot find diverse evidence, return only unique evidence.
 
         Your responsibilities:
         1. Focus on facts and evidence, not opinions
@@ -103,6 +101,12 @@ class EvidenceHunter:
             - "supporting" if the evidence directly supports the claim,
             - "contradicting" if the evidence directly refutes the claim,
             - "neutral" if the evidence is related but does not clearly support or contradict the claim.
+            - When evaluating the stance of a piece of evidence with respect to a claim, you must strictly check every factual aspect of the claim against the evidence. Do not only look for partial matches or keywords—carefully verify if the evidence fully supports, contradicts, or is neutral to the claim.
+
+                - If the evidence clearly states the opposite of the claim, or provides information that directly conflicts with any key part of the claim, you must classify the stance as "contradicting".
+                - If the evidence fully supports all factual aspects of the claim, classify as "supporting".
+                - If the evidence is related but does not clearly support or contradict the claim, classify as "neutral".
+
         - credibility: 
             - A score from 0.0 to 1.0 indicating the credibility of the source
             - If the source is in the list of trusted sources, set the credibility close to 1.0
@@ -110,6 +114,25 @@ class EvidenceHunter:
 
         - timestamp: The timestamp of the evidence
         """
+    
+    return PROMPT
+    
+class EvidenceHunter:
+    """Agent for gathering and evaluating evidence related to factual claims.
+    
+    This class encapsulates the logic for formulating search queries,
+    evaluating source credibility, and collecting diverse evidence
+    from trusted and untrusted sources.
+    """
+    def __init__(self,trust_sources_path: str=os.path.join(os.path.dirname(__file__), "..", "data", "trust_sources.txt")):
+        """Initialize the evidence hunter with a claim.
+        
+        Args:
+            trust_sources_path (str): The path to the trust sources file.
+        """
+        self.trust_sources = get_trust_sources(trust_sources_path)
+
+        PROMPT = get_prompt(self.trust_sources)
 
         self.evidence_hunter_agent = Agent(
             name="EvidenceHunter",
@@ -140,7 +163,7 @@ class EvidenceHunter:
             - supports the claim: {claim.text}
             - contradicts the claim: {claim.text}
             - is neutral to the claim: {claim.text}
-            - Exceptions to the claim: {claim.text}
+            - Exceptions to the claim: {claim.text}A
             - Alternative explanations for the claim: {claim.text}
             - Alternative explanations against the claim: {claim.text}
             - Cases where the claim does not hold: {claim.text}
