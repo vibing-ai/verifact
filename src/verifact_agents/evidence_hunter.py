@@ -2,6 +2,7 @@ import logging
 import os
 from datetime import datetime
 from pathlib import Path
+from typing import List, Optional
 
 from agents import Agent, WebSearchTool
 from pydantic import BaseModel, Field
@@ -20,6 +21,21 @@ class Evidence(BaseModel):
     credibility: float = 1.0
     timestamp: str = Field(default_factory=lambda: datetime.now().isoformat())
 
+def deduplicate_evidence(evidence_list):
+    """Deduplicate evidence list by source and content.
+    Args:
+        evidence_list (list[Evidence]): The list of evidence to deduplicate.
+    Returns:
+        list[Evidence]: The deduplicated list of evidence.
+    """
+    seen = set()
+    unique_evidence = []
+    for ev in evidence_list:
+        key = (ev.source.strip().lower(), ev.content.strip())
+        if key not in seen:
+            seen.add(key)
+            unique_evidence.append(ev)
+    return unique_evidence
 
 def get_trust_sources(path: str):
     """Get the trust sources from the file, skipping empty and comment lines.
@@ -53,7 +69,10 @@ class EvidenceHunter:
     evaluating source credibility, and collecting diverse evidence
     from trusted and untrusted sources.
     """
-    def __init__(self,trust_sources_path: str=os.path.join(os.path.dirname(__file__), "..", "data", "trust_sources.txt")):
+    def __init__(
+        self,
+        trust_sources_path: str = os.path.join(os.path.dirname(__file__), "..", "..", "data", "trust_sources.txt"),
+    ):
         """Initialize the evidence hunter with a claim.
         
         Args:
@@ -63,11 +82,15 @@ class EvidenceHunter:
 
         PROMPT = self.get_prompt(self.trust_sources)
 
+        # Use provided search tools, create multiple search tools, or use default WebSearchTool
+
+        tools = [WebSearchTool()]
+
         self.evidence_hunter_agent = Agent(
             name="EvidenceHunter",
             instructions=PROMPT,
             output_type=list[Evidence],
-            tools=[WebSearchTool()],
+            tools=tools,
             model=os.getenv("EVIDENCE_HUNTER_MODEL"),
         )
 
@@ -88,6 +111,11 @@ class EvidenceHunter:
                 - Consider queries that might find contradicting evidence
 
             2. Evaluate search results carefully:
+                - Use different search tools if needed. Especially when:
+                    - The search engine is not working
+                    - The search engine is not returning relevant results
+                    - The search engine is not returning any results
+                    - The search engine is returning a lot of spam or low-quality results
                 - Determine source credibility (news organizations, academic sources, government sites are typically more reliable)
                 - Consider the trusted sources in the list: {", ".join(trust_sources)}
                 - Assess relevance to the specific claim
@@ -103,6 +131,11 @@ class EvidenceHunter:
         """
         return """
             3. Return a comprehensive set of evidence:
+                - For each evidence object:
+                    - Only include evidence that directly and explicitly addresses the claim. Do not include evidence that is only tangentially related or discusses broader or different topics.
+                    - Only return one piece of evidence per source
+                    - Do not combine, summarize, or further process information from multiple sources.
+                    - The content must be a direct quote or close paraphrase taken from the website, without any additional explanation or synthesis.
                 - Include supporting, neutral, and contradicting evidence when available
                 - Include multiple evidences on different aspects of the claim
                 - Rank evidence by relevance and credibility (0.0-1.0 scale)
@@ -114,14 +147,22 @@ class EvidenceHunter:
                 - Include evidence from different perspectives, not just supporting but also contradicting, neutral, or exception cases
                 - If no contradicting evidence is found, look for alternative explanations, exceptions, or cases where the claim does not hold
                 - If possible, include evidence from different time periods or under different conditions
-                - Do not return multiple pieces of evidence that are essentially the same in content or from the same source
 
             Your responsibilities:
             1. Focus on facts and evidence, not opinions
-            2. Find multiple sources when possible to corroborate information
-            3. If no contradicting evidence is found, look for alternative explanations, exceptions, or cases where the claim does not hold
-            4. Identify contradictions or nuances in the evidence
-            5. Evaluate source credibility and provide higher relevance to more credible sources
+            2. Find evidence from credible sources that:
+                - supports the claim
+                - contradicts the claim
+                - is neutral to the claim
+                - Exceptions to the claim
+                - Alternative explanations for the claim
+                - Alternative explanations against the claim
+                - Cases where the claim does not hold
+                You don't need to find all of these, but try to find as many as possible.
+            3. Find multiple sources when possible to corroborate information
+            4. If no contradicting evidence is found, look for alternative explanations, exceptions, or cases where the claim does not hold
+            5. Identify contradictions or nuances in the evidence
+            6. Evaluate source credibility and provide higher relevance to more credible sources
         """
 
     def get_output_requirements(self):
@@ -145,7 +186,7 @@ class EvidenceHunter:
                 - "neutral" if the evidence is related but does not clearly support or contradict the claim.
                 - When evaluating the stance of a piece of evidence with respect to a claim, you must strictly check every factual aspect of the claim against the evidence. Do not only look for partial matches or keywords—carefully verify if the evidence fully supports, contradicts, or is neutral to the claim.
 
-                    - If the evidence clearly states the opposite of the claim, or provides information that directly conflicts with any key part of the claim, you must classify the stance as "contradicting".
+                    - If the evidence clearly states the opposite of the claim, or provides information that directly conflicts with any key part of the claim, classify the stance as "contradicting".
                     - If the evidence fully supports all factual aspects of the claim, classify as "supporting".
                     - If the evidence is related but does not clearly support or contradict the claim, classify as "neutral".
 
@@ -155,6 +196,8 @@ class EvidenceHunter:
                 - If the timestamp of the evidence is older than 10 years, set the credibility close to 0.0
 
             - timestamp: The timestamp of the evidence
+
+            Do not return multiple pieces of evidence that are essentially the same in content or from the same source.
         """
 
     def get_prompt(self, trust_sources: list[str]):
@@ -194,21 +237,7 @@ class EvidenceHunter:
 
         Context of the claim: {claim_context}
 
-        Your task:
-        1. Find evidence from credible sources that:
-            - supports the claim: {claim.text}
-            - contradicts the claim: {claim.text}
-            - is neutral to the claim: {claim.text}
-            - Exceptions to the claim: {claim.text}
-            - Alternative explanations for the claim: {claim.text}
-            - Alternative explanations against the claim: {claim.text}
-            - Cases where the claim does not hold: {claim.text}
-        2. Consider the trusted sources in the list: {self.trust_sources}
-        3. Search for multiple perspectives and authoritative sources
-        4. Evaluate the reliability and relevance of each source
-        5. Collect supporting, contradicting, and neutral evidence when available.
-
-        Return a comprehensive set of evidence pieces in the required format.
+        Search for the evidence that supports, contradicts, or is neutral to the claim from multiple perspectives.
         """
         return query
 
