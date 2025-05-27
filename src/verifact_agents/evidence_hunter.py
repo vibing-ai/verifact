@@ -2,7 +2,6 @@ import logging
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import List, Optional
 
 from agents import Agent, WebSearchTool
 from pydantic import BaseModel, Field
@@ -21,7 +20,7 @@ class Evidence(BaseModel):
     credibility: float = 1.0
     timestamp: str = Field(default_factory=lambda: datetime.now().isoformat())
 
-def deduplicate_evidence(evidence_list):
+def deduplicate_evidence(evidence_list: list[Evidence]) -> list[Evidence]:
     """Deduplicate evidence list by source and content.
     Args:
         evidence_list (list[Evidence]): The list of evidence to deduplicate.
@@ -232,7 +231,7 @@ class EvidenceHunter:
         """
 
         context = getattr(claim, "context", None)
-        claim_context = context if context else "No additional context provided"
+        claim_context = str(context) if context != 0.0 else "No additional context provided"
         query = f"""Claim to investigate: {claim.text}
 
         Context of the claim: {claim_context}
