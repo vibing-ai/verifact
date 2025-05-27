@@ -1,7 +1,5 @@
 from typing import Any
-from pydantic import BaseModel
-from agents import Agent
-import asyncio
+from src.verifact_agents.base import Agent
 
 class MockResult:
     def __init__(self, output: Any):
