@@ -1,6 +1,9 @@
-from pydantic import BaseModel
-from agents import Agent
 import os
+
+from pydantic import BaseModel
+
+from agents import Agent
+
 
 class Claim(BaseModel):
     """A factual claim that requires verification."""
@@ -85,7 +88,6 @@ For each claim, return:
 11. Rank (relative to other claims)
 """
 
-# Could this agent handoff to sub-agents (as tools) to do each of its tasks?
 claim_detector_agent = Agent(
     name="ClaimDetector",
     instructions=PROMPT,

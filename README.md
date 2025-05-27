@@ -94,10 +94,10 @@ uv pip install . --extra dev
 
    ```bash
    # Start the Chainlit UI
-   chainlit run app.py  # Access at http://localhost:8501
+   uv run chainlit run app.py --host localhost
 
    # For the API (in a separate terminal)
-   uvicorn src.main:app --host 0.0.0.0 --port 8000
+   uvicorn src.main:app --host localhost --port 8000
 
    # To run a simple multi-agent flow:
    uv run src/verifact_manager.py

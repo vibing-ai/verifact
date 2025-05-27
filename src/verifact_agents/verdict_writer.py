@@ -1,7 +1,10 @@
 import os
-from agents import Agent
-from pydantic import BaseModel, Field
 from typing import Literal
+
+from pydantic import BaseModel, Field
+
+from agents import Agent
+
 
 class Verdict(BaseModel):
     """A verdict on a claim based on evidence."""
