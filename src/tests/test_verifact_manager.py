@@ -74,7 +74,7 @@ async def test_factcheck_pipeline(monkeypatch, claim_text, verdict_text, evidenc
     manager = vm.VerifactManager()
     result = await manager.run(claim_text)
 
-    claim_result, evidence_result, verdict_result = result[0]
+    _, evidence_result, verdict_result = result[0]
 
     # Verdict checks
     assert verdict_result.verdict == verdict_text
