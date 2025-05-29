@@ -1,18 +1,30 @@
+import pandas as pd
 import chainlit as cl
 
 from src.verifact_manager import VerifactManager
 
 pipeline = VerifactManager()
 
+def get_verdict_value(verdict_text):
+    match verdict_text:
+        case "true":
+            return "✅ True"
+        case "partially true":
+            return "🤔 Partially True"
+        case "false":
+            return "❌ False"
+        case _:
+            return "✖️ Uncertain"
+
 @cl.on_message
 async def handle_message(message: cl.Message):
-    progress_msg = cl.Message(content="Starting fact-checking pipeline...")
+    progress_msg = cl.Message(content="Starting fact-checking pipeline:")
     await progress_msg.send()
     progress_updates = []
 
     async def progress_callback(msg, update):
         progress_updates.append(update)
-        msg.content = "\n".join(progress_updates)
+        msg.content = "\n \u2014".join(progress_updates)
         await msg.update()
 
     try:
@@ -30,24 +42,33 @@ async def handle_message(message: cl.Message):
             explanation = getattr(verdict, 'explanation', 'N/A')
             sources = getattr(verdict, 'sources', [])
             sources_str = "\n".join(sources) if sources else "No sources provided."
-            # Evidence formatting
-            if evidence:
-                evidence_str = "\n".join([
-                    f"- {getattr(ev, 'content', str(ev))} (Source: {getattr(ev, 'source', 'N/A')}, Stance: {getattr(ev, 'stance', 'N/A')}, Relevance: {getattr(ev, 'relevance', 'N/A')})"
-                    for ev in evidence
-                ])
-            else:
-                evidence_str = "No evidence found."
-            response += (
-                f"\n---\n**Claim {idx+1}:** {claim_text}\n"
-                f"**Evidence:**\n{evidence_str}\n"
-                f"\n**Verdict:** {verdict_text}\n"
-                f"**Confidence:** {confidence}\n"
-                f"**Explanation:** {explanation}\n"
-                f"**Sources:**\n{sources_str}\n"
-            )
-        progress_msg.content = response
+
+            
+            claim_title = f"Claim {idx+1}: {claim_text} \u2014 Verdict: {get_verdict_value(verdict_text)}"
+
+            async with cl.Step(name=claim_title, type="system") as step:
+                # Evidence formatting
+                if evidence:
+                    evidence_str = "\n".join([
+                        f"- {getattr(ev, 'content', str(ev))} (Source: {getattr(ev, 'source', 'N/A')}, Stance: {getattr(ev, 'stance', 'N/A')}, Relevance: {getattr(ev, 'relevance', 'N/A')})"
+                        for ev in evidence
+                    ])
+                else:
+                    evidence_str = "No evidence found."
+                    
+                step.output = (
+                    f"\n---\n**Claim {idx+1}:** {claim_text}\n"
+                    f"**Evidence:**\n{evidence_str}\n"
+                    f"\n**Verdict:** {verdict_text}\n"
+                    f"**Confidence:** {confidence}\n"
+                    f"**Explanation:** {explanation}\n"
+                    f"**Sources:**\n{sources_str}\n"
+                )
+                await step.update()
+                
+        progress_msg.content = ""
         await progress_msg.update()
+                
     except Exception as e:
         progress_msg.content = f"An error occurred during fact-checking: {str(e)}"
         await progress_msg.update()
