@@ -8,6 +8,15 @@ from src.verifact_manager import VerifactManager
 
 load_dotenv()
 
+def validate_metric(metric_data, expect_success, min_score):
+    assert metric_data.score > min_score, "Score should be greater than specified in the test data"
+    assert metric_data.success is expect_success
+    assert metric_data.reason is not None
+    assert "Truths" in metric_data.verbose_logs
+    assert "Claims" in metric_data.verbose_logs
+    assert "Verdicts" in metric_data.verbose_logs
+    print(f"metric reason: {metric_data.reason}")
+    print(f"verbose logs: {metric_data.verbose_logs}")
 @pytest.mark.asyncio
 async def test_faithfulness_real_output(query, expect_success, min_score):
     """Test the faithfulness.
@@ -47,17 +56,19 @@ async def test_faithfulness_real_output(query, expect_success, min_score):
 
             _, test_result_list = result
 
-            if test_result_list is not None and len(test_result_list) > 0:
-                for test_result in test_result_list:
-                    print(f"Test Result list name: {test_result.name}")
-                    for metric_data in test_result.metrics_data:
-                        assert metric_data.score > min_score, "Score should be greater than specified in the test data"
-                        assert metric_data.success is expect_success
-                        assert metric_data.reason is not None
-                        assert "Truths" in metric_data.verbose_logs
-                        assert "Claims" in metric_data.verbose_logs
-                        assert "Verdicts" in metric_data.verbose_logs
-                        print(f"metric reason: {metric_data.reason}")
-                        print(f"verbose logs: {metric_data.verbose_logs}")
+            if not test_result_list:
+                continue
+            for test_result in test_result_list:
+                print(f"Test Result list name: {test_result.name}")
+                for metric_data in test_result.metrics_data:
+                    validate_metric(metric_data, expect_success, min_score)
+                        # assert metric_data.score > min_score, "Score should be greater than specified in the test data"
+                        # assert metric_data.success is expect_success
+                        # assert metric_data.reason is not None
+                        # assert "Truths" in metric_data.verbose_logs
+                        # assert "Claims" in metric_data.verbose_logs
+                        # assert "Verdicts" in metric_data.verbose_logs
+                        # print(f"metric reason: {metric_data.reason}")
+                        # print(f"verbose logs: {metric_data.verbose_logs}")
             else:
                 print(f"Test Result {test_result.name} list is None or empty")
