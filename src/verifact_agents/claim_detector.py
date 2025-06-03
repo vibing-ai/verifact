@@ -1,97 +1,182 @@
+"""Claim detection agent for VeriFact.
+
+This module provides the claim detection agent that identifies factual claims
+in text using rule-based processing and pattern matching.
+"""
 import os
+import logging
+import re
+from typing import List, Optional
+from pydantic import BaseModel, Field
 
-from pydantic import BaseModel
+from agents import Agent, function_tool
+from .text_processor import TextProcessor
+from .claim_rules import ClaimRules, ClaimRule, calculate_scores
 
-from agents import Agent
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Keep the original PROMPT as a constant
+PROMPT = """
+You are a claim detection agent designed to identify factual claims from text that require verification.
+Your task is to:
+1. Identify explicit and implicit factual claims in the input text
+2. Return the claims in a structured format
+
+The system will automatically:
+- Score claims for check-worthiness, specificity, public interest, and impact
+- Extract and categorize entities
+- Classify claims by domain
+- Filter out non-factual claims
+
+For each claim, return:
+The original claim text
+"""
 
 
 class Claim(BaseModel):
     """A factual claim that requires verification."""
-
     text: str
-    context: float = 0.0
+    check_worthiness: float = Field(default=0.0, ge=0.0, le=1.0)
+    domain: str = Field(default="Other")
+    specificity_score: float = Field(default=0.0, ge=0.0, le=1.0)
+    public_interest_score: float = Field(default=0.0, ge=0.0, le=1.0)
+    impact_score: float = Field(default=0.0, ge=0.0, le=1.0)
+    confidence: float = Field(default=0.0, ge=0.0, le=1.0)
+    entities: List[str] = Field(default_factory=list)
+    # rank: int = Field(default=0)
+    # is_compound: bool = Field(default=False)
+    # sub_claims: List['Claim'] = Field(default_factory=list)
 
-PROMPT = """
-You are a claim detection agent designed to identify factual claims from text that require verification.
-Your task is to:
-1. Identify explicit and implicit factual claims
-2. Score each claim's check-worthiness, specificity, public interest, and impact
-3. Extract and categorize entities mentioned in claims
-4. Classify claims by domain (politics, science, health, etc.)
-5. Normalize claims to a standard format
-6. Split compound claims into separate checkable statements
-7. Rank claims by overall importance for fact-checking
+# Initialize shared resources
+text_processor = TextProcessor()
+rules = ClaimRules.get_default_rules()
+logger.info("Claim detection initialized with %d rules", len(rules))
 
-FACTUAL CLAIMS:
-- Are statements presented as facts
-- Can be verified with evidence
-- Make specific, measurable assertions
-- Examples: statistical claims, historical facts, scientific statements
+def normalize_claim(text: str) -> str:
+    """Normalize the claim text using TextProcessor."""
+    return text_processor.normalize_text(text)
 
-NOT FACTUAL CLAIMS:
-- Personal opinions ("I think pizza is delicious")
-- Subjective judgments ("This is the best movie")
-- Hypotheticals ("If it rains tomorrow...")
-- Pure predictions about future events ("Next year's winner will be...")
-- Questions ("Is climate change real?")
+def extract_entities(text: str) -> List[str]:
+    """Extract entities using TextProcessor."""
+    entities = text_processor.extract_entities(text)
+    return [ent["text"] for ent in entities]
+def calculate_confidence(
+    normalized_text: str,
+    domain: str,
+    entities: List[str],
+    specificity: float
+) -> float:
+    """Calculate confidence score based on multiple factors."""
+    base_confidence = 0.7
+    
+    # Adjust based on domain
+    domain_confidence = {
+        "science": 1.1,
+        "nature": 1.1,
+        "health": 1.2,
+        "technology": 1.0,
+        "statistics": 1.2,
+        "general": 0.9,
+        "Other": 0.8
+    }
+    base_confidence *= domain_confidence.get(domain, 0.8)
+    
+    # Adjust based on entity presence
+    if entities:
+        base_confidence *= min(1.2, 1.0 + (len(entities) * 0.1))
+    
+    # Adjust based on specificity
+    base_confidence *= (0.8 + (specificity * 0.4))  # Range: 0.8 to 1.2
+    
+    # Check for opinion indicators
+    for indicator, _ in ClaimRules.SCORING_RULES["opinion_indicators"]:
+        if re.search(indicator, normalized_text.lower()):
+            base_confidence *= 0.8
+            break
+    
+    return min(1.0, base_confidence)
 
-DISTINCTNESS:
-Ensure each claim is distinct and doesn't substantially overlap with other claims.
-If a statement contains multiple related but distinct claims, separate them.
+async def process_claims(text: str) -> List[Claim]:
+    """
+    Process input text and extract claims.
 
-CHECK-WORTHINESS SCORING:
-Rate claims from 0.0-1.0 based on:
-- Specificity (specificity_score): How specific and measurable the claim is (0.0-1.0)
-- Public interest (public_interest_score): Relevance to public figures/institutions (0.0-1.0)
-- Potential impact (impact_score): Significance of consequences if true/false (0.0-1.0)
-- Overall check_worthiness should be a weighted combination of these factors
+    Args:
+        text: The input text to process
 
-RANKING CRITERIA:
-Rank claims in order of importance for fact-checking, considering:
-1. Check-worthiness score (primary factor)
-2. Specificity of the claim (easier to verify)
-3. Domain importance (health/safety claims prioritized)
-4. Public interest value
-5. Potential impact if the claim is true/false
+    Returns:
+        List[Claim]: A list of detected claims
 
-ENTITY EXTRACTION:
-Identify entities such as:
-- People, organizations, locations
-- Dates, times, numbers, statistics, percentages
-- Products, technologies, scientific terms
+    Raises:
+        ValueError: If the input text is empty or invalid
+    """
+    try:
+        if not text or not isinstance(text, str):
+            raise ValueError("Input text must be a non-empty string")
 
-DOMAIN CLASSIFICATION:
-Assign claims to the most relevant domain:
-- Politics, Economics, Health, Science, Technology
-- Environment, Education, Entertainment, Sports, Other
+        logger.info("Processing text of length %d", len(text))
+        
+        # Use TextProcessor for sentence splitting
+        sentences = text_processor.split_sentences(text)
+        claims: List[Claim] = []
+        
+        for sentence in sentences:
+            normalized_text = normalize_claim(sentence)
+            entities = extract_entities(normalized_text)
+            
+            # Determine domain using ClaimRules
+            domain = "Other"
+            for rule in rules:
+                if re.search(rule.pattern, normalized_text.lower()):
+                    domain = rule.domain
+                    break
+            specificity, public_interest, impact, check_worthiness = calculate_scores(
+                normalized_text, domain
+            )
 
-CLAIM NORMALIZATION:
-- Standardize formatting and phrasing
-- Resolve pronouns to their antecedents
-- Expand abbreviations and acronyms
-- Standardize numerical expressions
+            # Calculate confidence based on multiple factors
+            confidence = calculate_confidence(
+                normalized_text=normalized_text,
+                domain=domain,
+                entities=entities,
+                specificity=specificity
+            )
 
-COMPOUND CLAIMS:
-If a statement contains multiple verifiable claims, break it down into separate checkable statements.
+            claim = Claim(
+                text=normalized_text,
+                domain=domain,
+                specificity_score=specificity,
+                public_interest_score=public_interest,
+                impact_score=impact,
+                check_worthiness=check_worthiness,
+                confidence=confidence,
+                entities=entities,
+                # rank=0,
+                # is_compound=False,
+                # sub_claims=[]
+            )
+            claims.append(claim)
+        
+        logger.info("Extracted %d claims from text", len(claims))
+        return claims
 
-For each claim, return:
-1. The original claim text
-2. A normalized version of the claim
-3. Check-worthiness score (0.0-1.0)
-4. Specificity score (0.0-1.0)
-5. Public interest score (0.0-1.0)
-6. Impact score (0.0-1.0)
-7. Confidence in detection (0.0-1.0)
-8. Domain classification
-9. Extracted entities with types
-10. Parts of compound claims (if applicable)
-11. Rank (relative to other claims)
-"""
+    except Exception as e:
+        logger.error("Error processing text: %s", str(e), exc_info=True)
+        raise
+
+@function_tool(
+    name_override="process_claims",
+    description_override="Process text to extract and analyze factual claims"
+)
+async def process_claims_tool(text: str) -> List[Claim]:
+    """Process input text and extract claims."""
+    return await process_claims(text)
 
 claim_detector_agent = Agent(
     name="ClaimDetector",
     instructions=PROMPT,
     output_type=list[Claim],
-    tools=[],
-    model=os.getenv("CLAIM_DETECTOR_MODEL"),
+    tools=[process_claims_tool],
+    model=os.getenv("CLAIM_DETECTOR_MODEL")
 )
