@@ -1,44 +1,121 @@
-import asyncio
-from pprint import pprint
-from verifact_agents.claim_detector import process_claims, Claim
+import pytest
+from verifact_agents.text_processor import TextProcessor
+from verifact_agents.claim_rules import ClaimRules, calculate_scores
+from verifact_agents.claim_detector import process_claims, Claim, calculate_confidence
 
-# Sample text to test claim detection
-SAMPLE_TEXT = """
-The Earth is round.
-"""
+# Test constants
+TEST_SENTENCE = "The Earth is round."
 
-def format_claim(claim: Claim) -> dict:
-    """Format a claim object for pretty printing."""
-    return {
-        "text": claim.text,
-        "domain": claim.domain,
-        "scores": {
-            "check_worthiness": f"{claim.check_worthiness:.2f}",
-            "specificity": f"{claim.specificity_score:.2f}",
-            "public_interest": f"{claim.public_interest_score:.2f}",
-            "impact": f"{claim.impact_score:.2f}",
-            "confidence": f"{claim.confidence:.2f}"
-        },
-        "entities": claim.entities
-    }
+@pytest.fixture
+def text_processor():
+    return TextProcessor()
 
-async def test_claim_detection():
-    """Test the claim detection functionality with a sample text."""
-    print("\n=== Testing Claim Detection ===\n")
-    print(f"Input Text:\n{SAMPLE_TEXT}\n")
+@pytest.fixture
+def processed_text(text_processor):
+    """Fixture that provides the processed version of our test sentence."""
+    return text_processor.normalize_text(TEST_SENTENCE)
+
+class TestTextProcessor:
+    """Tests for the TextProcessor component."""
     
-    try:
-        # Directly use process_claims to test the core functionality
-        claims = await process_claims(SAMPLE_TEXT)
-        print(f"Number of claims detected: {len(claims)}\n")
+    def test_normalize_text(self, text_processor, processed_text):
+        """Test that text is properly normalized."""
+        assert processed_text == "The Earth is round."
         
-        for i, claim in enumerate(claims, 1):
-            print(f"Claim {i}:")
-            pprint(format_claim(claim), indent=2, width=100)
-            print("\n" + "-"*80 + "\n")
-            
-    except Exception as e:
-        print(f"Error processing text: {str(e)}\n")
+    def test_extract_entities(self, text_processor, processed_text):
+        """Test entity extraction from our test sentence."""
+        entities = text_processor.extract_entities(processed_text)
+        assert len(entities) > 0
+        # Check that "Earth" is recognized as an entity
+        assert any(entity["text"] == "Earth" for entity in entities)
+        
+    def test_split_sentences(self, text_processor):
+        """Test sentence splitting with our test sentence."""
+        sentences = text_processor.split_sentences(TEST_SENTENCE)
+        assert len(sentences) == 1
+        assert sentences[0] == TEST_SENTENCE
 
-if __name__ == "__main__":
-    asyncio.run(test_claim_detection())
+class TestClaimRules:
+    """Tests for the ClaimRules component."""
+    
+    def test_domain_detection(self, processed_text):
+        """Test that our sentence is properly classified into a domain."""
+        # Check all rules to see which domain matches
+        matching_domains = set()
+        for rule in ClaimRules.get_default_rules():
+            if rule.pattern.search(processed_text.lower()):
+                matching_domains.add(rule.domain)
+        
+        # Our sentence should match either 'nature' or 'general' domain
+        assert matching_domains.intersection({'nature', 'general'})
+        
+    def test_score_calculation(self, processed_text):
+        """Test score calculation for our test sentence."""
+        # Test with both possible domains
+        for domain in ['nature', 'general']:
+            specificity, public_interest, impact, check_worthiness = calculate_scores(
+                processed_text, domain
+            )
+            # Verify all scores are within valid range
+            assert all(0.0 <= score <= 1.0 for score in [
+                specificity, public_interest, impact, check_worthiness
+            ])
+            # For nature domain, we expect higher scores
+            if domain == 'nature':
+                assert specificity >= 0.7
+                assert public_interest >= 0.6
+                assert impact >= 0.5
+
+class TestClaimDetector:
+    """Tests for the main ClaimDetector component."""
+    
+    @pytest.mark.asyncio
+    async def test_process_claims(self, processed_text):
+        """Test the complete claim processing pipeline."""
+        claims = await process_claims(TEST_SENTENCE)
+        
+        # Verify we got exactly one claim
+        assert len(claims) == 1
+        claim = claims[0]
+        
+        # Verify claim structure
+        assert isinstance(claim, Claim)
+        assert claim.text == processed_text
+        assert claim.domain in ['nature', 'general']
+        
+        # Verify all scores are present and valid
+        assert 0.0 <= claim.check_worthiness <= 1.0
+        assert 0.0 <= claim.specificity_score <= 1.0
+        assert 0.0 <= claim.public_interest_score <= 1.0
+        assert 0.0 <= claim.impact_score <= 1.0
+        assert 0.0 <= claim.confidence <= 1.0
+        
+        # Verify entities
+        assert len(claim.entities) > 0
+        assert any("Earth" in entity for entity in claim.entities)
+        
+    def test_confidence_calculation(self, processed_text):
+        """Test confidence calculation for our test sentence."""
+        # Test with both possible domains
+        for domain in ['nature', 'general']:
+            confidence = calculate_confidence(
+                normalized_text=processed_text,
+                domain=domain,
+                entities=["Earth"],
+                specificity=0.7
+            )
+            assert 0.0 <= confidence <= 1.0
+            # Nature domain should have higher confidence
+            if domain == 'nature':
+                assert confidence > 0.7
+
+    @pytest.mark.asyncio
+    async def test_error_handling(self):
+        """Test error handling in claim processing."""
+        # Test empty input
+        with pytest.raises(ValueError):
+            await process_claims("")
+        
+        # Test None input
+        with pytest.raises(ValueError):
+            await process_claims(None)
