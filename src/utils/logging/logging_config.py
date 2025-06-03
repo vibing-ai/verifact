@@ -7,6 +7,7 @@ def setup_logging():
     log_file = os.getenv("LOG_FILE")
 
     if log_format == "json":
+        print("=======>logging_config.py, log_format == \"json\" ln-10")
         try:
             import json_log_formatter
             formatter = json_log_formatter.JSONFormatter()
@@ -15,6 +16,7 @@ def setup_logging():
                 '{"time": "%(asctime)s", "level": "%(levelname)s", "name": "%(name)s", "message": "%(message)s"}'
             )
     else:
+        print("=======>logging_config.py, log_format != \"json\" ln-19")
         formatter = logging.Formatter(
             "%(asctime)s - %(levelname)s - %(name)s - %(message)s"
         )
