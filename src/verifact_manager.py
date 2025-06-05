@@ -224,16 +224,7 @@ if __name__ == "__main__":
     from utils.logging.logging_config import setup_logging
     setup_logging()
     
-    # async def test_claims():
-    #     #query = "The sky is blue and the grass is green"
-    #     query = "The Eiffel Tower is 330 meters tall and was completed in 1889."
-    #     claims_output = await Runner.run(claim_detector_agent, query)
-    #     print("------->verifact_manager.py claims_output.final_output_as():", claims_output.final_output_as(list[Claim]))
-    #     return claims_output 
-    #
-    # claims_output = asyncio.run(test_claims())
-
     query = "The Eiffel Tower is 330 meters tall and was completed in 1889."
     manager = VerifactManager()
     verdicts = asyncio.run(manager.run(query))
-    print(">>>>>>>>Verdicts:", verdicts)
+    print(verdicts)
