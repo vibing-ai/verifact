@@ -56,20 +56,24 @@ class VerifactManager:
         with trace("VeriFact trace", trace_id=trace_id):
             logger.info(f"Starting factchecking pipeline for trace {trace_id}...")
             if progress_callback and progress_msg:
-                print()
+                print("progress_callback:", progress_callback)
+                print("progress_msg", progress_msg)
                 await progress_callback(progress_msg, "Starting factchecking pipeline...")
 
             # Step 1: Detect claims
             try:
                 if progress_callback and progress_msg:
+                    logger.info(f"verifact_manager.py, ln-66")
                     await progress_callback(progress_msg, "Detecting factual claims...")
                 claims = await self._detect_claims(query)
                 if not claims:
+                    logger.info(f"verifact_manager.py, ln-70")
                     logger.info("No check-worthy claims detected in the text")
                     if progress_callback and progress_msg:
                         await progress_callback(progress_msg, "No factual claims detected in your message.")
                     return []
                 if progress_callback and progress_msg:
+                    logger.info(f"verifact_manager.py, ln-75")
                     await progress_callback(progress_msg, f"Detected {len(claims)} claim(s). Gathering evidence...")
             except Exception as e:
                 logger.error("Error in claim detection: %s", str(e), exc_info=True)
@@ -139,11 +143,11 @@ class VerifactManager:
         logger.info(f"Generated verdicts for {len(claims_with_evidence)} claims")
     
     async def _detect_claims(self, text: str) -> list[Claim]:
-        logger.info("Detecting claims...")
+        logger.info("_detect_claims(), Detecting claims...")
         result = await Runner.run(claim_detector_agent, text)
 
         claims = result.final_output_as(list[Claim])
-        logger.info(f"Detected {len(claims)} claims")
+        logger.info(f"_detect_claims(), Detected {len(claims)} claims")
 
         return claims
 
@@ -224,7 +228,7 @@ if __name__ == "__main__":
     #     #query = "The sky is blue and the grass is green"
     #     query = "The Eiffel Tower is 330 meters tall and was completed in 1889."
     #     claims_output = await Runner.run(claim_detector_agent, query)
-    #     print("------->verifact_manager.py claim_output_as():", claims_output.final_output_as(list[Claim]))
+    #     print("------->verifact_manager.py claims_output.final_output_as():", claims_output.final_output_as(list[Claim]))
     #     return claims_output 
     #
     # claims_output = asyncio.run(test_claims())
@@ -232,4 +236,4 @@ if __name__ == "__main__":
     query = "The Eiffel Tower is 330 meters tall and was completed in 1889."
     manager = VerifactManager()
     verdicts = asyncio.run(manager.run(query))
-    print(verdicts)
+    print(">>>>>>>>Verdicts:", verdicts)

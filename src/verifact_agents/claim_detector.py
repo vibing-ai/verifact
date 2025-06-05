@@ -25,7 +25,7 @@ class Claim(BaseModel):
     
     domain: str = Field(..., description="The domain classification of the claim (e.g., Politics, Science, Health).")
     
-    entities: Optional[list[dict[str, str]]] = Field(default_factory=[], description="A list of extracted entities with their types.")
+    entities: Optional[list[dict[str, str]]] = Field(default_factory=list, description="A list of extracted entities with their types.")
     
     compound_claim_parts: Optional[list[str]] = Field(default=None, description="If a compound claim, the separate checkable statements.")
     
