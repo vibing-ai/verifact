@@ -48,19 +48,6 @@ class Claim(BaseModel):
     # is_compound: bool = Field(default=False)
     # sub_claims: list['Claim'] = Field(default_factory=list)
 
-# Initialize shared resources
-text_processor = TextProcessor()
-rules = ClaimRules.get_default_rules()
-logger.info("Claim detection initialized with %d rules", len(rules))
-
-def normalize_claim(text: str) -> str:
-    """Normalize the claim text using TextProcessor."""
-    return text_processor.normalize_text(text)
-
-def extract_entities(text: str) -> list[str]:
-    """Extract entities using TextProcessor."""
-    entities = text_processor.extract_entities(text)
-    return [ent["text"] for ent in entities]
 def calculate_confidence(
     normalized_text: str,
     domain: str,
@@ -109,6 +96,9 @@ async def process_claims(text: str) -> list[Claim]:
     Raises:
         ValueError: If the input text is empty or invalid
     """
+    text_processor = TextProcessor()
+    rules = ClaimRules.get_default_rules()
+    logger.info("Claim detection initialized with %d rules", len(rules))
     try:
         if not text or not isinstance(text, str):
             raise ValueError("Input text must be a non-empty string")
@@ -120,8 +110,8 @@ async def process_claims(text: str) -> list[Claim]:
         claims: list[Claim] = []
 
         for sentence in sentences:
-            normalized_text = normalize_claim(sentence)
-            entities = extract_entities(normalized_text)
+            normalized_text = text_processor.normalize_text(sentence)
+            entities = text_processor.extract_entities(normalized_text)
 
             # Determine domain using ClaimRules
             domain = "Other"
