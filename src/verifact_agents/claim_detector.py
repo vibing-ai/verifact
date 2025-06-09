@@ -183,7 +183,7 @@ def extract_context(text: str, sentence: str, window_size: int = 2) -> str:
         # Find the index of the current sentence
         sentence_index = -1
         for i, sent in enumerate(all_sentences):
-            if text_processor.normalize_text(sent) == sentence:
+            if text_processor.normalize_text(sent) == normalized_sentence:
                 sentence_index = i
                 break
         
@@ -196,7 +196,7 @@ def extract_context(text: str, sentence: str, window_size: int = 2) -> str:
         
         context_sentences = all_sentences[start_idx:end_idx]
         # Remove the current sentence from context to avoid duplication
-        context_sentences = [s for s in context_sentences if text_processor.normalize_text(s) != sentence]
+        context_sentences = [s for s in context_sentences if text_processor.normalize_text(s) != normalized_sentence]
         
         return " ".join(context_sentences).strip()
     
