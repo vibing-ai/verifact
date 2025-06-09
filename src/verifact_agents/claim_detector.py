@@ -49,6 +49,26 @@ class Claim(BaseModel):
     # is_compound: bool = Field(default=False)
     # sub_claims: list['Claim'] = Field(default_factory=list)
 
+    def is_checkworthy(self, threshold: float = 0.5) -> bool:
+        """Check if this claim meets the minimum check-worthiness threshold."""
+        return self.check_worthiness >= threshold
+
+    def get_summary(self) -> str:
+        """Get a brief summary of the claim."""
+        return f"{self.text[:50]}... (Domain: {self.domain}, Score: {self.check_worthiness:.2f})"
+
+    def has_entities(self) -> bool:
+        """Check if the claim has any entities."""
+        return len(self.entities) > 0
+
+    def get_entity_names(self) -> list[str]:
+        """Get the names of entities in the claim."""
+        return self.entities.copy()
+
+    def is_high_confidence(self, threshold: float = 0.8) -> bool:
+        """Check if the claim has high confidence."""
+        return self.confidence >= threshold
+
 def calculate_confidence(
     normalized_text: str,
     domain: str,
@@ -85,7 +105,62 @@ def calculate_confidence(
 
     return min(1.0, base_confidence)
 
-# ... existing code ...
+def _determine_domain(normalized_text: str, rules: list) -> str:
+    """Determine the domain for a given text using claim rules."""
+    for rule in rules:
+        if re.search(rule.pattern, normalized_text.lower()):
+            return rule.domain
+    return "Other"
+
+def _extract_entities_from_text(text_processor: TextProcessor, normalized_text: str) -> list[str]:
+    """Extract entity names from normalized text."""
+    entity_dicts = text_processor.extract_entities(normalized_text)
+    return [entity["text"] for entity in entity_dicts]
+
+def _process_single_sentence(
+    sentence: str, 
+    text: str, 
+    text_processor: TextProcessor, 
+    rules: list,
+    min_checkworthiness: float = 0.5
+) -> Claim | None:
+    """Process a single sentence and return a Claim if it meets criteria."""
+    normalized_text = text_processor.normalize_text(sentence)
+    entities = _extract_entities_from_text(text_processor, normalized_text)
+    domain = _determine_domain(normalized_text, rules)
+    
+    specificity, public_interest, impact, check_worthiness = calculate_scores(
+        normalized_text, domain
+    )
+    
+    confidence = calculate_confidence(
+        normalized_text=normalized_text,
+        domain=domain,
+        entities=entities,
+        specificity=specificity
+    )
+    
+    if check_worthiness >= min_checkworthiness:
+        context = extract_context(text, sentence)
+        return Claim(
+            text=normalized_text,
+            context=context,
+            domain=domain,
+            specificity_score=specificity,
+            public_interest_score=public_interest,
+            impact_score=impact,
+            check_worthiness=check_worthiness,
+            confidence=confidence,
+            entities=entities,
+        )
+    
+    logger.debug("Filtered out claim with check-worthiness %.2f: %s", check_worthiness, normalized_text[:50])
+    return None
+
+def _validate_input(text: str) -> None:
+    """Validate input text."""
+    if not text or not isinstance(text, str):
+        raise ValueError("Input text must be a non-empty string")
 
 def extract_context(text: str, sentence: str, window_size: int = 2) -> str:
     """Extract context around a sentence from the original text.
@@ -126,11 +201,12 @@ def extract_context(text: str, sentence: str, window_size: int = 2) -> str:
         logger.warning(f"Error extracting context: {e}")
         return ""
 
-async def process_claims(text: str) -> list[Claim]:
+async def process_claims(text: str, min_checkworthiness: float = 0.5) -> list[Claim]:
     """Process input text and extract claims.
 
     Args:
         text: The input text to process
+        min_checkworthiness: Minimum check-worthiness score to include a claim
 
     Returns:
         list[Claim]: A list of detected claims
@@ -142,8 +218,7 @@ async def process_claims(text: str) -> list[Claim]:
     rules = ClaimRules.get_default_rules()
     logger.info("Claim detection initialized with %d rules", len(rules))
     try:
-        if not text or not isinstance(text, str):
-            raise ValueError("Input text must be a non-empty string")
+        _validate_input(text)
 
         logger.info("Processing text of length %d", len(text))
 
@@ -152,53 +227,12 @@ async def process_claims(text: str) -> list[Claim]:
         claims: list[Claim] = []
 
         for sentence in sentences:
-            normalized_text = text_processor.normalize_text(sentence)
-            entity_dicts = text_processor.extract_entities(normalized_text)
-            # Extract just the entity text from the dictionaries
-            entities = [entity["text"] for entity in entity_dicts]
-
-
-            # Determine domain using ClaimRules
-            domain = "Other"
-            for rule in rules:
-                if re.search(rule.pattern, normalized_text.lower()):
-                    domain = rule.domain
-                    break
-            specificity, public_interest, impact, check_worthiness = calculate_scores(
-                normalized_text, domain
-            )
-
-            # Calculate confidence based on multiple factors
-            confidence = calculate_confidence(
-                normalized_text=normalized_text,
-                domain=domain,
-                entities=entities,
-                specificity=specificity
-            )
-            if check_worthiness >= 0.5:
-                # Extract context for this claim
-                context = extract_context(text, sentence)
-                
-                claim = Claim(
-                    text=normalized_text,
-                    context=context,
-                    domain=domain,
-                    specificity_score=specificity,
-                    public_interest_score=public_interest,
-                    impact_score=impact,
-                    check_worthiness=check_worthiness,
-                    confidence=confidence,
-                    entities=entities,
-                    # rank=0,
-                    # is_compound=False,
-                    # sub_claims=[]
-                )
+            claim = _process_single_sentence(sentence, text, text_processor, rules, min_checkworthiness)
+            if claim:
                 claims.append(claim)
-                logger.debug("Added claim with check-worthiness %.2f: %s", check_worthiness, normalized_text[:50])
-            else:
-                logger.debug("Filtered out claim with check-worthiness %.2f: %s", check_worthiness, normalized_text[:50])
+                logger.debug("Added claim with check-worthiness %.2f: %s", claim.check_worthiness, claim.text[:50])
         
-        logger.info("Extracted %d claims from text", len(claims))
+        logger.info("Extracted %d claims from text (filtered from %d sentences)", len(claims), len(sentences))
         return claims
 
     except Exception as e:
@@ -209,9 +243,9 @@ async def process_claims(text: str) -> list[Claim]:
     name_override="process_claims",
     description_override="Process text to extract and analyze factual claims"
 )
-async def process_claims_tool(text: str) -> list[Claim]:
+async def process_claims_tool(text: str, min_checkworthiness: float = 0.5) -> list[Claim]:
     """Process input text and extract claims."""
-    return await process_claims(text)
+    return await process_claims(text, min_checkworthiness)
 
 claim_detector_agent = Agent(
     name="ClaimDetector",
