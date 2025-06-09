@@ -177,6 +177,9 @@ def extract_context(text: str, sentence: str, window_size: int = 2) -> str:
     all_sentences = text_processor.split_sentences(text)
     
     try:
+        # Normalize the input sentence once for consistent comparison
+        normalized_sentence = text_processor.normalize_text(sentence)
+
         # Find the index of the current sentence
         sentence_index = -1
         for i, sent in enumerate(all_sentences):
