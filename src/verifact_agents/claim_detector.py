@@ -111,7 +111,10 @@ async def process_claims(text: str) -> list[Claim]:
 
         for sentence in sentences:
             normalized_text = text_processor.normalize_text(sentence)
-            entities = text_processor.extract_entities(normalized_text)
+            entity_dicts = text_processor.extract_entities(normalized_text)
+            # Extract just the entity text from the dictionaries
+            entities = [entity["text"] for entity in entity_dicts]
+
 
             # Determine domain using ClaimRules
             domain = "Other"
@@ -130,22 +133,25 @@ async def process_claims(text: str) -> list[Claim]:
                 entities=entities,
                 specificity=specificity
             )
-
-            claim = Claim(
-                text=normalized_text,
-                domain=domain,
-                specificity_score=specificity,
-                public_interest_score=public_interest,
-                impact_score=impact,
-                check_worthiness=check_worthiness,
-                confidence=confidence,
-                entities=entities,
-                # rank=0,
-                # is_compound=False,
-                # sub_claims=[]
-            )
-            claims.append(claim)
-
+            if check_worthiness >= 0.5:
+                claim = Claim(
+                    text=normalized_text,
+                    domain=domain,
+                    specificity_score=specificity,
+                    public_interest_score=public_interest,
+                    impact_score=impact,
+                    check_worthiness=check_worthiness,
+                    confidence=confidence,
+                    entities=entities,
+                    # rank=0,
+                    # is_compound=False,
+                    # sub_claims=[]
+                )
+                claims.append(claim)
+                logger.debug("Added claim with check-worthiness %.2f: %s", check_worthiness, normalized_text[:50])
+            else:
+                logger.debug("Filtered out claim with check-worthiness %.2f: %s", check_worthiness, normalized_text[:50])
+        
         logger.info("Extracted %d claims from text", len(claims))
         return claims
 
