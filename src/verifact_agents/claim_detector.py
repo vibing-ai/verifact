@@ -37,6 +37,7 @@ The original claim text
 class Claim(BaseModel):
     """A factual claim that requires verification."""
     text: str
+    context: str = Field(default="")
     check_worthiness: float = Field(default=0.0, ge=0.0, le=1.0)
     domain: str = Field(default="Other")
     specificity_score: float = Field(default=0.0, ge=0.0, le=1.0)
@@ -83,6 +84,47 @@ def calculate_confidence(
             break
 
     return min(1.0, base_confidence)
+
+# ... existing code ...
+
+def extract_context(text: str, sentence: str, window_size: int = 2) -> str:
+    """Extract context around a sentence from the original text.
+    
+    Args:
+        text: The original full text
+        sentence: The specific sentence being processed as a claim
+        window_size: Number of sentences to include before and after (default: 2)
+    
+    Returns:
+        str: Context around the sentence
+    """
+    text_processor = TextProcessor()
+    all_sentences = text_processor.split_sentences(text)
+    
+    try:
+        # Find the index of the current sentence
+        sentence_index = -1
+        for i, sent in enumerate(all_sentences):
+            if text_processor.normalize_text(sent) == sentence:
+                sentence_index = i
+                break
+        
+        if sentence_index == -1:
+            return ""
+        
+        # Extract context window
+        start_idx = max(0, sentence_index - window_size)
+        end_idx = min(len(all_sentences), sentence_index + window_size + 1)
+        
+        context_sentences = all_sentences[start_idx:end_idx]
+        # Remove the current sentence from context to avoid duplication
+        context_sentences = [s for s in context_sentences if text_processor.normalize_text(s) != sentence]
+        
+        return " ".join(context_sentences).strip()
+    
+    except Exception as e:
+        logger.warning(f"Error extracting context: {e}")
+        return ""
 
 async def process_claims(text: str) -> list[Claim]:
     """Process input text and extract claims.
@@ -134,8 +176,12 @@ async def process_claims(text: str) -> list[Claim]:
                 specificity=specificity
             )
             if check_worthiness >= 0.5:
+                # Extract context for this claim
+                context = extract_context(text, sentence)
+                
                 claim = Claim(
                     text=normalized_text,
+                    context=context,
                     domain=domain,
                     specificity_score=specificity,
                     public_interest_score=public_interest,

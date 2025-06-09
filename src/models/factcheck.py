@@ -8,6 +8,7 @@ class Source(BaseModel):
 
 class Claim(BaseModel):
     text: str
+    context: str = Field(default="")
     verdict: str
     confidence: float = Field(ge=0.0, le=1.0)
     explanation: str

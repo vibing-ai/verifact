@@ -116,6 +116,8 @@ class TestClaimDetector:
         assert isinstance(claim, Claim)
         assert claim.text == processed_text_fixture
         assert claim.domain in ['nature', 'general']
+        assert hasattr(claim, 'context')  # Verify context field exists
+        assert isinstance(claim.context, str)  # Verify context is a string
 
         # Verify all scores are present and valid
         assert 0.0 <= claim.check_worthiness <= 1.0

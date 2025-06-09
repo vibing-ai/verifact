@@ -20,6 +20,7 @@ async def factcheck(request: FactCheckRequest):
         claims=[
             Claim(
                 text="Example claim",
+                context="Context around the example claim",
                 verdict="Mostly True",
                 confidence=0.89,
                 explanation="This is a detailed explanation with evidence",
