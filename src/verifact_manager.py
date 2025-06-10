@@ -10,13 +10,15 @@ and provides both synchronous and asynchronous operation modes.
 """
 
 import asyncio
-import chainlit as cl
-from pydantic import BaseModel, Field
-from agents import Runner, gen_trace_id, trace
-from src.verifact_agents.claim_detector import claim_detector_agent, Claim
-from src.verifact_agents.evidence_hunter import evidence_hunter_agent, Evidence
-from src.verifact_agents.verdict_writer import verdict_writer_agent, Verdict
 import logging
+
+import chainlit as cl
+from agents import Runner, gen_trace_id, trace
+from pydantic import BaseModel, Field
+
+from verifact_agents.claim_detector import Claim, claim_detector_agent
+from verifact_agents.evidence_hunter import Evidence, EvidenceHunter, deduplicate_evidence
+from verifact_agents.verdict_writer import Verdict, verdict_writer_agent
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +39,7 @@ class ManagerConfig(BaseModel):
 class VerifactManager:
     def __init__(self, config: ManagerConfig = None):
         self.config = config or ManagerConfig()
+        self.evidence_hunter = EvidenceHunter()
 
     async def run(self, query: str, progress_callback=None, progress_msg=None) -> None:
         """Process text through the full factchecking pipeline.
@@ -128,15 +131,18 @@ class VerifactManager:
     async def _gather_evidence_for_claim(self, claim: Claim) -> list[Evidence]:
         logger.info(f"Gathering evidence for claim {claim.text[:50]}...")
 
-        query = f"""
-        Claim to investigate: {claim.text}
-        Context of the claim: {claim.context if hasattr(claim, "context") and claim.context else "No additional context provided"}
-        """
+        # query = f"""
+        # Claim to investigate: {claim.text}
+        # Context of the claim: {claim.context if hasattr(claim, "context") and claim.context else "No additional context provided"}
+        # """
+        query = self.evidence_hunter.query_formulation(claim)
 
-        result = await Runner.run(evidence_hunter_agent, query)
-        logger.info(f"Evidence gathered for claim: {claim.text[:50]}")
+        result = await Runner.run(self.evidence_hunter.evidence_hunter_agent, query)
+        logger.info(f"Evidence gathered for claim: {result}")
 
-        return result.final_output_as(list[Evidence])
+        evidences = result.final_output_as(list[Evidence])
+        unique_evidences = deduplicate_evidence(evidences)
+        return unique_evidences
         
     async def _gather_evidence(self, claims: list[Claim]) -> list[tuple[Claim, list[Evidence] | None]]:
         tasks = [self._gather_evidence_for_claim(claim) for claim in claims]
@@ -194,6 +200,6 @@ if __name__ == "__main__":
     from utils.logging.logging_config import setup_logging
     setup_logging()
     manager = VerifactManager()
-    query = "The sky is blue and the grass is green"
+    query = "The sky is blue and grasses are green."
     verdicts = asyncio.run(manager.run(query))
     print(verdicts)
