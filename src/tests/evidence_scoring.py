@@ -72,6 +72,15 @@ def stance_match(gold_label, hunter_stances):
         return "neutral" in hunter_stances
     return False
 
+def get_max_similarity(gold_texts, hunter_texts):
+    max_sim = 0.0
+    for gt in gold_texts:
+        for ht in hunter_texts:
+            sim = simple_similarity(gt, ht)
+            if sim > max_sim:
+                max_sim = sim
+    return max_sim
+
 def score_claim(gold, hunter, sim_threshold=0.7):
     '''Score the claim.
     
@@ -91,12 +100,7 @@ def score_claim(gold, hunter, sim_threshold=0.7):
 
     gold_texts = [ev.get('line_text', '') for ev in gold_evidences if ev.get('line_text')]
     hunter_texts = [ev.get('content', '') for ev in hunter_evidences if 'wiki' in (ev.get('source', '')).lower() or 'wikipedia' in (ev.get('source', '')).lower()]
-    max_sim = 0.0
-    for gt in gold_texts:
-        for ht in hunter_texts:
-            sim = simple_similarity(gt, ht)
-            if sim > max_sim:
-                max_sim = sim
+    max_sim = get_max_similarity(gold_texts, hunter_texts)
 
     return {
         'stance_match': stance_is_match,

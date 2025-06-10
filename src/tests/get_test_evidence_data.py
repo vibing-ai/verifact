@@ -52,15 +52,17 @@ def sample_claims(data: list[dict], sample_size: int, seed: int | None = 42) -> 
     rng = random.Random(seed) if seed is not None else random
     return rng.sample(data, sample_size)
 
-def build_wiki_index(wiki_dir: str) -> dict:
-    """Traverse all jsonl files in the wiki-pages directory and build a {page_id: text} index.
-    
-    Args:
-        wiki_dir (str): The path to the wiki-pages directory.
+def split_lines(lines_str):
+    if '\\n' in lines_str:
+        return lines_str.split('\\n')
+    elif '\n' in lines_str:
+        return lines_str.split('\n')
+    elif '\r\n' in lines_str:
+        return lines_str.split('\r\n')
+    else:
+        return [lines_str]
 
-    Returns:
-        dict: A dictionary containing the {page_id: text} index.
-    """
+def build_wiki_index(wiki_dir: str) -> dict:
     wiki_index = {}
     for fname in os.listdir(wiki_dir):
         if fname.endswith('.json') or fname.endswith('.jsonl'):
@@ -68,10 +70,7 @@ def build_wiki_index(wiki_dir: str) -> dict:
                 for line in f:
                     obj = json.loads(line)
                     if isinstance(obj.get('lines'), str):
-                        if '\n' in obj['lines']:
-                            obj['lines'] = obj['lines'].split('\\n') if '\\n' in obj['lines'] else obj['lines'].split('\n')
-                        else:
-                            obj['lines'] = obj['lines'].split('\r\n') if '\r\n' in obj['lines'] else obj['lines'].split('\n')
+                        obj['lines'] = split_lines(obj['lines'])
                     wiki_index[obj['id']] = obj
     return wiki_index
 
@@ -91,6 +90,13 @@ def extract_evidence_page_ids(claim: Any) -> list[str]:
                 page_ids.add(str(item[0]))
     return list(page_ids)
 
+def get_line_text(wiki_obj, line_idx_in_page):
+    if wiki_obj and "lines" in wiki_obj and isinstance(line_idx_in_page, int):
+        lines = wiki_obj["lines"]
+        if 0 <= line_idx_in_page < len(lines):
+            return lines[line_idx_in_page]
+    return ""
+
 def process_evidence_item(item: Any, wiki_index: dict[str, Any]) -> dict[str, Any]:
     """Process a single evidence item and extract wiki content.
     
@@ -104,14 +110,9 @@ def process_evidence_item(item: Any, wiki_index: dict[str, Any]) -> dict[str, An
     page_title = item[2] if len(item) > 2 else None
     line_idx_in_page = item[3] if len(item) > 3 else None
     line_text = ""
-    
     if page_title and line_idx_in_page is not None:
         wiki_obj = wiki_index.get(page_title, {})
-        if wiki_obj and "lines" in wiki_obj and isinstance(line_idx_in_page, int):
-            lines = wiki_obj["lines"]
-            if 0 <= line_idx_in_page < len(lines):
-                line_text = lines[line_idx_in_page]
-    
+        line_text = get_line_text(wiki_obj, line_idx_in_page)
     return {
         "page_title": page_title,
         "line_idx_in_page": line_idx_in_page,
