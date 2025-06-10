@@ -1,10 +1,11 @@
 import json
 import os
-import random
+import secrets
 from typing import Any
 
 # Download the dataset from https://fever.ai/dataset/fever.html
 # The dataset is available for download from the FEVER website.
+# Extract the wiki-pages.tar.gz file to the wiki-pages directory.
 # Put the dataset in the following directory structure within the `verifact` project:
 # |-- verifact
 # |-- data
@@ -44,13 +45,13 @@ def sample_claims(data: list[dict], sample_size: int, seed: int | None = 42) -> 
     Args:
         data (list[dict]): A list of dictionaries containing the claims.
         sample_size (int): The number of claims to sample.
-        seed (int | None): The seed for the random number generator.
+        seed (int | None): The seed for the random number generator (ignored for secrets.SystemRandom).
 
     Returns:
         list[dict]: A list of dictionaries containing the sampled claims.
     '''
-    rng = random.Random(seed) if seed is not None else random
-    return rng.sample(data, sample_size)
+    indices = secrets.SystemRandom().sample(range(len(data)), sample_size)
+    return [data[i] for i in indices]
 
 def split_lines(lines_str):
     if '\\n' in lines_str:
