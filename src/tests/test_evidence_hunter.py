@@ -22,7 +22,21 @@ def load_sampled_claims(path):
         return json.load(f)
 
 def build_claim_objects(sampled_claims):
-    return [Claim(text=entry['claim']) for entry in sampled_claims]
+    '''Build claim objects from sampled claims.
+    
+    Args:
+        sampled_claims (list[dict]): A list of dictionaries, each containing a sampled claim.
+
+    Returns:
+        list[Claim]: A list of claim objects.
+    '''
+    return [Claim(
+        text=entry['claim'],
+        verdict='',
+        confidence=0.0,
+        explanation='',
+        sources=[]
+    ) for entry in sampled_claims]
 
 async def gather_evidence_for_claim(evidence_hunter, claim):
     query = evidence_hunter.query_formulation(claim)
@@ -48,6 +62,10 @@ if __name__ == "__main__":
     sampled_claims = load_sampled_claims(SAMPLED_CLAIMS_PATH)
     claims = build_claim_objects(sampled_claims)
     evidence_results = asyncio.run(run_evidence_hunter_on_claims(claims))
-    with open(EVIDENCE_RESULTS_PATH, 'w', encoding='utf-8') as f:
-        json.dump(evidence_results, f, ensure_ascii=False, indent=2)
+    try:
+        with open(EVIDENCE_RESULTS_PATH, 'w', encoding='utf-8') as f:
+            json.dump(evidence_results, f, ensure_ascii=False, indent=2)
+    except IOError as e:
+        print(f"Error writing results to {EVIDENCE_RESULTS_PATH}: {e}")
+        raise
     print(f"Saved evidence hunter results to {EVIDENCE_RESULTS_PATH}")

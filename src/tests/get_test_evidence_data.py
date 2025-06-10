@@ -1,7 +1,7 @@
 import json
 import os
 import random
-from typing import Dict, List
+from typing import Any
 
 SHARED_TASK_PATH = 'data/testing_data/shared_task_dev.jsonl'
 WIKI_PAGES_DIR = 'data/testing_data/wiki-pages/wiki-pages/'
@@ -9,7 +9,7 @@ OUTPUT_PATH = 'data/testing_data/sampled_claims_with_wiki.json'
 
 SAMPLE_SIZE = 50
 
-def load_claims(file_path: str) -> List[Dict]:
+def load_claims(file_path: str) -> list[dict[str, Any]]:
     """Load claims from a jsonl file.
     
     Args:
@@ -19,12 +19,16 @@ def load_claims(file_path: str) -> List[Dict]:
         List[Dict]: A list of dictionaries containing the claims.
     """
     data = []
-    with open(file_path, 'r', encoding='utf-8') as f:
-        for line in f:
-            data.append(json.loads(line))
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                data.append(json.loads(line))
+    except FileNotFoundError as e:
+        print(f"Error loading claims from {file_path}: {e}")
+        raise
     return data
 
-def sample_claims(data: List[Dict], sample_size: int) -> List[Dict]:
+def sample_claims(data: list[dict[str, Any]], sample_size: int) -> list[dict[str, Any]]:
     """Sample claims from the data.
     
     Args:
@@ -59,7 +63,7 @@ def build_wiki_index(wiki_dir: str) -> dict:
                     wiki_index[obj['id']] = obj
     return wiki_index
 
-def extract_evidence_page_ids(claim: Dict) -> List[str]:
+def extract_evidence_page_ids(claim: Any) -> list[str]:
     """Extract the page_id of the evidence from the claim.
     
     Args:
@@ -75,7 +79,7 @@ def extract_evidence_page_ids(claim: Dict) -> List[str]:
                 page_ids.add(str(item[0]))
     return list(page_ids)
 
-def process_evidence_item(item, wiki_index):
+def process_evidence_item(item: Any, wiki_index: dict[str, Any]) -> dict[str, Any]:
     """Process a single evidence item and extract wiki content.
     
     Args:
@@ -102,7 +106,7 @@ def process_evidence_item(item, wiki_index):
         "line_text": line_text
     }
 
-def attach_wiki_content_to_claims(claims: List[Dict], wiki_index: dict) -> List[Dict]:
+def attach_wiki_content_to_claims(claims: list[dict[str, Any]], wiki_index: dict[str, Any]) -> list[dict[str, Any]]:
     """Attach the wiki content of the evidence of each claim.
     
     Args:
@@ -133,13 +137,15 @@ def main():
     print(f"Sampled {len(sampled)} claims")
     wiki_index = build_wiki_index(WIKI_PAGES_DIR)
     print(f"Built wiki index with {len(wiki_index)} pages")
-    print(claims[0]['evidence'])
-    print(list(wiki_index.keys())[:10])
     enriched = attach_wiki_content_to_claims(sampled, wiki_index)
     print(f"Attached wiki content to {len(enriched)} claims")
-    with open(OUTPUT_PATH, 'w', encoding='utf-8') as f:
-        json.dump(enriched, f, ensure_ascii=False, indent=2)
-    print(f"Saved to {OUTPUT_PATH}")
+    try:
+        with open(OUTPUT_PATH, 'w', encoding='utf-8') as f:
+            json.dump(enriched, f, ensure_ascii=False, indent=2)
+        print(f"Saved to {OUTPUT_PATH}")
+    except IOError as e:
+        print(f"Error writing to {OUTPUT_PATH}: {e}")
+        raise
 
 if __name__ == '__main__':
     main()

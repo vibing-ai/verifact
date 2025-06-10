@@ -1,10 +1,22 @@
 import json
 from difflib import SequenceMatcher
 
-with open('data/testing_data/sampled_claims_with_wiki.json', 'r', encoding='utf-8') as f:
-    gold_data = json.load(f)
-with open('data/testing_data/evidence_hunter_results.json', 'r', encoding='utf-8') as f:
-    hunter_data = json.load(f)
+
+def load_data():
+    """Load gold and hunter data from JSON files.
+    
+    Returns:
+        tuple: A tuple containing the gold and hunter data.
+    """
+    try:
+        with open('data/testing_data/sampled_claims_with_wiki.json', 'r', encoding='utf-8') as f:
+            gold_data = json.load(f)
+        with open('data/testing_data/evidence_hunter_results.json', 'r', encoding='utf-8') as f:
+            hunter_data = json.load(f)
+        return gold_data, hunter_data
+    except FileNotFoundError as e:
+        print(f"Error loading data files: {e}")
+        raise
 
 def normalize_stance(stance):
     '''Normalize the stance to a standard format.
@@ -92,8 +104,9 @@ def main():
     stance_correct = 0
     content_sim_total = 0
     detailed_results = []
+    gold_data, hunter_data = load_data()
     n = len(gold_data)
-    for gold, hunter in zip(gold_data, hunter_data):
+    for gold, hunter in zip(gold_data, hunter_data, strict=True):
         score = score_claim(gold, hunter)
         if score['stance_match']:
             stance_correct += 1
