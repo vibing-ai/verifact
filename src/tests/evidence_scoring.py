@@ -1,6 +1,9 @@
 import json
 from difflib import SequenceMatcher
 
+GOLD_DATA_PATH = 'data/testing_data/sampled_claims_with_wiki.json'
+HUNTER_DATA_PATH = 'data/testing_data/evidence_hunter_results.json'
+SCORE_REPORT_PATH = 'data/testing_data/scoring_report.json'
 
 def load_data():
     """Load gold and hunter data from JSON files.
@@ -9,9 +12,9 @@ def load_data():
         tuple: A tuple containing the gold and hunter data.
     """
     try:
-        with open('data/testing_data/sampled_claims_with_wiki.json', 'r', encoding='utf-8') as f:
+        with open(GOLD_DATA_PATH, 'r', encoding='utf-8') as f:
             gold_data = json.load(f)
-        with open('data/testing_data/evidence_hunter_results.json', 'r', encoding='utf-8') as f:
+        with open(HUNTER_DATA_PATH, 'r', encoding='utf-8') as f:
             hunter_data = json.load(f)
         return gold_data, hunter_data
     except FileNotFoundError as e:
@@ -121,9 +124,13 @@ def main():
         })
     print(f'Stance accuracy: {stance_correct/n:.2%}')
     print(f'Average max content similarity (wiki source): {content_sim_total/n:.2f}')
-    with open('data/testing_data/scoring_report.json', 'w', encoding='utf-8') as f:
-        json.dump(detailed_results, f, ensure_ascii=False, indent=2)
-    print('Detailed scoring report saved to data/testing_data/scoring_report.json')
+    try:
+        with open(SCORE_REPORT_PATH, 'w', encoding='utf-8') as f:
+            json.dump(detailed_results, f, ensure_ascii=False, indent=2)
+        print(f'Detailed scoring report saved to {SCORE_REPORT_PATH}')
+    except IOError as e:
+        print(f'Error writing to {SCORE_REPORT_PATH}: {e}')
+        raise
 
 if __name__ == '__main__':
     main()

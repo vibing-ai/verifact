@@ -3,6 +3,15 @@ import os
 import random
 from typing import Any
 
+# Download the dataset from https://fever.ai/dataset/fever.html
+# The dataset is available for download from the FEVER website.
+# Put the dataset in the following directory structure within the `verifact` project:
+# |-- verifact
+# |-- data
+# |-- testing_data
+# |-- shared_task_dev.jsonl
+# |-- wiki_pages
+
 SHARED_TASK_PATH = 'data/testing_data/shared_task_dev.jsonl'
 WIKI_PAGES_DIR = 'data/testing_data/wiki-pages/wiki-pages/'
 OUTPUT_PATH = 'data/testing_data/sampled_claims_with_wiki.json'
