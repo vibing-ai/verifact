@@ -28,17 +28,20 @@ def load_claims(file_path: str) -> list[dict[str, Any]]:
         raise
     return data
 
-def sample_claims(data: list[dict[str, Any]], sample_size: int) -> list[dict[str, Any]]:
-    """Sample claims from the data.
+
+def sample_claims(data: list[dict], sample_size: int, seed: int | None = 42) -> list[dict]:
+    '''Sample claims from the data.
     
     Args:
-        data (List[Dict]): A list of dictionaries containing the claims.
+        data (list[dict]): A list of dictionaries containing the claims.
         sample_size (int): The number of claims to sample.
+        seed (int | None): The seed for the random number generator.
 
     Returns:
-        List[Dict]: A list of dictionaries containing the sampled claims.
-    """
-    return random.sample(data, sample_size)
+        list[dict]: A list of dictionaries containing the sampled claims.
+    '''
+    rng = random.Random(seed) if seed is not None else random
+    return rng.sample(data, sample_size)
 
 def build_wiki_index(wiki_dir: str) -> dict:
     """Traverse all jsonl files in the wiki-pages directory and build a {page_id: text} index.
