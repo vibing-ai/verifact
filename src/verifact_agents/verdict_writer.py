@@ -71,11 +71,12 @@ Instructions:
    - standard: 2–3 sentences with key evidence
    - detailed: Comprehensive analysis with all evidence and perspectives
 7. For confidence scoring:
-   - 0.9-1.0: Overwhelming evidence from multiple high-credibility sources
-   - 0.7-0.89: Strong evidence from reliable sources
+   - 0.9-1.0: Overwhelming evidence from multiple high-credibility sources, all supporting
+   - 0.7-0.89: Strong evidence from reliable sources, mostly supporting
    - 0.4-0.69: Mixed evidence or limited sources
    - 0.1-0.39: Weak or contradictory evidence
    - 0.0-0.09: Insufficient evidence
+   IMPORTANT: When evidence is mixed (both supporting and contradicting), confidence MUST be between 0.4 and 0.6
 
 Guidelines:
 - Maintain political neutrality
@@ -83,7 +84,7 @@ Guidelines:
 - Be transparent about uncertainty or lack of evidence
 - If evidence is mixed, include alternative perspectives
 - Consider evidence relevance when assigning confidence scores
-- For mixed evidence, confidence should be between 0.4 and 0.6
+- For mixed evidence, confidence MUST be between 0.4 and 0.6
 """
 
 def format_evidence_block(evidence: list[dict]) -> str:

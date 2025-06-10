@@ -1,6 +1,13 @@
 import pytest
 import warnings
+import sys
+from pathlib import Path
 from typing import Generator, Dict, Any
+
+# Add the project root directory to the Python path
+project_root = str(Path(__file__).parent.parent.parent)
+sys.path.insert(0, project_root)
+
 from src.verifact_agents.verdict_writer import VerdictWriter
 
 # Suppress the starlette multipart deprecation warning
