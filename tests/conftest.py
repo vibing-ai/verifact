@@ -1,7 +1,11 @@
 import pytest
 import os
+import warnings
 from typing import Generator, Dict, Any
 from src.verifact_agents.verdict_writer import VerdictWriter
+
+# Suppress the starlette multipart deprecation warning
+warnings.filterwarnings("ignore", category=PendingDeprecationWarning, module="starlette.formparsers")
 
 @pytest.fixture(scope="session")
 def test_evidence() -> Dict[str, Any]:
