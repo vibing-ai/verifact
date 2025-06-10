@@ -3,12 +3,11 @@ import os
 import random
 from typing import Dict, List
 
-# 配置路径
 SHARED_TASK_PATH = 'data/testing_data/shared_task_dev.jsonl'
 WIKI_PAGES_DIR = 'data/testing_data/wiki-pages/wiki-pages/'
 OUTPUT_PATH = 'data/testing_data/sampled_claims_with_wiki.json'
 
-SAMPLE_SIZE = 10 
+SAMPLE_SIZE = 50
 
 def load_claims(file_path: str) -> List[Dict]:
     """Load claims from a jsonl file.
@@ -76,6 +75,33 @@ def extract_evidence_page_ids(claim: Dict) -> List[str]:
                 page_ids.add(str(item[0]))
     return list(page_ids)
 
+def process_evidence_item(item, wiki_index):
+    """Process a single evidence item and extract wiki content.
+    
+    Args:
+        item: Evidence item from the claim data.
+        wiki_index: Dictionary mapping page IDs to wiki content.
+        
+    Returns:
+        dict: Processed evidence with page title, line index, and text.
+    """
+    page_title = item[2] if len(item) > 2 else None
+    line_idx_in_page = item[3] if len(item) > 3 else None
+    line_text = ""
+    
+    if page_title and line_idx_in_page is not None:
+        wiki_obj = wiki_index.get(page_title, {})
+        if wiki_obj and "lines" in wiki_obj and isinstance(line_idx_in_page, int):
+            lines = wiki_obj["lines"]
+            if 0 <= line_idx_in_page < len(lines):
+                line_text = lines[line_idx_in_page]
+    
+    return {
+        "page_title": page_title,
+        "line_idx_in_page": line_idx_in_page,
+        "line_text": line_text
+    }
+
 def attach_wiki_content_to_claims(claims: List[Dict], wiki_index: dict) -> List[Dict]:
     """Attach the wiki content of the evidence of each claim.
     
@@ -92,20 +118,7 @@ def attach_wiki_content_to_claims(claims: List[Dict], wiki_index: dict) -> List[
         wiki_evidences = []
         for group in evidences:
             for item in group:
-                page_title = item[2] if len(item) > 2 else None
-                line_idx_in_page = item[3] if len(item) > 3 else None
-                line_text = ""
-                if page_title and line_idx_in_page is not None:
-                    wiki_obj = wiki_index.get(page_title, {})
-                    if wiki_obj and "lines" in wiki_obj and isinstance(line_idx_in_page, int):
-                        lines = wiki_obj["lines"]
-                        if 0 <= line_idx_in_page < len(lines):
-                            line_text = lines[line_idx_in_page]
-                wiki_evidences.append({
-                    "page_title": page_title,
-                    "line_idx_in_page": line_idx_in_page,
-                    "line_text": line_text
-                })
+                wiki_evidences.append(process_evidence_item(item, wiki_index))
         enriched.append({
             "claim": claim.get("claim", ""),
             "label": claim.get("label", ""),
