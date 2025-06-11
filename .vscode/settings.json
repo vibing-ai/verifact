@@ -13,7 +13,7 @@
     },
 
     "editor.lineNumbersMinChars": 1,
-    "editor.glyphMargin": false,
+    "editor.glyphMargin": true,
     "editor.folding": false,
 
     
@@ -42,5 +42,9 @@
     "autoDocstring.startOnNewLine": true,
     
     "git.enableSmartCommit": true,
-    "git.confirmSync": false
+    "git.confirmSync": false,
+    "vim.showMarksInGutter": true,
+    "debug.allowBreakpointsEverywhere": true,
+    "debug.showBreakpointsInOverviewRuler": true,
+    "scm.diffDecorationsGutterWidth": 3
 } 
