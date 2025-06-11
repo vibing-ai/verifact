@@ -11,6 +11,11 @@
     "editor.codeActionsOnSave": {
         "source.organizeImports": "explicit"
     },
+
+    "editor.lineNumbersMinChars": 1,
+    "editor.glyphMargin": true,
+    "editor.folding": false,
+
     
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
@@ -37,5 +42,9 @@
     "autoDocstring.startOnNewLine": true,
     
     "git.enableSmartCommit": true,
-    "git.confirmSync": false
+    "git.confirmSync": false,
+    "vim.showMarksInGutter": true,
+    "debug.allowBreakpointsEverywhere": true,
+    "debug.showBreakpointsInOverviewRuler": true,
+    "scm.diffDecorationsGutterWidth": 3
 } 
