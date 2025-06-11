@@ -1,4 +1,3 @@
-import pytest
 from agents import Agent as OpenAIAgent
 from src.verifact_agents import ClaimDetector
 
