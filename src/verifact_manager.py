@@ -12,7 +12,7 @@ and provides both synchronous and asynchronous operation modes.
 import asyncio
 import logging
 
-import chainlit as cl
+# import chainlit as cl
 from agents import Runner, gen_trace_id, trace
 from pydantic import BaseModel, Field
 
@@ -131,14 +131,18 @@ class VerifactManager:
     async def _gather_evidence_for_claim(self, claim: Claim) -> list[Evidence]:
         logger.info(f"Gathering evidence for claim {claim.text[:50]}...")
 
-        # query = f"""
-        # Claim to investigate: {claim.text}
-        # Context of the claim: {claim.context if hasattr(claim, "context") and claim.context else "No additional context provided"}
-        # """
         query = self.evidence_hunter.query_formulation(claim)
 
-        result = await Runner.run(self.evidence_hunter.evidence_hunter_agent, query)
-        logger.info(f"Evidence gathered for claim: {result}")
+        try:
+            result = await Runner.run(
+                self.evidence_hunter.evidence_hunter_agent, 
+                query,
+                max_turns=10 
+            )
+            logger.info(f"Evidence gathered for claim: {result}")
+        except Exception as e:
+            logger.error(f"Error running evidence_hunter_agent: {e}", exc_info=True)
+            result = None
 
         evidences = result.final_output_as(list[Evidence])
         unique_evidences = deduplicate_evidence(evidences)
@@ -200,6 +204,6 @@ if __name__ == "__main__":
     from utils.logging.logging_config import setup_logging
     setup_logging()
     manager = VerifactManager()
-    query = "The sky is blue and grasses are green."
+    query = "Finding Dory was penned by someone who works primarily at Pixar."
     verdicts = asyncio.run(manager.run(query))
     print(verdicts)
