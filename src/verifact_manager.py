@@ -191,7 +191,7 @@ if __name__ == "__main__":
     # load env
     from dotenv import load_dotenv
     load_dotenv()
-    from utils.logging.logging_config import setup_logging
+    from utils.logging_utils.logging_config import setup_logging
     setup_logging()
     manager = VerifactManager()
     query = "The sky is blue and the grass is green"

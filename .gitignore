@@ -181,6 +181,8 @@ pyrightconfig.json
 
 # Cursor
 .cursorrules
+.cursor
+mcp.jason
 
 #chainlit
 .chainlit/
