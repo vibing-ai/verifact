@@ -140,8 +140,41 @@ class EvidenceHunter:
         Returns:
             str: The requirements for tool usage and result formatting.
         """
+
         if self.use_serper:
-            return """
+            return self._get_serper_tool_requirements()
+        
+        return self._get_diversity_tool_requirements()
+    
+    def _get_diversity_tool_requirements(self):
+        return """
+            - Search tool usage requirements (Diversity Mode):
+                - Make comprehensive search queries to gather diverse perspectives
+                - Aim for 3-4 results from different viewpoints
+                - Include both supporting and contradicting evidence when available
+                - Consider multiple aspects of the claim
+                - Balance between authoritative and diverse sources
+
+                Evidence output format example:
+                [
+                {
+                    "content": "...",        // Use the 'snippet' field from the search result
+                    "source": "...",         // Use the 'url' field from the search result
+                    "relevance": 1.0,        // How directly it addresses the claim
+                    "stance": "supporting",  // supporting, contradicting, or neutral
+                    "credibility": 1.0,      // Based on source reputation
+                    "timestamp": "..."       // Current time or date from result
+                }
+                ]
+
+            - IMPORTANT:
+                - Gather diverse perspectives
+                - Include different types of sources
+                - Balance between supporting and contradicting evidence
+            """
+
+    def _get_serper_tool_requirements(self):
+        return """
             You have a maximum of 5 search attempts.
             - Search tool usage requirements (Efficiency Mode):
                 - Make ONE precise search query
@@ -166,32 +199,6 @@ class EvidenceHunter:
                 - Make only ONE search call
                 - Return only the most relevant results
                 - Prefer quality over quantity
-            """
-        else:
-            return """
-            - Search tool usage requirements (Diversity Mode):
-                - Make comprehensive search queries to gather diverse perspectives
-                - Aim for 3-4 results from different viewpoints
-                - Include both supporting and contradicting evidence when available
-                - Consider multiple aspects of the claim
-                - Balance between authoritative and diverse sources
-
-                Evidence output format example:
-                [
-                {
-                    "content": "...",        // Use the 'snippet' field from the search result
-                    "source": "...",         // Use the 'url' field from the search result
-                    "relevance": 1.0,        // How directly it addresses the claim
-                    "stance": "supporting",  // supporting, contradicting, or neutral
-                    "credibility": 1.0,      // Based on source reputation
-                    "timestamp": "..."       // Current time or date from result
-                }
-                ]
-
-            - IMPORTANT:
-                - Gather diverse perspectives
-                - Include different types of sources
-                - Balance between supporting and contradicting evidence
             """
 
     def get_evidence_requirements(self):

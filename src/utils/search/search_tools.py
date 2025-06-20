@@ -6,16 +6,16 @@ multiple search providers with the OpenAI Agents SDK.
 
 import logging
 import os
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import httpx
-from agents import Agent, Runner, WebSearchTool, function_tool
+from agents import WebSearchTool, function_tool
 
 # Create a logger for this module
 logger = logging.getLogger(__name__)
 
 @function_tool
-async def serper_search(query: str, num_results: int = 10, search_type: str = "search") -> List[Dict[str, Any]]:
+async def serper_search(query: str, num_results: int = 10, search_type: str = "search") -> list[dict[str, Any]]:
     """
     Search the web using Serper.dev API to find current information on any topic.
 
@@ -53,7 +53,6 @@ async def serper_search(query: str, num_results: int = 10, search_type: str = "s
                 return [{"error": f"API returned status code {response.status_code}"}]
             
             data = response.json()
-            logger.info('Serper parsed data:', data)
     except Exception as e:
         logger.error(f"Error in serper_search: {str(e)}")
         return [{"error": f"Error performing search: {str(e)}"}]
@@ -82,7 +81,7 @@ async def serper_search(query: str, num_results: int = 10, search_type: str = "s
     # print(results)
     return results
 
-def get_websearch_tool(user_location: Optional[Dict[str, Any]] = None) -> WebSearchTool:
+def get_websearch_tool(user_location: dict[str, Any] | None = None) -> WebSearchTool:
     """
     Get OpenAI's WebSearchTool instance with optional location configuration.
     
@@ -99,7 +98,7 @@ def get_websearch_tool(user_location: Optional[Dict[str, Any]] = None) -> WebSea
         logger.error("WebSearchTool not available. Make sure you're using OpenAI Agents SDK.")
         raise ImportError("WebSearchTool not available.")
 
-def get_search_tools(tool_names: List[str] = None) -> List[Any]:
+def get_search_tools(tool_names: list[str] = None) -> list[Any]:
     """
     Get multiple configured search tool instances.
 
