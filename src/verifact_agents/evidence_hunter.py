@@ -4,7 +4,7 @@ import logging
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
 from agents import Agent, WebSearchTool
 from pydantic import BaseModel, Field

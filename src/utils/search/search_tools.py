@@ -14,8 +14,31 @@ from agents import WebSearchTool, function_tool
 # Create a logger for this module
 logger = logging.getLogger(__name__)
 
+def _parse_serper_results(
+    data: dict[str, Any], search_type: str, num_results: int
+) -> list[dict[str, Any]]:
+    """Helper to parse results from Serper API response."""
+    result_key_map = {
+        "search": "organic",
+        "news": "news",
+        "images": "images",
+    }
+    results_key = result_key_map.get(search_type, "organic")
+
+    search_results = data.get(results_key, [])[:num_results]
+
+    return [
+        {
+            "content": result.get("snippet", ""),
+            "source": result.get("link", ""),
+        }
+        for result in search_results
+    ]
+
 @function_tool
-async def serper_search(query: str, num_results: int = 10, search_type: str = "search") -> list[dict[str, Any]]:
+async def serper_search(
+    query: str, num_results: int = 10, search_type: str = "search"
+) -> list[dict[str, Any]]:
     """
     Search the web using Serper.dev API to find current information on any topic.
 
@@ -35,51 +58,31 @@ async def serper_search(query: str, num_results: int = 10, search_type: str = "s
     api_url = "https://google.serper.dev"
     endpoint = "/search" if search_type == "search" else f"/{search_type}"
     headers = {"X-API-KEY": api_key, "Content-Type": "application/json"}
-    
+
     payload = {
         "q": query,
         "num": min(10, max(1, num_results)),
-        "gl": "us", 
-        "hl": "en", 
+        "gl": "us",
+        "hl": "en",
         "type": search_type,
-        "tbs": "qdr:y" 
+        "tbs": "qdr:y",
     }
 
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(f"{api_url}{endpoint}", headers=headers, json=payload)
-            if response.status_code != 200:
-                logger.error(f"Serper API error: {response.status_code} - {response.text}")
-                return [{"error": f"API returned status code {response.status_code}"}]
-            
+            response = await client.post(
+                f"{api_url}{endpoint}", headers=headers, json=payload
+            )
+            response.raise_for_status()
             data = response.json()
+    except httpx.HTTPStatusError as e:
+        logger.error(f"Serper API error: {e.response.status_code} - {e.response.text}")
+        return [{"error": f"API returned status code {e.response.status_code}"}]
     except Exception as e:
         logger.error(f"Error in serper_search: {str(e)}")
         return [{"error": f"Error performing search: {str(e)}"}]
 
-    results = []
-    
-    if search_type == "search":
-        for i, result in enumerate(data.get("organic", [])[:num_results]):
-            results.append({
-                "content": result.get("snippet", ""),
-                "source": result.get("link", ""),
-            })
-    elif search_type == "news":
-        for i, result in enumerate(data.get("news", [])[:num_results]):
-            results.append({
-                "content": result.get("snippet", ""),
-                "source": result.get("link", ""),
-            })
-    elif search_type == "images":
-        for i, result in enumerate(data.get("images", [])[:num_results]):
-            results.append({
-                "content": result.get("snippet", ""),
-                "source": result.get("link", ""),
-            })
-    
-    # print(results)
-    return results
+    return _parse_serper_results(data, search_type, num_results)
 
 def get_websearch_tool(user_location: dict[str, Any] | None = None) -> WebSearchTool:
     """
