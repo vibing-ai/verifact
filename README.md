@@ -107,9 +107,9 @@ uv pip install . --extra dev
 
 VeriFact uses specialized models from OpenAI, each selected for specific strengths:
 
-- **Claim Detection**: `gpt-4o-mini` (fast and affordable, for focused tasks)
-- **Evidence Gathering**: `gpt-4o-mini` (fast and affordable, for focused tasks)
-- **Verdict Writing**: `o4-mini` (reasoning model, fast, and cheap)
+- **Claim Detection**: `gpt-4o-mini`
+- **Evidence Gathering**: `gpt-4o-mini`
+- **Verdict Writing**: `o4-mini`
 
 You can customize which models are used by editing your `.env` file:
 

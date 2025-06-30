@@ -1,152 +1,145 @@
-"""Unit tests for the claim detection system components. Testing claim detection,
-claim rules, and text processing."""
+"""Unit tests for the AI-driven claim detection system."""
 
 import pytest
-from verifact_agents.text_processor import TextProcessor
-from verifact_agents.claim_rules import ClaimRules, calculate_scores
-from verifact_agents.claim_detector import process_claims, Claim, calculate_confidence
+from unittest.mock import AsyncMock, patch
+from verifact_agents.claim_detector import process_claims, Claim, claim_detector
 
 # Test constants
 TEST_SENTENCE = "The Earth is round."
+TEST_CLAIM_TEXT = "The study found that 75% of participants showed improvement."
 
 @pytest.fixture
-def text_processor_fixture():
-    """Provide a TextProcessor instance for testing."""
-    return TextProcessor()
+def claim_detector_fixture():
+    """Provide a ClaimDetector instance for testing."""
+    return claim_detector
 
 @pytest.fixture
-def processed_text_fixture(text_processor_fixture):
-    """Fixture that provides the processed version of our test sentence."""
-    return text_processor_fixture.normalize_text(TEST_SENTENCE)
-
-class TestTextProcessor:
-    """Tests for the TextProcessor component."""
-
-    def test_normalize_text(self, text_processor_fixture):
-        """Test that text is properly normalized.
-        
-        Tests various text normalization scenarios including:
-        - Extra whitespace handling
-        - Quote normalization
-        - Special character removal
-        - Sentence ending
-        """
-        # Test basic normalization with extra whitespace
-        assert text_processor_fixture.normalize_text("  The   Earth   is   round  ") == "The Earth is round."
-        
-        # Test quote normalization
-        assert text_processor_fixture.normalize_text('"The Earth" is round') == '"The Earth" is round.'
-        assert text_processor_fixture.normalize_text("'The Earth' is round") == "'The Earth' is round."
-        
-        # Test special character handling
-        assert text_processor_fixture.normalize_text("The Earth...is round!") == "The Earth...is round!"
-        assert text_processor_fixture.normalize_text("The Earth—is round") == "The Earth is round."
-        
-        # Test newlines and tabs
-        assert text_processor_fixture.normalize_text("The Earth\nis round") == "The Earth is round."
-        assert text_processor_fixture.normalize_text("The Earth\tis round") == "The Earth is round."
-        
-        # Test empty and whitespace-only strings
-        assert text_processor_fixture.normalize_text("") == ""
-        assert text_processor_fixture.normalize_text("   ") == ""
-        assert text_processor_fixture.normalize_text("\n\t") == ""
-        
-        # Test sentence ending
-        assert text_processor_fixture.normalize_text("The Earth is round") == "The Earth is round."
-        assert text_processor_fixture.normalize_text("The Earth is round!") == "The Earth is round!"
-        assert text_processor_fixture.normalize_text("The Earth is round?") == "The Earth is round?"
-
-    def test_extract_entities(self, text_processor_fixture, processed_text_fixture):
-        """Test entity extraction from our test sentence."""
-        entities = text_processor_fixture.extract_entities(processed_text_fixture)
-        assert len(entities) > 0
-        # Check that "Earth" is recognized as an entity
-        assert any(entity["text"] == "Earth" for entity in entities)
-        
-    def test_split_sentences(self, text_processor_fixture):
-        """Test sentence splitting with our test sentence."""
-        sentences = text_processor_fixture.split_sentences(TEST_SENTENCE)
-        assert len(sentences) == 1
-        assert sentences[0] == TEST_SENTENCE
-
-class TestClaimRules:
-    """Tests for the ClaimRules component."""
-    
-    def test_domain_detection(self, processed_text_fixture):
-        """Test that our sentence is properly classified into a domain."""
-        # Check all rules to see which domain matches
-        matching_domains = set()
-        for rule in ClaimRules.get_default_rules():
-            if rule.pattern.search(processed_text_fixture.lower()):
-                matching_domains.add(rule.domain)
-        
-        # Our sentence should match either 'nature' or 'general' domain
-        assert matching_domains.intersection({'nature', 'general'})
-        
-    def test_score_calculation(self, processed_text_fixture):
-        """Test score calculation for our test sentence."""
-        # Test with both possible domains
-        for domain in ['nature', 'general']:
-            specificity, public_interest, impact, check_worthiness = calculate_scores(
-                processed_text_fixture, domain
-            )
-            # Verify all scores are within valid range
-            assert all(0.0 <= score <= 1.0 for score in [
-                specificity, public_interest, impact, check_worthiness
-            ])
-            # For nature domain, we expect higher scores
-            if domain == 'nature':
-                assert specificity >= 0.7
-                assert public_interest >= 0.6
-                assert impact >= 0.5
+def mock_claim_response():
+    """Mock response for testing without API calls."""
+    return [
+        Claim(
+            text="The study found that 75% of participants showed improvement",
+            context="",
+            check_worthiness=0.8,
+            domain="Science",
+            confidence=0.9,
+            entities=["study", "participants"]
+        )
+    ]
 
 class TestClaimDetector:
-    """Tests for the main ClaimDetector component."""
+    """Tests for the AI-driven ClaimDetector component."""
     
     @pytest.mark.asyncio
-    async def test_process_claims(self, processed_text_fixture):
-        """Test the complete claim processing pipeline."""
-        claims = await process_claims(TEST_SENTENCE)
+    async def test_process_claims_basic(self, claim_detector_fixture):
+        """Test the complete claim processing pipeline with a simple claim."""
+        claims = await process_claims(TEST_CLAIM_TEXT)
 
-        # Verify we got exactly one claim
-        assert len(claims) == 1
+        # Verify we got at least one claim
+        assert len(claims) >= 1
+        
+        # Check the first claim
         claim = claims[0]
-
-        # Verify claim structure
         assert isinstance(claim, Claim)
-        assert claim.text == processed_text_fixture
-        assert claim.domain in ['nature', 'general']
-        assert hasattr(claim, 'context')  # Verify context field exists
-        assert isinstance(claim.context, str)  # Verify context is a string
-
-        # Verify all scores are present and valid
+        assert "75%" in claim.text or "participants" in claim.text
+        assert claim.domain in ['Science', 'Health', 'Statistics', 'Other']
         assert 0.0 <= claim.check_worthiness <= 1.0
-        assert 0.0 <= claim.specificity_score <= 1.0
-        assert 0.0 <= claim.public_interest_score <= 1.0
-        assert 0.0 <= claim.impact_score <= 1.0
         assert 0.0 <= claim.confidence <= 1.0
-
-        # Verify entities
-        assert len(claim.entities) > 0
-        assert any("Earth" in entity for entity in claim.entities)
-
-    def test_confidence_calculation(self, processed_text_fixture):
-        """Test confidence calculation for our test sentence."""
-        # Test with both possible domains
-        for domain in ['nature', 'general']:
-            confidence = calculate_confidence(
-                normalized_text=processed_text_fixture,
-                domain=domain,
-                entities=["Earth"],
-                specificity=0.7
-            )
-            assert 0.0 <= confidence <= 1.0
-            # Nature domain should have higher confidence
-            if domain == 'nature':
-                assert confidence > 0.7
+        assert isinstance(claim.entities, list)
+        assert isinstance(claim.context, str)
 
     @pytest.mark.asyncio
-    async def test_error_handling(self):
+    async def test_process_claims_multiple_sentences(self, claim_detector_fixture):
+        """Test processing multiple sentences in a paragraph."""
+        multi_sentence_text = "The study found that 75% of participants showed improvement. However, the researchers noted that the sample size was small."
+        
+        claims = await process_claims(multi_sentence_text)
+        
+        # Should detect multiple claims
+        assert len(claims) >= 1
+        
+        # Verify each claim has proper structure
+        for claim in claims:
+            assert isinstance(claim, Claim)
+            assert claim.text.strip() != ""
+            assert claim.domain in ['Science', 'Health', 'Statistics', 'Other']
+            assert 0.0 <= claim.check_worthiness <= 1.0
+            assert 0.0 <= claim.confidence <= 1.0
+
+    @pytest.mark.asyncio
+    async def test_process_claims_opinion_filtering(self, claim_detector_fixture):
+        """Test that opinions and non-factual statements are filtered out."""
+        opinion_text = "I think this is a good idea. The weather might be nice tomorrow."
+        
+        claims = await process_claims(opinion_text)
+        
+        # Should filter out opinions, so fewer or no claims
+        # The exact number depends on AI interpretation, but should be low
+        assert len(claims) <= 1
+
+    @pytest.mark.asyncio
+    async def test_process_claims_with_min_threshold(self, claim_detector_fixture):
+        """Test filtering by minimum check-worthiness threshold."""
+        claims = await process_claims(TEST_CLAIM_TEXT, min_checkworthiness=0.8)
+        
+        # All claims should meet the threshold
+        for claim in claims:
+            assert claim.check_worthiness >= 0.8
+
+    def test_claim_model_structure(self):
+        """Test the Claim model structure and methods."""
+        claim = Claim(
+            text="Test claim",
+            context="Test context",
+            check_worthiness=0.7,
+            domain="Science",
+            confidence=0.8,
+            entities=["test", "claim"]
+        )
+        
+        # Test basic properties
+        assert claim.text == "Test claim"
+        assert claim.context == "Test context"
+        assert claim.check_worthiness == 0.7
+        assert claim.domain == "Science"
+        assert claim.confidence == 0.8
+        assert claim.entities == ["test", "claim"]
+        
+        # Test methods
+        assert claim.is_checkworthy(threshold=0.5) == True
+        assert claim.is_checkworthy(threshold=0.8) == False
+        assert claim.has_entities() == True
+        assert claim.get_entity_names() == ["test", "claim"]
+        assert claim.is_high_confidence(threshold=0.7) == True
+        assert claim.is_high_confidence(threshold=0.9) == False
+
+    def test_claim_detector_preprocessing(self, claim_detector_fixture):
+        """Test text preprocessing functionality."""
+        # Test basic preprocessing
+        cleaned = claim_detector_fixture._preprocess_text("  The   Earth   is   round  ")
+        assert cleaned == "The Earth is round"
+        
+        # Test quote normalization
+        cleaned = claim_detector_fixture._preprocess_text('"The Earth" is round')
+        assert '"The Earth" is round' in cleaned
+
+    def test_claim_detector_deduplication(self, claim_detector_fixture):
+        """Test claim deduplication functionality."""
+        # Create duplicate claims
+        claim1 = Claim(text="The Earth is round", check_worthiness=0.8)
+        claim2 = Claim(text="The Earth is round", check_worthiness=0.7)  # Lower score
+        claim3 = Claim(text="Different claim", check_worthiness=0.6)
+        
+        claims = [claim1, claim2, claim3]
+        deduplicated = claim_detector_fixture._deduplicate_claims(claims)
+        
+        # Should remove duplicate and keep the higher scoring one
+        assert len(deduplicated) == 2
+        assert deduplicated[0].check_worthiness == 0.8  # Higher score first
+        assert deduplicated[1].text == "Different claim"
+
+    @pytest.mark.asyncio
+    async def test_error_handling(self, claim_detector_fixture):
         """Test error handling in claim processing."""
         # Test empty input
         with pytest.raises(ValueError):
@@ -155,3 +148,26 @@ class TestClaimDetector:
         # Test None input
         with pytest.raises(ValueError):
             await process_claims(None)
+
+    @pytest.mark.asyncio
+    async def test_short_text_handling(self, claim_detector_fixture):
+        """Test handling of very short texts."""
+        # Test with text that's too short
+        claims = await process_claims("Hi")
+        
+        # Should handle gracefully (either return empty list or process normally)
+        assert isinstance(claims, list)
+
+    def test_claim_detector_validation(self, claim_detector_fixture):
+        """Test score validation functionality."""
+        # Create claims with extreme scores
+        claim1 = Claim(text="Very short", check_worthiness=0.95)  # High score, short text
+        claim2 = Claim(text="Normal length claim with reasonable content", check_worthiness=0.8)
+        
+        claims = [claim1, claim2]
+        validated = claim_detector_fixture._validate_checkworthiness_scores(claims)
+        
+        # Very short claim should have adjusted score
+        assert validated[0].check_worthiness <= 0.8
+        # Normal claim should be unchanged
+        assert validated[1].check_worthiness == 0.8
