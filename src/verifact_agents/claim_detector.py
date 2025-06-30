@@ -9,7 +9,7 @@ import logging
 import re
 import html
 from typing import List
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from agents import Agent, function_tool, Runner
 
 # Configure logging
@@ -116,7 +116,7 @@ class Claim(BaseModel):
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
     entities: list[str] = Field(default_factory=list)
 
-    @validator('text')
+    @field_validator('text')
     def validate_claim_text(cls, v):
         """Validate and sanitize claim text."""
         if not v or not isinstance(v, str):
@@ -124,7 +124,7 @@ class Claim(BaseModel):
         
         # Check length
         if len(v) > 150:
-            raise ValueError("Claim text too long (max 2000 characters)")
+            raise ValueError("Claim text too long (max 150 characters)")
         
         # Sanitize the text
         sanitized = cls._sanitize_text(v)
@@ -133,11 +133,11 @@ class Claim(BaseModel):
 
         return sanitized
 
-    @validator('context')
+    @field_validator('context')
     def validate_context(cls, v):
         """Validate and sanitize context."""
         if v and len(v) > 200:
-            raise ValueError("Context too long (max 1000 characters)")
+            raise ValueError("Context too long (max 200 characters)")
         return cls._sanitize_text(v) if v else v
 
     @staticmethod
@@ -214,13 +214,14 @@ class ClaimDetector:
         
         # Sanitize the text
         sanitized_text = self._sanitize_text(text)
+        
         # Check if sanitization significantly changed the text
         if len(sanitized_text) < len(text) * 0.8:  # If more than 20% was removed
             logger.warning("Significant content was removed during sanitization")
         
         return sanitized_text
 
-    def _sanitize_text(text: str) -> str:
+    def _sanitize_text(self, text: str) -> str:
         """Sanitize text to remove potentially dangerous content."""
         # HTML escape
         text = html.escape(text)
