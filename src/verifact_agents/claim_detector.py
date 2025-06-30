@@ -121,11 +121,11 @@ class Claim(BaseModel):
         """Validate and sanitize claim text."""
         if not v or not isinstance(v, str):
             raise ValueError("Claim text must be a non-empty string")
-        
+ 
         # Check length
         if len(v) > 150:
             raise ValueError("Claim text too long (max 150 characters)")
-        
+
         # Sanitize the text
         sanitized = cls._sanitize_text(v)
         if sanitized != v:
@@ -205,20 +205,20 @@ class ClaimDetector:
             r'(?i)(<script|javascript:|vbscript:|data:text/html)',  # XSS
             r'(?i)(file://|ftp://|gopher://)',  # Dangerous protocols
         ]
-        
+
         for pattern in suspicious_patterns:
             if re.search(pattern, text):
                 logger.warning(f"Suspicious pattern detected in input: {pattern}")
                 # Remove the suspicious content
                 text = re.sub(pattern, '', text, flags=re.IGNORECASE)
-        
+
         # Sanitize the text
         sanitized_text = self._sanitize_text(text)
-        
+
         # Check if sanitization significantly changed the text
         if len(sanitized_text) < len(text) * 0.8:  # If more than 20% was removed
             logger.warning("Significant content was removed during sanitization")
-        
+
         return sanitized_text
 
     def _sanitize_text(self, text: str) -> str:
