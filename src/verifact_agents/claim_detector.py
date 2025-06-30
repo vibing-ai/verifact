@@ -7,18 +7,34 @@ for intelligent analysis instead of complex rule-based processing.
 import os
 import logging
 import re
+import html
 from typing import List
-from pydantic import BaseModel, Field
-
-from agents import Agent, function_tool
+from pydantic import BaseModel, Field, validator
+from agents import Agent, function_tool, Runner
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Keep the original PROMPT as a constant
+# Length limits for text and claims
+MAX_TEXT_LENGTH = 250
+MIN_TEXT_LENGTH = 10
+MAX_CLAIMS_PER_REQUEST = 2
+DANGEROUS_PATTERNS = [
+    r'<script.*?</script>',  # Script tags
+    r'javascript:',  # JavaScript protocol
+    r'data:text/html',  # Data URLs
+    r'vbscript:',  # VBScript
+    r'on\w+\s*=',  # Event handlers
+    r'<iframe.*?</iframe>',  # Iframe tags
+    r'<object.*?</object>',  # Object tags
+    r'<embed.*?</embed>',  # Embed tags
+]
+
 PROMPT = """
 You are an intelligent claim detection agent designed to identify factual claims from text that require verification.
+
+IMPORTANT: Due to system constraints, you can only return a maximum of 2 claims per request. Focus on the most important and check-worthy claims.
 
 Your task is to analyze input text and identify factual claims that should be fact-checked. You must distinguish between:
 - FACTUAL CLAIMS: Statements that make specific, verifiable assertions about reality
@@ -100,6 +116,48 @@ class Claim(BaseModel):
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
     entities: list[str] = Field(default_factory=list)
 
+    @validator('text')
+    def validate_claim_text(cls, v):
+        """Validate and sanitize claim text."""
+        if not v or not isinstance(v, str):
+            raise ValueError("Claim text must be a non-empty string")
+        
+        # Check length
+        if len(v) > 150:
+            raise ValueError("Claim text too long (max 2000 characters)")
+        
+        # Sanitize the text
+        sanitized = cls._sanitize_text(v)
+        if sanitized != v:
+            logger.warning("Claim text was sanitized due to potentially dangerous content")
+
+        return sanitized
+
+    @validator('context')
+    def validate_context(cls, v):
+        """Validate and sanitize context."""
+        if v and len(v) > 200:
+            raise ValueError("Context too long (max 1000 characters)")
+        return cls._sanitize_text(v) if v else v
+
+    @staticmethod
+    def _sanitize_text(text: str) -> str:
+        """Sanitize text to remove potentially dangerous content."""
+        # HTML escape
+        text = html.escape(text)
+
+        # Remove dangerous patterns
+        for pattern in DANGEROUS_PATTERNS:
+            text = re.sub(pattern, '', text, flags=re.IGNORECASE | re.DOTALL)
+
+        # Remove control characters except newlines and tabs
+        text = re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]', '', text)
+
+        # Normalize whitespace
+        text = re.sub(r'\s+', ' ', text).strip()
+
+        return text
+
     def is_checkworthy(self, threshold: float = 0.5) -> bool:
         """Check if this claim meets the minimum check-worthiness threshold."""
         return self.check_worthiness >= threshold
@@ -122,32 +180,84 @@ class Claim(BaseModel):
 
 class ClaimDetector:
     """AI-driven claim detection system that replaces complex rule-based processing."""
-    
+
     def __init__(self):
         """Initialize the claim detector with AI agent."""
         self.agent = claim_detector_agent
+
+    def _validate_and_sanitize_input(self, text: str) -> str:
+        """Comprehensive input validation and sanitization."""
+        # Type and basic validation
+        if not text or not isinstance(text, str):
+            raise ValueError("Input text must be a non-empty string")
+
+        # Length validation
+        if len(text) < MIN_TEXT_LENGTH:
+            raise ValueError(f"Text too short (minimum {MIN_TEXT_LENGTH} characters)")
+
+        if len(text) > MAX_TEXT_LENGTH:
+            raise ValueError(f"Text too long (maximum {MAX_TEXT_LENGTH} characters)")
+
+        # Check for suspicious patterns
+        suspicious_patterns = [
+            r'(?i)(eval|exec|compile|__import__|globals|locals)',  # Python code injection
+            r'(?i)(union|select|insert|update|delete|drop|create)',  # SQL injection
+            r'(?i)(<script|javascript:|vbscript:|data:text/html)',  # XSS
+            r'(?i)(file://|ftp://|gopher://)',  # Dangerous protocols
+        ]
+        
+        for pattern in suspicious_patterns:
+            if re.search(pattern, text):
+                logger.warning(f"Suspicious pattern detected in input: {pattern}")
+                # Remove the suspicious content
+                text = re.sub(pattern, '', text, flags=re.IGNORECASE)
+        
+        # Sanitize the text
+        sanitized_text = self._sanitize_text(text)
+        # Check if sanitization significantly changed the text
+        if len(sanitized_text) < len(text) * 0.8:  # If more than 20% was removed
+            logger.warning("Significant content was removed during sanitization")
+        
+        return sanitized_text
+
+    def _sanitize_text(text: str) -> str:
+        """Sanitize text to remove potentially dangerous content."""
+        # HTML escape
+        text = html.escape(text)
+
+        # Remove dangerous patterns
+        for pattern in DANGEROUS_PATTERNS:
+            text = re.sub(pattern, '', text, flags=re.IGNORECASE | re.DOTALL)
+
+        # Remove control characters except newlines and tabs
+        text = re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]', '', text)
+
+        # Remove excessive whitespace and normalize
+        text = re.sub(r'\s+', ' ', text).strip()
+
+        return text
 
     def _preprocess_text(self, text: str) -> str:
         """Text preprocessing."""
         if not text or not isinstance(text, str):
             raise ValueError("Input text must be a non-empty string")
-        
+
         # Basic cleaning
         text = text.strip()
         text = " ".join(text.split())  # Remove extra whitespace
-        
+
         # Normalize quotes and dashes
         text = re.sub(r'["""]', '"', text)
         text = re.sub(r"[''']", "'", text)
         text = re.sub(r'[—–−]', ' ', text)
-        
+
         # Remove common noise patterns
         text = re.sub(r'\b(um|uh|er|ah)\b', '', text, flags=re.IGNORECASE)
-        
+
         # Normalize common abbreviations
         text = re.sub(r'\bvs\.\b', 'versus', text, flags=re.IGNORECASE)
         text = re.sub(r'\betc\.\b', 'etcetera', text, flags=re.IGNORECASE)
-        
+
         return text
 
     def _deduplicate_claims(self, claims: List[Claim]) -> List[Claim]:
@@ -157,13 +267,13 @@ class ClaimDetector:
 
         # Sort by check-worthiness (highest first)
         sorted_claims = sorted(claims, key=lambda x: x.check_worthiness, reverse=True)
-        
+
         unique_claims = []
         seen_texts = set()
 
         for claim in sorted_claims:
             normalized_text = claim.text.lower().strip()
-            
+
             # Check for duplicates
             is_duplicate = False
             for seen_text in seen_texts:
@@ -206,14 +316,18 @@ class ClaimDetector:
             logger.info(f"Processing text of length {len(cleaned_text)}")
 
             # Handle very short texts
-            if len(cleaned_text) < 10:
+            if len(cleaned_text) < MIN_TEXT_LENGTH:
                 logger.warning("Text too short for meaningful claim detection")
                 return []
 
             # Use AI agent to analyze and extract claims
-            from agents import Runner
             result = await Runner.run(self.agent, cleaned_text)
             claims = result.final_output_as(List[Claim])
+
+            # Limit number of claims returned
+            if len(claims) > MAX_CLAIMS_PER_REQUEST:
+                logger.warning(f"Too many claims detected, limiting to {MAX_CLAIMS_PER_REQUEST}")
+                claims = claims[:MAX_CLAIMS_PER_REQUEST]
 
             # Validate and enhance results
             claims = self._validate_checkworthiness_scores(claims)
@@ -221,10 +335,10 @@ class ClaimDetector:
 
             # Filter by minimum check-worthiness
             filtered_claims = [claim for claim in claims if claim.check_worthiness >= min_checkworthiness]
-            
+
             # Deduplicate claims
             final_claims = self._deduplicate_claims(filtered_claims)
-            
+
             logger.info(f"Extracted {len(final_claims)} claims from text")
             return final_claims
 
