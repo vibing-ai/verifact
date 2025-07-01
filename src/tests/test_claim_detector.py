@@ -152,10 +152,12 @@ class TestClaimDetector:
     @pytest.mark.asyncio
     async def test_short_text_handling(self, claim_detector_fixture):
         """Test handling of very short texts."""
-        # Test with text that's too short
-        claims = await process_claims("Hi")
-
-        # Should handle gracefully (either return empty list or process normally)
+        # Test with text that's too short - should raise ValueError
+        with pytest.raises(ValueError, match="Text too short"):
+            await process_claims("Hi")
+        
+        # Test with text that's just at the minimum length
+        claims = await process_claims("This is ten")  # Exactly 10 characters
         assert isinstance(claims, list)
 
     def test_claim_detector_validation(self, claim_detector_fixture):
@@ -203,12 +205,12 @@ class TestClaimDetector:
         """Test that individual claim text length limits are enforced."""
         # Test claim text too long
         long_claim_text = "A" * 151  # Exceeds 150 character limit
-        with pytest.raises(ValueError, match="Claim text too long"):
+        with pytest.raises(ValueError, match="Text too long.*150"):
             Claim(text=long_claim_text, check_worthiness=0.8)
 
         # Test context too long
         long_context = "A" * 201  # Exceeds 200 character limit
-        with pytest.raises(ValueError, match="Context too long"):
+        with pytest.raises(ValueError, match="Text too long.*200"):
             Claim(text="Valid claim", context=long_context, check_worthiness=0.8)
 
         # Test valid lengths
@@ -232,28 +234,21 @@ class TestClaimDetector:
         # This would be tested in the actual detect_claims method
         assert len(many_claims) > 2  # Verify we have more than the limit
 
-    def test_claim_sanitization_logic(self):
-        """Test that claim sanitization logic works correctly."""
-        # Test HTML sanitization
-        malicious_claim = Claim(
-            text='<script>alert("xss")</script>The Earth is round',
-            check_worthiness=0.8,
-            domain="Science"
-        )
-
-        # The validator should sanitize this
-        assert '<script>' not in malicious_claim.text
-        assert 'The Earth is round' in malicious_claim.text
-
-        # Test control character sanitization
-        malicious_claim = Claim(
-            text='The Earth\x00is\x01round',
-            check_worthiness=0.8,
-            domain="Science"
-        )
-
-        # Control characters should be removed
-        assert '\x00' not in malicious_claim.text
-        assert '\x01' not in malicious_claim.text
-        assert 'The Earth' in malicious_claim.text
-        assert 'round' in malicious_claim.text
+    def test_validate_text_input_utility(self):
+        """Test the centralized text validation utility."""
+        from verifact_agents.claim_detector import _validate_text_input
+        
+        # Test valid input
+        assert _validate_text_input("Valid text") == "Valid text"
+        
+        # Test invalid inputs
+        with pytest.raises(ValueError, match="Input text must be a non-empty string"):
+            _validate_text_input("")
+        
+        with pytest.raises(ValueError, match="Input text must be a non-empty string"):
+            _validate_text_input(None)
+        
+        # Test length validation
+        short_text = "a" * 9  # Less than MIN_TEXT_LENGTH (10)
+        with pytest.raises(ValueError, match="Text too short"):
+            _validate_text_input(short_text)

@@ -107,6 +107,31 @@ Only extract claims that can be factually verified. If a statement is a recommen
 Focus on claims that are specific, verifiable, and matter to public discourse.
 """
 
+def _validate_text_input(text: str, min_length: int = MIN_TEXT_LENGTH, max_length: int = MAX_TEXT_LENGTH) -> str:
+    """Centralized text input validation.
+    
+    Args:
+        text: Input text to validate
+        min_length: Minimum allowed length (default: MIN_TEXT_LENGTH)
+        max_length: Maximum allowed length (default: MAX_TEXT_LENGTH)
+    
+    Returns:
+        Validated text string
+        
+    Raises:
+        ValueError: If text is invalid
+    """
+    if not text or not isinstance(text, str):
+        raise ValueError("Input text must be a non-empty string")
+    
+    if len(text) < min_length:
+        raise ValueError(f"Text too short (minimum {min_length} characters)")
+    
+    if len(text) > max_length:
+        raise ValueError(f"Text too long (maximum {max_length} characters)")
+    
+    return text.strip()
+
 class Claim(BaseModel):
     """A factual claim that requires verification."""
     text: str
@@ -119,13 +144,9 @@ class Claim(BaseModel):
     @field_validator('text')
     def validate_claim_text(cls, v):
         """Validate and sanitize claim text."""
-        if not v or not isinstance(v, str):
-            raise ValueError("Claim text must be a non-empty string")
- 
-        # Check length
-        if len(v) > 150:
-            raise ValueError("Claim text too long (max 150 characters)")
-
+        # Use centralized validation
+        v = _validate_text_input(v, min_length=1, max_length=150)
+        
         # Sanitize the text
         sanitized = cls._sanitize_text(v)
         if sanitized != v:
@@ -136,9 +157,10 @@ class Claim(BaseModel):
     @field_validator('context')
     def validate_context(cls, v):
         """Validate and sanitize context."""
-        if v and len(v) > 200:
-            raise ValueError("Context too long (max 200 characters)")
-        return cls._sanitize_text(v) if v else v
+        if v:  # Only validate if context is provided
+            v = _validate_text_input(v, min_length=1, max_length=200)
+            return cls._sanitize_text(v)
+        return v
 
     @staticmethod
     def _sanitize_text(text: str) -> str:
@@ -185,66 +207,12 @@ class ClaimDetector:
         """Initialize the claim detector with AI agent."""
         self.agent = claim_detector_agent
 
-    def _validate_and_sanitize_input(self, text: str) -> str:
-        """Comprehensive input validation and sanitization."""
-        # Type and basic validation
-        if not text or not isinstance(text, str):
-            raise ValueError("Input text must be a non-empty string")
-
-        # Length validation
-        if len(text) < MIN_TEXT_LENGTH:
-            raise ValueError(f"Text too short (minimum {MIN_TEXT_LENGTH} characters)")
-
-        if len(text) > MAX_TEXT_LENGTH:
-            raise ValueError(f"Text too long (maximum {MAX_TEXT_LENGTH} characters)")
-
-        # Check for suspicious patterns
-        suspicious_patterns = [
-            r'(?i)(eval|exec|compile|__import__|globals|locals)',  # Python code injection
-            r'(?i)(union|select|insert|update|delete|drop|create)',  # SQL injection
-            r'(?i)(<script|javascript:|vbscript:|data:text/html)',  # XSS
-            r'(?i)(file://|ftp://|gopher://)',  # Dangerous protocols
-        ]
-
-        for pattern in suspicious_patterns:
-            if re.search(pattern, text):
-                logger.warning(f"Suspicious pattern detected in input: {pattern}")
-                # Remove the suspicious content
-                text = re.sub(pattern, '', text, flags=re.IGNORECASE)
-
-        # Sanitize the text
-        sanitized_text = self._sanitize_text(text)
-
-        # Check if sanitization significantly changed the text
-        if len(sanitized_text) < len(text) * 0.8:  # If more than 20% was removed
-            logger.warning("Significant content was removed during sanitization")
-
-        return sanitized_text
-
-    def _sanitize_text(self, text: str) -> str:
-        """Sanitize text to remove potentially dangerous content."""
-        # HTML escape
-        text = html.escape(text)
-
-        # Remove dangerous patterns
-        for pattern in DANGEROUS_PATTERNS:
-            text = re.sub(pattern, '', text, flags=re.IGNORECASE | re.DOTALL)
-
-        # Remove control characters except newlines and tabs
-        text = re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]', '', text)
-
-        # Remove excessive whitespace and normalize
-        text = re.sub(r'\s+', ' ', text).strip()
-
-        return text
-
     def _preprocess_text(self, text: str) -> str:
         """Text preprocessing."""
-        if not text or not isinstance(text, str):
-            raise ValueError("Input text must be a non-empty string")
-
+        # Use centralized validation
+        text = _validate_text_input(text)
+        
         # Basic cleaning
-        text = text.strip()
         text = " ".join(text.split())  # Remove extra whitespace
 
         # Normalize quotes and dashes
@@ -358,16 +326,16 @@ claim_detector_agent = Agent(
 # Create singleton instance
 claim_detector = ClaimDetector()
 
-# Backward compatibility functions
+# Function for direct calls (used by tests and other code)
 async def process_claims(text: str, min_checkworthiness: float = 0.5) -> List[Claim]:
-    """Process input text and extract claims (backward compatibility)."""
+    """Process input text and extract claims."""
     return await claim_detector.detect_claims(text, min_checkworthiness)
 
-# Add this to ensure proper integration
+# Tool function for pipeline integration
 @function_tool(
     name_override="process_claims",
     description_override="Process text to extract and analyze factual claims"
 )
 async def process_claims_tool(text: str, min_checkworthiness: float = 0.5) -> List[Claim]:
     """Process input text and extract claims (tool version for pipeline)."""
-    return await process_claims(text, min_checkworthiness)
+    return await claim_detector.detect_claims(text, min_checkworthiness)
