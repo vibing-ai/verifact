@@ -19,6 +19,8 @@ logger = logging.getLogger(__name__)
 # Length limits for text and claims
 MAX_TEXT_LENGTH = 250
 MIN_TEXT_LENGTH = 10
+MAX_CLAIM_TEXT_LENGTH = 150
+MAX_CONTEXT_LENGTH = 200
 MAX_CLAIMS_PER_REQUEST = 2
 DANGEROUS_PATTERNS = [
     r'<script.*?</script>',  # Script tags
@@ -93,13 +95,13 @@ Identify relevant named entities, organizations, people, places, dates, and key 
 For each claim, provide relevant surrounding context that helps understand the claim's meaning and significance.
 
 ## Output Format:
-Return a list of Claim objects with:
-- text: The factual claim text (normalized and cleaned)
-- context: Surrounding context that helps understand the claim
-- check_worthiness: Score from 0.0 to 1.0
-- domain: The relevant domain category
-- confidence: Your confidence in the claim being factual
-- entities: List of relevant entities mentioned
+You MUST return a list of Pydantic `Claim` objects. Each `Claim` object should have the following fields:
+- text: The factual claim text (normalized and cleaned). Max length: 150 characters.
+- context: Surrounding context that helps understand the claim. Max length: 200 characters.
+- check_worthiness: Score from 0.0 to 1.0.
+- domain: The relevant domain category.
+- confidence: Your confidence in the claim being factual (0.0-1.0).
+- entities: List of relevant entities mentioned (strings).
 
 ## Key Rule:
 Only extract claims that can be factually verified. If a statement is a recommendation, opinion, suggestion, or speculation, do NOT include it as a claim.
@@ -145,7 +147,7 @@ class Claim(BaseModel):
     def validate_claim_text(cls, v):
         """Validate and sanitize claim text."""
         # Use centralized validation
-        v = _validate_text_input(v, min_length=1, max_length=150)
+        v = _validate_text_input(v, min_length=1, max_length=MAX_CLAIM_TEXT_LENGTH)
         
         # Sanitize the text
         sanitized = cls._sanitize_text(v)
@@ -158,7 +160,7 @@ class Claim(BaseModel):
     def validate_context(cls, v):
         """Validate and sanitize context."""
         if v:  # Only validate if context is provided
-            v = _validate_text_input(v, min_length=1, max_length=200)
+            v = _validate_text_input(v, min_length=1, max_length=MAX_CONTEXT_LENGTH)
             return cls._sanitize_text(v)
         return v
 
@@ -224,9 +226,11 @@ class ClaimDetector:
         text = re.sub(r'\b(um|uh|er|ah)\b', '', text, flags=re.IGNORECASE)
 
         # Normalize common abbreviations
-        text = re.sub(r'\bvs\.\b', 'versus', text, flags=re.IGNORECASE)
-        text = re.sub(r'\betc\.\b', 'etcetera', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bvs\.', 'versus', text, flags=re.IGNORECASE)
+        text = re.sub(r'\betc\.', 'etcetera', text, flags=re.IGNORECASE)
 
+        # Final whitespace cleanup after all substitutions
+        text = " ".join(text.split())
         return text
 
     def _deduplicate_claims(self, claims: List[Claim]) -> List[Claim]:
@@ -234,24 +238,59 @@ class ClaimDetector:
         if not claims:
             return claims
 
-        # Sort by check-worthiness (highest first)
+        # Sort by check-worthiness (highest first) to prioritize more important claims
+        # when duplicates are found.
         sorted_claims = sorted(claims, key=lambda x: x.check_worthiness, reverse=True)
 
         unique_claims = []
         seen_texts = set()
 
+        # Note: This is a O(N*M) check in worst case for string comparisons inside the loop,
+        # and N^2 if all texts are unique and compared.
+        # For small N (like MAX_CLAIMS_PER_REQUEST), this is acceptable.
+        # For larger N, more advanced methods like LSH or embeddings might be needed.
         for claim in sorted_claims:
-            normalized_text = claim.text.lower().strip()
+            # Unescape HTML entities for more robust comparison, then normalize
+            text_to_normalize = str(claim.text) # Explicitly cast to string
+            unscaped_text = html.unescape(text_to_normalize)
+            # Aggressively normalize whitespace: replace all whitespace with single space, then strip.
+            normalized_text = " ".join(re.split(r'\s+', unscaped_text.lower().strip()))
 
-            # Check for duplicates
+
             is_duplicate = False
+            if not normalized_text: # Handle cases of empty normalized text if they can occur
+                continue
+
             for seen_text in seen_texts:
-                if (normalized_text in seen_text or seen_text in normalized_text or 
-                    len(set(normalized_text.split()) & set(seen_text.split())) / 
-                    max(len(normalized_text.split()), len(seen_text.split())) > 0.8):
+                # Simple substring check (fast)
+                if normalized_text in seen_text or seen_text in normalized_text:
+                    is_duplicate = True
+                    break
+                
+                # Jaccard index for word sets (slower, more robust for rephrasing)
+                # Ensure no division by zero if splits result in empty sets (though unlikely with prior validation)
+                norm_words = set(normalized_text.split())
+                seen_words = set(seen_text.split())
+                if not norm_words or not seen_words: # Should not happen with validated text
+                    if not norm_words and not seen_words: # Both empty, consider duplicate
+                         is_duplicate = True
+                         break
+                    continue
+
+
+                intersection_len = len(norm_words & seen_words)
+                union_len = len(norm_words | seen_words) # More standard Jaccard denominator
+                
+                if union_len == 0 : # Both texts were empty or only whitespace
                     is_duplicate = True
                     break
 
+                jaccard_sim = intersection_len / union_len if union_len > 0 else 0
+                
+                if jaccard_sim > 0.8:
+                    is_duplicate = True
+                    break
+            
             if not is_duplicate:
                 unique_claims.append(claim)
                 seen_texts.add(normalized_text)
@@ -260,12 +299,14 @@ class ClaimDetector:
         return unique_claims
 
     def _entity_extraction(self, claims: List[Claim]) -> List[Claim]:
-        """Enhance entity extraction with additional validation."""
-        for claim in claims:
-            # Ensure entities are not empty if claim has specific patterns
-            if not claim.entities and any(word in claim.text.lower() for word in ['study', 'research', 'company', 'government']):
-                # Could add fallback entity extraction here
-                pass
+        """
+        Placeholder for potential future entity extraction enhancements.
+        Currently, entity extraction is primarily handled by the LLM.
+        This method can be expanded to include rule-based validation or fallback mechanisms.
+        """
+        # Example: Could add logic here to ensure entities are valid or to extract
+        # additional entities if the LLM missed obvious ones based on patterns.
+        # For now, it performs no additional operations.
         return claims
 
     def _validate_checkworthiness_scores(self, claims: List[Claim]) -> List[Claim]:
