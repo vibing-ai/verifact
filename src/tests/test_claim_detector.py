@@ -1,10 +1,18 @@
 """Unit tests for the AI-driven claim detection system."""
 
 import os
-from dotenv import load_dotenv
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
-from verifact_agents.claim_detector import process_claims, Claim, claim_detector, MAX_CLAIMS_PER_REQUEST, MIN_TEXT_LENGTH
+from dotenv import load_dotenv
+
+from verifact_agents.claim_detector import (
+    MAX_CLAIMS_PER_REQUEST,
+    MIN_TEXT_LENGTH,
+    Claim,
+    claim_detector,
+    process_claims,
+)
 
 # Load environment variables from .env file
 load_dotenv()
@@ -198,7 +206,7 @@ class TestClaimDetector:
         ]
 
         deduplicated = claim_detector._deduplicate_claims(claims_in)
-        
+
         # Find the duplicate claim that was kept
         duplicate_claims = [c for c in deduplicated if c.text == "Duplicate"]
         assert len(duplicate_claims) == 1

@@ -1,12 +1,8 @@
-from fastapi import APIRouter
-from datetime import datetime
 import time
-from models.factcheck import (
-    FactCheckRequest,
-    FactCheckResponse,
-    Claim,
-    Source
-)
+
+from fastapi import APIRouter
+
+from models.factcheck import Claim, FactCheckRequest, FactCheckResponse, Source
 
 router = APIRouter(prefix="/api/v1")
 
@@ -51,4 +47,4 @@ async def factcheck(request: FactCheckRequest):
         }
     )
 
-    return response 
+    return response

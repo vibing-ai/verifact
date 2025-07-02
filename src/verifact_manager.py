@@ -10,13 +10,14 @@ and provides both synchronous and asynchronous operation modes.
 """
 
 import asyncio
-import chainlit as cl
-from pydantic import BaseModel, Field
-from agents import Runner, gen_trace_id, trace
-from src.verifact_agents.claim_detector import claim_detector_agent, Claim
-from src.verifact_agents.evidence_hunter import evidence_hunter_agent, Evidence
-from src.verifact_agents.verdict_writer import verdict_writer_agent, Verdict
 import logging
+
+from agents import Runner, gen_trace_id, trace
+from pydantic import BaseModel, Field
+
+from src.verifact_agents.claim_detector import Claim, claim_detector_agent
+from src.verifact_agents.evidence_hunter import Evidence, evidence_hunter_agent
+from src.verifact_agents.verdict_writer import Verdict, verdict_writer_agent
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +83,7 @@ class VerifactManager:
                         await progress_callback(progress_msg, f"Gathering evidence for claim {idx+1}/{len(claims)}: '{getattr(claim, 'text', str(claim))[:60]}'...")
                     try:
                         evidence = await self._gather_evidence_for_claim(claim)
-                    except Exception as e:
+                    except Exception:
                         evidence = None
                     claim_evidence_pairs.append((claim, evidence))
                 if progress_callback and progress_msg:
@@ -98,7 +99,7 @@ class VerifactManager:
                 verdicts = []
                 for idx, (claim, evidence) in enumerate(claim_evidence_pairs):
                     if not evidence:
-                        logger.warning(f"Skipping claim - no evidence found")
+                        logger.warning("Skipping claim - no evidence found")
                         if progress_callback and progress_msg:
                             await progress_callback(progress_msg, f"No evidence found for claim {idx+1}: '{getattr(claim, 'text', str(claim))[:60]}'. Skipping verdict.")
                         continue
@@ -144,7 +145,7 @@ class VerifactManager:
         results = await asyncio.gather(*tasks, return_exceptions=True)
         claim_evidence_pairs = []
 
-        for claim, result in zip(claims, results):
+        for claim, result in zip(claims, results, strict=False):
             if isinstance(result, Exception):
                 logger.error(f"Error gathering evidence for claim: {claim.text[:50]}: {result.message}", exc_info=True)
                 claim_evidence_pairs.append((claim, None))
@@ -175,7 +176,7 @@ class VerifactManager:
         for claim, evidence in claims_with_evidence:
             logger.info(f"Claim: {claim.text[:50]}")
             if not evidence:
-                logger.warning(f"Skipping claim - no evidence found")
+                logger.warning("Skipping claim - no evidence found")
                 continue
 
             logger.info(f"Evidence: {evidence} | {type(evidence)}")

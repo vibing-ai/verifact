@@ -1,5 +1,7 @@
+from typing import Any
+
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
+
 
 class Source(BaseModel):
     """Source information for fact-checking."""
@@ -14,21 +16,21 @@ class Claim(BaseModel):
     verdict: str
     confidence: float = Field(ge=0.0, le=1.0)
     explanation: str
-    sources: List[Source]
+    sources: list[Source]
 
 class FactCheckOptions(BaseModel):
     """Configuration options for fact-checking."""
     min_check_worthiness: float = Field(default=0.7, ge=0.0, le=1.0)
-    domains: List[str] = Field(default=["politics", "health"])
+    domains: list[str] = Field(default=["politics", "health"])
     max_claims: int = Field(default=5, gt=0)
     explanation_detail: str = Field(default="detailed")
 
 class FactCheckRequest(BaseModel):
     """Request model for fact-checking."""
     text: str
-    options: Optional[FactCheckOptions] = FactCheckOptions()
+    options: FactCheckOptions | None = FactCheckOptions()
 
 class FactCheckResponse(BaseModel):
     """Response model for fact-checking."""
-    claims: List[Claim]
-    metadata: Dict[str, Any] 
+    claims: list[Claim]
+    metadata: dict[str, Any]

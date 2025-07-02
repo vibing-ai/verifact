@@ -4,12 +4,12 @@ This module provides a streamlined claim detection system that uses AI agents
 for intelligent analysis instead of complex rule-based processing.
 """
 
+import html
 import logging
 import re
-import html
-from typing import List
+
+from agents import Agent, Runner, function_tool
 from pydantic import BaseModel, Field, field_validator
-from agents import Agent, function_tool, Runner
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -222,7 +222,7 @@ class ClaimDetector:
         # Final cleanup after all substitutions
         return self._normalize_whitespace(text)
 
-    def _deduplicate_claims(self, claims: List[Claim]) -> List[Claim]:
+    def _deduplicate_claims(self, claims: list[Claim]) -> list[Claim]:
         """Remove duplicate or very similar claims.
 
         Args:
@@ -256,7 +256,7 @@ class ClaimDetector:
         logger.info(f"Deduplicated claims: {len(claims)} -> {len(unique_claims)}")
         return unique_claims
 
-    async def detect_claims(self, text: str, min_checkworthiness: float = 0.5) -> List[Claim]:
+    async def detect_claims(self, text: str, min_checkworthiness: float = 0.5) -> list[Claim]:
         """Detect claims in text using AI agent analysis."""
         try:
             # Preprocess text
@@ -270,7 +270,7 @@ class ClaimDetector:
 
             # Use AI agent to analyze and extract claims
             result = await Runner.run(self.agent, cleaned_text)
-            claims = result.final_output_as(List[Claim])
+            claims = result.final_output_as(list[Claim])
 
             # Limit number of claims returned
             if len(claims) > MAX_CLAIMS_PER_REQUEST:
@@ -294,7 +294,7 @@ class ClaimDetector:
 claim_detector_agent = Agent(
     name="ClaimDetector",
     instructions=PROMPT,
-    output_type=List[Claim],
+    output_type=list[Claim],
     model="gpt-4o-mini"
 )
 
@@ -302,7 +302,7 @@ claim_detector_agent = Agent(
 claim_detector = ClaimDetector()
 
 # Function for direct calls (used by tests and other code)
-async def process_claims(text: str, min_checkworthiness: float = 0.5) -> List[Claim]:
+async def process_claims(text: str, min_checkworthiness: float = 0.5) -> list[Claim]:
     """Process input text and extract claims."""
     return await claim_detector.detect_claims(text, min_checkworthiness)
 
@@ -311,6 +311,6 @@ async def process_claims(text: str, min_checkworthiness: float = 0.5) -> List[Cl
     name_override="process_claims",
     description_override="Process text to extract and analyze factual claims"
 )
-async def process_claims_tool(text: str, min_checkworthiness: float = 0.5) -> List[Claim]:
+async def process_claims_tool(text: str, min_checkworthiness: float = 0.5) -> list[Claim]:
     """Process input text and extract claims (tool version for pipeline)."""
     return await claim_detector.detect_claims(text, min_checkworthiness)

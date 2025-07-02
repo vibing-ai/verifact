@@ -4,7 +4,7 @@ This module defines the core protocols and data structures for the agent system,
 establishing a foundation for clean separation of concerns.
 """
 
-from typing import Awaitable, Generic, Protocol, TypeVar
+from typing import Generic, Protocol, TypeVar
 
 T_Input = TypeVar('T_Input')
 T_Output = TypeVar('T_Output')

@@ -1,9 +1,8 @@
 import os
 from typing import Literal
 
-from pydantic import BaseModel, Field
-
 from agents import Agent
+from pydantic import BaseModel, Field
 
 
 class Verdict(BaseModel):
