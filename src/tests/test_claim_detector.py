@@ -4,7 +4,7 @@ import os
 from dotenv import load_dotenv
 import pytest
 from unittest.mock import patch, MagicMock
-from verifact_agents.claim_detector import process_claims, Claim, claim_detector, MAX_CLAIMS_PER_REQUEST
+from verifact_agents.claim_detector import process_claims, Claim, claim_detector, MAX_CLAIMS_PER_REQUEST, MIN_TEXT_LENGTH
 
 # Load environment variables from .env file
 load_dotenv()
@@ -207,7 +207,7 @@ class TestClaimDetector:
     @pytest.mark.asyncio
     async def test_invalid_inputs(self, invalid_input):
         """Test various invalid inputs."""
-        if len(str(invalid_input or "")) < 10:  # MIN_TEXT_LENGTH
+        if len(str(invalid_input or "")) < MIN_TEXT_LENGTH:
             with pytest.raises(ValueError):
                 await process_claims(invalid_input)
 
@@ -309,5 +309,4 @@ class TestClaimDetector:
             assert opinion_avg_score < factual_avg_score
 
         # Test edge case
-        short_claims = await process_claims("This is exactly ten characters long.")
-        assert isinstance(short_claims, list)
+        assert isinstance(await process_claims("This is exactly ten characters long."), list)
