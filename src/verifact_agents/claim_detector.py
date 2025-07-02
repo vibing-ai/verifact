@@ -79,17 +79,6 @@ Automatically classify claims into relevant domains:
 ## Entity Extraction:
 Identify relevant named entities, organizations, people, places, dates, and key concepts that are central to the claim.
 
-## Scoring Guidelines:
-- **Check-worthiness (0.0-1.0)**: How important it is to verify this claim
-  - 0.8-1.0: High-stakes claims with broad impact
-  - 0.5-0.7: Moderate importance claims
-  - 0.0-0.4: Low-priority or already well-established claims
-
-- **Confidence (0.0-1.0)**: Your confidence in the claim being factual vs opinion
-  - 0.8-1.0: Clearly factual, specific, verifiable
-  - 0.5-0.7: Likely factual but some ambiguity
-  - 0.0-0.4: Unclear if factual or opinion
-
 ## Context Extraction:
 For each claim, provide relevant surrounding context that helps understand the claim's meaning and significance.
 
@@ -177,9 +166,7 @@ class Claim(BaseModel):
         text = re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]', '', text)
 
         # Normalize whitespace
-        text = re.sub(r'\s+', ' ', text).strip()
-
-        return text
+        return " ".join(text.split())
 
     def is_checkworthy(self, threshold: float = 0.5) -> bool:
         """Check if this claim meets the minimum check-worthiness threshold."""
@@ -208,13 +195,17 @@ class ClaimDetector:
         """Initialize the claim detector with AI agent."""
         self.agent = claim_detector_agent
 
+    def _normalize_whitespace(self, text: str) -> str:
+        """Normalize whitespace: replace multiple spaces/tabs/newlines with single space."""
+        return " ".join(text.split())
+
     def _preprocess_text(self, text: str) -> str:
         """Text preprocessing."""
         # Use centralized validation
         text = _validate_text_input(text)
         
         # Basic cleaning
-        text = " ".join(text.split())  # Remove extra whitespace
+        text = self._normalize_whitespace(text)
 
         # Normalize quotes and dashes
         text = re.sub(r'["""]', '"', text)
@@ -228,26 +219,8 @@ class ClaimDetector:
         text = re.sub(r'\bvs\.', 'versus', text, flags=re.IGNORECASE)
         text = re.sub(r'\betc\.', 'etcetera', text, flags=re.IGNORECASE)
 
-        # Final whitespace cleanup after all substitutions
-        text = " ".join(text.split())
-        return text
-
-    def _normalize_for_comparison(self, text: str) -> str:
-        """Normalize text for comparison by unescaping HTML and normalizing whitespace.
-        
-        Args:
-            text: The text to normalize
-            
-        Returns:
-            Normalized text string ready for comparison
-        """
-        # Unescape HTML entities for more robust comparison
-        unescaped_text = html.unescape(str(text))
-        
-        # Aggressively normalize whitespace: replace all whitespace with single space, then strip
-        normalized_text = " ".join(re.split(r'\s+', unescaped_text.lower().strip()))
-        
-        return normalized_text
+        # Final cleanup after all substitutions
+        return self._normalize_whitespace(text)
 
     def _deduplicate_claims(self, claims: List[Claim]) -> List[Claim]:
         """Remove duplicate or very similar claims.
@@ -269,7 +242,7 @@ class ClaimDetector:
         seen_texts = set()
 
         for claim in sorted_claims:
-            normalized_text = self._normalize_for_comparison(claim.text)
+            normalized_text = claim.text.lower().strip()
             
             # Skip empty normalized text
             if not normalized_text:
@@ -282,26 +255,6 @@ class ClaimDetector:
 
         logger.info(f"Deduplicated claims: {len(claims)} -> {len(unique_claims)}")
         return unique_claims
-
-    def _validate_checkworthiness_scores(self, claims: List[Claim]) -> List[Claim]:
-        """Validate and potentially adjust check-worthiness scores."""
-        for claim in claims:
-            # Ensure scores are within reasonable bounds
-            if claim.check_worthiness > 0.9 and len(claim.text) < 20:
-                # Very short claims shouldn't have very high scores
-                claim.check_worthiness = min(claim.check_worthiness, 0.8)
-        return claims
-
-    def _entity_extraction(self, claims: List[Claim]) -> List[Claim]:
-        """Placeholder for potential future entity extraction enhancements.
-        
-        Currently, entity extraction is primarily handled by the LLM.
-        This method can be expanded to include rule-based validation or fallback mechanisms.
-        """
-        # Example: Could add logic here to ensure entities are valid or to extract
-        # additional entities if the LLM missed obvious ones based on patterns.
-        # For now, it performs no additional operations.
-        return claims
 
     async def detect_claims(self, text: str, min_checkworthiness: float = 0.5) -> List[Claim]:
         """Detect claims in text using AI agent analysis."""
@@ -323,9 +276,6 @@ class ClaimDetector:
             if len(claims) > MAX_CLAIMS_PER_REQUEST:
                 logger.warning(f"Too many claims detected, limiting to {MAX_CLAIMS_PER_REQUEST}")
                 claims = claims[:MAX_CLAIMS_PER_REQUEST]
-
-            # Validate and enhance results
-            claims = self._validate_checkworthiness_scores(claims)
 
             # Filter by minimum check-worthiness
             filtered_claims = [claim for claim in claims if claim.check_worthiness >= min_checkworthiness]
