@@ -43,7 +43,7 @@ class VerifactManager:
         """Process text through the full factchecking pipeline.
 
         Args:
-            text: The text to factcheck
+            query (str): The text to factcheck.
             progress_callback: Optional function to call with progress messages
             progress_msg: The Chainlit message object to update
 
