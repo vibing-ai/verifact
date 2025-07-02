@@ -86,38 +86,8 @@ exclude = [
     "dist",
 ]
 
-[tool.ruff.lint]
-select = [
-    "E",    # pycodestyle errors
-    "F",    # pyflakes
-    "B",    # bugbear
-    "I",    # isort 
-    "C4",   # comprehensions
-    "D",    # pydocstyle
-    "UP",   # pyupgrade
-    "W",    # pycodestyle warnings
-]
-ignore = [
-    "E203",  # Whitespace before ':' (not PEP 8 compliant)
-    "E501",  # Line too long (handled by formatter)
-    "D100",  # Missing docstring in public module
-    "D104",  # Missing docstring in public package
-]
-fixable = ["ALL"]
-unfixable = []
-dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
-
-[tool.ruff.lint.isort]
-known-first-party = ["src"]
-
-[tool.ruff.lint.pydocstyle]
-convention = "google"
-
-[tool.ruff.format]
-quote-style = "double"
-indent-style = "space"
-line-ending = "auto"
-docstring-code-format = true
+[tool.ruff.isort]
+known-first-party = ["verifact"]
 
 [tool.isort]
 line_length = 100
@@ -136,6 +106,36 @@ no_implicit_optional = true
 module = "tests.*"
 disallow_untyped_defs = false
 disallow_incomplete_defs = false
+
+[tool.ruff.lint]
+select = [
+    "E", "W", "F", "I", "N", "UP", "B", "A", "C4", "DTZ", "T10", "EM", "EXE", 
+    "FA", "ISC", "ICN", "G", "INP", "PIE", "T20", "PYI", "PT", "Q", "RSE", 
+    "RET", "SLF", "SLOT", "SIM", "TID", "TCH", "ARG", "PTH", "ERA", "PD", 
+    "PGH", "PL", "TRY", "FLY", "PERF", "FURB", "LOG", "RUF"
+]
+
+ignore = [
+    "E501", "B008", "C901", "PLR0913", "PLR0912", "PLR0915", "PLR0911"
+]
+
+fixable = ["ALL"]
+unfixable = []
+
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+docstring-code-format = true
 
 [tool.coverage.run]
 source = ["src"]

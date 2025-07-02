@@ -6,6 +6,7 @@ from models.factcheck import Claim, FactCheckRequest, FactCheckResponse, Source
 
 router = APIRouter(prefix="/api/v1")
 
+
 @router.post("/factcheck", response_model=FactCheckResponse)
 async def factcheck(request: FactCheckRequest):
     """Perform fact-checking analysis on input text.
@@ -33,18 +34,11 @@ async def factcheck(request: FactCheckRequest):
                 confidence=0.89,
                 explanation="This is a detailed explanation with evidence",
                 sources=[
-                    Source(
-                        url="source1.com",
-                        credibility=0.95,
-                        quote="Example quote from source"
-                    )
-                ]
+                    Source(url="source1.com", credibility=0.95, quote="Example quote from source")
+                ],
             )
         ],
-        metadata={
-            "processing_time": f"{time.time() - start_time:.1f}s",
-            "model_version": "1.0.4"
-        }
+        metadata={"processing_time": f"{time.time() - start_time:.1f}s", "model_version": "1.0.4"},
     )
 
     return response

@@ -16,6 +16,7 @@ class Verdict(BaseModel):
     explanation: str = Field(description="Detailed explanation of the verdict with reasoning")
     sources: list[str] = Field(description="List of sources used to reach the verdict", min_items=1)
 
+
 PROMPT = """
 You are a verdict writing agent. Your job is to analyze evidence and determine
 the accuracy of a claim, providing a detailed explanation and citing sources.

@@ -22,14 +22,14 @@ MAX_CLAIM_TEXT_LENGTH = 150
 MAX_CONTEXT_LENGTH = 200
 MAX_CLAIMS_PER_REQUEST = 2
 DANGEROUS_PATTERNS = [
-    r'<script.*?</script>',  # Script tags
-    r'javascript:',  # JavaScript protocol
-    r'data:text/html',  # Data URLs
-    r'vbscript:',  # VBScript
-    r'on\w+\s*=',  # Event handlers
-    r'<iframe.*?</iframe>',  # Iframe tags
-    r'<object.*?</object>',  # Object tags
-    r'<embed.*?</embed>',  # Embed tags
+    r"<script.*?</script>",  # Script tags
+    r"javascript:",  # JavaScript protocol
+    r"data:text/html",  # Data URLs
+    r"vbscript:",  # VBScript
+    r"on\w+\s*=",  # Event handlers
+    r"<iframe.*?</iframe>",  # Iframe tags
+    r"<object.*?</object>",  # Object tags
+    r"<embed.*?</embed>",  # Embed tags
 ]
 
 PROMPT = """
@@ -97,7 +97,10 @@ Only extract claims that can be factually verified. If a statement is a recommen
 Focus on claims that are specific, verifiable, and matter to public discourse.
 """
 
-def _validate_text_input(text: str, min_length: int = MIN_TEXT_LENGTH, max_length: int = MAX_TEXT_LENGTH) -> str:
+
+def _validate_text_input(
+    text: str, min_length: int = MIN_TEXT_LENGTH, max_length: int = MAX_TEXT_LENGTH
+) -> str:
     """Centralized text input validation.
 
     Args:
@@ -122,8 +125,10 @@ def _validate_text_input(text: str, min_length: int = MIN_TEXT_LENGTH, max_lengt
 
     return text.strip()
 
+
 class Claim(BaseModel):
     """A factual claim that requires verification."""
+
     text: str
     context: str = Field(default="")
     check_worthiness: float = Field(default=0.0, ge=0.0, le=1.0)
@@ -131,7 +136,7 @@ class Claim(BaseModel):
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
     entities: list[str] = Field(default_factory=list)
 
-    @field_validator('text')
+    @field_validator("text")
     def validate_claim_text(cls, v):
         """Validate and sanitize claim text."""
         # Use centralized validation
@@ -144,7 +149,7 @@ class Claim(BaseModel):
 
         return sanitized
 
-    @field_validator('context')
+    @field_validator("context")
     def validate_context(cls, v):
         """Validate and sanitize context."""
         if v:  # Only validate if context is provided
@@ -160,10 +165,10 @@ class Claim(BaseModel):
 
         # Remove dangerous patterns
         for pattern in DANGEROUS_PATTERNS:
-            text = re.sub(pattern, '', text, flags=re.IGNORECASE | re.DOTALL)
+            text = re.sub(pattern, "", text, flags=re.IGNORECASE | re.DOTALL)
 
         # Remove control characters except newlines and tabs
-        text = re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]', '', text)
+        text = re.sub(r"[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]", "", text)
 
         # Normalize whitespace
         return " ".join(text.split())
@@ -188,6 +193,7 @@ class Claim(BaseModel):
         """Check if the claim has high confidence."""
         return self.confidence >= threshold
 
+
 class ClaimDetector:
     """AI-driven claim detection system that replaces complex rule-based processing."""
 
@@ -210,14 +216,14 @@ class ClaimDetector:
         # Normalize quotes and dashes
         text = re.sub(r'["""]', '"', text)
         text = re.sub(r"[''']", "'", text)
-        text = re.sub(r'[—–−]', ' ', text)
+        text = re.sub(r"[—–−]", " ", text)
 
         # Remove common noise patterns
-        text = re.sub(r'\b(um|uh|er|ah)\b', '', text, flags=re.IGNORECASE)
+        text = re.sub(r"\b(um|uh|er|ah)\b", "", text, flags=re.IGNORECASE)
 
         # Normalize common abbreviations
-        text = re.sub(r'\bvs\.', 'versus', text, flags=re.IGNORECASE)
-        text = re.sub(r'\betc\.', 'etcetera', text, flags=re.IGNORECASE)
+        text = re.sub(r"\bvs\.", "versus", text, flags=re.IGNORECASE)
+        text = re.sub(r"\betc\.", "etcetera", text, flags=re.IGNORECASE)
 
         # Final cleanup after all substitutions
         return self._normalize_whitespace(text)
@@ -278,7 +284,9 @@ class ClaimDetector:
                 claims = claims[:MAX_CLAIMS_PER_REQUEST]
 
             # Filter by minimum check-worthiness
-            filtered_claims = [claim for claim in claims if claim.check_worthiness >= min_checkworthiness]
+            filtered_claims = [
+                claim for claim in claims if claim.check_worthiness >= min_checkworthiness
+            ]
 
             # Deduplicate claims
             final_claims = self._deduplicate_claims(filtered_claims)
@@ -290,26 +298,26 @@ class ClaimDetector:
             logger.error(f"Error processing text: {str(e)}", exc_info=True)
             raise
 
+
 # Create the agent instance as a constant (like the original)
 claim_detector_agent = Agent(
-    name="ClaimDetector",
-    instructions=PROMPT,
-    output_type=list[Claim],
-    model="gpt-4o-mini"
+    name="ClaimDetector", instructions=PROMPT, output_type=list[Claim], model="gpt-4o-mini"
 )
 
 # Create singleton instance
 claim_detector = ClaimDetector()
+
 
 # Function for direct calls (used by tests and other code)
 async def process_claims(text: str, min_checkworthiness: float = 0.5) -> list[Claim]:
     """Process input text and extract claims."""
     return await claim_detector.detect_claims(text, min_checkworthiness)
 
+
 # Tool function for pipeline integration
 @function_tool(
     name_override="process_claims",
-    description_override="Process text to extract and analyze factual claims"
+    description_override="Process text to extract and analyze factual claims",
 )
 async def process_claims_tool(text: str, min_checkworthiness: float = 0.5) -> list[Claim]:
     """Process input text and extract claims (tool version for pipeline)."""
