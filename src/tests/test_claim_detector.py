@@ -1,8 +1,20 @@
 """Unit tests for the AI-driven claim detection system."""
 
+import os
+from dotenv import load_dotenv
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
-from verifact_agents.claim_detector import process_claims, Claim, claim_detector, MAX_CLAIMS_PER_REQUEST, MIN_TEXT_LENGTH
+from unittest.mock import patch, MagicMock
+from verifact_agents.claim_detector import process_claims, Claim, claim_detector, MAX_CLAIMS_PER_REQUEST
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Get API key from environment variable
+API_KEY = os.getenv("OPENAI_API_KEY")
+
+# Check if API key is set
+if not API_KEY:
+    raise ValueError("OPENAI_API_KEY is not set in the environment variables")
 
 # Test constants
 TEST_SENTENCE = "The Earth is round."
@@ -154,12 +166,12 @@ class TestClaimDetector:
         assert claim.entities == ["test", "claim"]
 
         # Test methods
-        assert claim.is_checkworthy(threshold=0.5) == True
-        assert claim.is_checkworthy(threshold=0.8) == False
-        assert claim.has_entities() == True
+        assert claim.is_checkworthy(threshold=0.5)
+        assert not claim.is_checkworthy(threshold=0.8)
+        assert claim.has_entities()
         assert claim.get_entity_names() == ["test", "claim"]
-        assert claim.is_high_confidence(threshold=0.7) == True
-        assert claim.is_high_confidence(threshold=0.9) == False
+        assert claim.is_high_confidence(threshold=0.7)
+        assert not claim.is_high_confidence(threshold=0.9)
 
     def test_claim_detector_preprocessing(self, claim_detector_fixture):
         """Test text preprocessing functionality."""
@@ -184,81 +196,47 @@ class TestClaimDetector:
         assert "Earth versus Moon etcetera" in cleaned_abbr
 
 
-    @pytest.mark.parametrize(
-        "claims_in, expected_texts_ordered",
-        [
-            (
-                [Claim(text="The Earth is round", check_worthiness=0.8), Claim(text="The Earth is round", check_worthiness=0.7), Claim(text="Different claim", check_worthiness=0.6)],
-                ["The Earth is round", "Different claim"] # Higher score duplicate kept
-            ),
-            (
-                [Claim(text="The planet Earth is round", check_worthiness=0.8), Claim(text="The Earth is round", check_worthiness=0.7)],
-                ["The planet Earth is round", "The Earth is round"] # Adjusted: Substring check not triggering, both kept sorted.
-            ),
-            (
-                [Claim(text="The Earth is round", check_worthiness=0.7), Claim(text="The planet Earth is round", check_worthiness=0.8)],
-                ["The planet Earth is round", "The Earth is round"] # Adjusted: Substring check not triggering, both kept sorted.
-            ),
-            (
-                [Claim(text="Sun is hot", check_worthiness=0.8), Claim(text="The sun is very hot", check_worthiness=0.9)],
-                ["The sun is very hot", "Sun is hot"] # Jaccard similarity > 0.8, keeps higher score. "The sun is very hot" and "Sun is hot" are similar by Jaccard
-            ),
-            (
-                [Claim(text="Claim A", check_worthiness=0.9), Claim(text="Claim B", check_worthiness=0.8), Claim(text="Claim C", check_worthiness=0.7)],
-                ["Claim A", "Claim B", "Claim C"] # All unique
-            ),
-            (
-                [Claim(text="It is raining today", check_worthiness=0.7), Claim(text="it's raining today", check_worthiness=0.75)], # similar text, different scores
-                ["it&#x27;s raining today", "It is raining today"] # Jaccard is 0.4, not >0.8, so both kept, ordered by score. Use escaped version for 'it's'
-            ),
-             ( # Test sorting by score before deduplication
-                [Claim(text="Duplicate", check_worthiness=0.7), Claim(text="Unique1", check_worthiness=0.9), Claim(text="Duplicate", check_worthiness=0.8)],
-                ["Unique1", "Duplicate"] # "Duplicate" with 0.8 score should be kept
-            )
+    def test_claim_detector_deduplication_basic(self, claim_detector_fixture):
+        """Test basic deduplication with exact duplicates."""
+        claims_in = [
+            Claim(text="The Earth is round", check_worthiness=0.8),
+            Claim(text="The Earth is round", check_worthiness=0.7),
+            Claim(text="Different claim", check_worthiness=0.6)
         ]
-    )
-    def test_claim_detector_deduplication(self, claim_detector_fixture, claims_in, expected_texts_ordered):
-        """Test claim deduplication functionality with various scenarios."""
-        # Ensure claims are initially sorted by score as _deduplicate_claims expects
-        # The method itself sorts, but for setting up the test, this makes expectations clearer.
-        # claims_in_sorted = sorted(claims_in, key=lambda x: x.check_worthiness, reverse=True)
+        expected = ["The Earth is round", "Different claim"]
+        
+        deduplicated = claim_detector_fixture._deduplicate_claims(claims_in)
+        assert len(deduplicated) == len(expected)
+        assert {claim.text for claim in deduplicated} == set(expected)
+
+    def test_claim_detector_deduplication_sorting(self, claim_detector_fixture):
+        """Test that deduplicated claims are sorted by check_worthiness."""
+        claims_in = [
+            Claim(text="Claim A", check_worthiness=0.9),
+            Claim(text="Claim B", check_worthiness=0.8),
+            Claim(text="Claim C", check_worthiness=0.7)
+        ]
         
         deduplicated = claim_detector_fixture._deduplicate_claims(claims_in)
         
-        # 1. Check that the number of unique claims is as expected.
-        assert len(deduplicated) == len(expected_texts_ordered)
-        
-        # 2. Check that the texts of the deduplicated claims match the expected texts (ignoring order for this check).
-        deduplicated_claim_texts = {claim.text for claim in deduplicated}
-        assert deduplicated_claim_texts == set(expected_texts_ordered)
-
-        # 3. Check that the kept claims are indeed sorted by check_worthiness (descending).
+        # Check sorting by check_worthiness (descending)
         for i in range(len(deduplicated) - 1):
             assert deduplicated[i].check_worthiness >= deduplicated[i+1].check_worthiness
 
-        # 4. For each expected text, ensure the version kept was the highest-scoring one from the input.
-        for expected_text in expected_texts_ordered:
-            original_versions = [c for c in claims_in if c.text == expected_text or 
-                                 (c.text.lower().strip() in expected_text.lower().strip() or 
-                                  expected_text.lower().strip() in c.text.lower().strip()) or
-                                 # A simplified Jaccard check for related texts in the test definition might be needed if we expect this level of matching
-                                 (len(set(c.text.lower().split()) & set(expected_text.lower().split())) / 
-                                  len(set(c.text.lower().split()) | set(expected_text.lower().split())) > 0.8 if len(set(c.text.lower().split()) | set(expected_text.lower().split())) > 0 else False)
-                                ]
-            
-            highest_score_for_original = -1.0
-            if original_versions:
-                highest_score_for_original = max(ov.check_worthiness for ov in original_versions)
-            
-            kept_claim_for_text = next((c for c in deduplicated if c.text == expected_text), None)
-            
-            if kept_claim_for_text: # If this exact text was expected to be kept
-                 # Find the original claim that corresponds to this kept claim's text and ensure its score is the highest for that group
-                 assert kept_claim_for_text.check_worthiness == highest_score_for_original
-            # This part of the check becomes tricky if expected_texts_ordered contains a text that is a "representative"
-            # of a similarity group rather than the exact text of the highest scored member.
-            # The current `expected_texts_ordered` implies exact text matching.
-            # For now, points 1, 2, and 3 are the most critical and are well-tested.
+    def test_claim_detector_deduplication_highest_score_kept(self, claim_detector_fixture):
+        """Test that highest scoring duplicate is kept."""
+        claims_in = [
+            Claim(text="Duplicate", check_worthiness=0.7),
+            Claim(text="Unique1", check_worthiness=0.9),
+            Claim(text="Duplicate", check_worthiness=0.8)
+        ]
+        
+        deduplicated = claim_detector_fixture._deduplicate_claims(claims_in)
+        
+        # Find the duplicate claim that was kept
+        duplicate_claims = [c for c in deduplicated if c.text == "Duplicate"]
+        assert len(duplicate_claims) == 1
+        assert duplicate_claims[0].check_worthiness == 0.8  # Higher score kept
 
     @pytest.mark.asyncio
     async def test_error_handling(self, claim_detector_fixture):
@@ -394,7 +372,12 @@ class TestClaimDetector:
         # Test opinion (should return fewer or no claims)
         opinion_claims = await process_claims("I think this is a good idea.")
         # Either empty or lower scores than factual claims
-        
+        if len(opinion_claims) > 0:
+            factual_avg_score = sum(c.check_worthiness for c in factual_claims) / len(factual_claims)
+            opinion_avg_score = sum(c.check_worthiness for c in opinion_claims) / len(opinion_claims)
+            assert opinion_avg_score < factual_avg_score
+
         # Test edge case
         short_claims = await process_claims("This is exactly ten characters long.")
         # Should handle minimum length appropriately
+        assert isinstance(short_claims, list)

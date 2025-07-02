@@ -4,7 +4,6 @@ This module provides a streamlined claim detection system that uses AI agents
 for intelligent analysis instead of complex rule-based processing.
 """
 
-import os
 import logging
 import re
 import html
@@ -233,81 +232,56 @@ class ClaimDetector:
         text = " ".join(text.split())
         return text
 
+    def _normalize_for_comparison(self, text: str) -> str:
+        """Normalize text for comparison by unescaping HTML and normalizing whitespace.
+        
+        Args:
+            text: The text to normalize
+            
+        Returns:
+            Normalized text string ready for comparison
+        """
+        # Unescape HTML entities for more robust comparison
+        unescaped_text = html.unescape(str(text))
+        
+        # Aggressively normalize whitespace: replace all whitespace with single space, then strip
+        normalized_text = " ".join(re.split(r'\s+', unescaped_text.lower().strip()))
+        
+        return normalized_text
+
     def _deduplicate_claims(self, claims: List[Claim]) -> List[Claim]:
-        """Remove duplicate or very similar claims."""
+        """Remove duplicate or very similar claims.
+        
+        Args:
+            claims: List of claims to deduplicate
+            
+        Returns:
+            List of deduplicated claims, sorted by check-worthiness (highest first)
+        """
         if not claims:
             return claims
 
         # Sort by check-worthiness (highest first) to prioritize more important claims
-        # when duplicates are found.
+        # when duplicates are found
         sorted_claims = sorted(claims, key=lambda x: x.check_worthiness, reverse=True)
 
         unique_claims = []
         seen_texts = set()
 
-        # Note: This is a O(N*M) check in worst case for string comparisons inside the loop,
-        # and N^2 if all texts are unique and compared.
-        # For small N (like MAX_CLAIMS_PER_REQUEST), this is acceptable.
-        # For larger N, more advanced methods like LSH or embeddings might be needed.
         for claim in sorted_claims:
-            # Unescape HTML entities for more robust comparison, then normalize
-            text_to_normalize = str(claim.text) # Explicitly cast to string
-            unscaped_text = html.unescape(text_to_normalize)
-            # Aggressively normalize whitespace: replace all whitespace with single space, then strip.
-            normalized_text = " ".join(re.split(r'\s+', unscaped_text.lower().strip()))
-
-
-            is_duplicate = False
-            if not normalized_text: # Handle cases of empty normalized text if they can occur
+            normalized_text = self._normalize_for_comparison(claim.text)
+            
+            # Skip empty normalized text
+            if not normalized_text:
                 continue
 
-            for seen_text in seen_texts:
-                # Simple substring check (fast)
-                if normalized_text in seen_text or seen_text in normalized_text:
-                    is_duplicate = True
-                    break
-                
-                # Jaccard index for word sets (slower, more robust for rephrasing)
-                # Ensure no division by zero if splits result in empty sets (though unlikely with prior validation)
-                norm_words = set(normalized_text.split())
-                seen_words = set(seen_text.split())
-                if not norm_words or not seen_words: # Should not happen with validated text
-                    if not norm_words and not seen_words: # Both empty, consider duplicate
-                         is_duplicate = True
-                         break
-                    continue
-
-
-                intersection_len = len(norm_words & seen_words)
-                union_len = len(norm_words | seen_words) # More standard Jaccard denominator
-                
-                if union_len == 0 : # Both texts were empty or only whitespace
-                    is_duplicate = True
-                    break
-
-                jaccard_sim = intersection_len / union_len if union_len > 0 else 0
-                
-                if jaccard_sim > 0.8:
-                    is_duplicate = True
-                    break
-            
-            if not is_duplicate:
+            # Only consider exact matches as duplicates
+            if normalized_text not in seen_texts:
                 unique_claims.append(claim)
                 seen_texts.add(normalized_text)
 
         logger.info(f"Deduplicated claims: {len(claims)} -> {len(unique_claims)}")
         return unique_claims
-
-    def _entity_extraction(self, claims: List[Claim]) -> List[Claim]:
-        """
-        Placeholder for potential future entity extraction enhancements.
-        Currently, entity extraction is primarily handled by the LLM.
-        This method can be expanded to include rule-based validation or fallback mechanisms.
-        """
-        # Example: Could add logic here to ensure entities are valid or to extract
-        # additional entities if the LLM missed obvious ones based on patterns.
-        # For now, it performs no additional operations.
-        return claims
 
     def _validate_checkworthiness_scores(self, claims: List[Claim]) -> List[Claim]:
         """Validate and potentially adjust check-worthiness scores."""
@@ -316,6 +290,17 @@ class ClaimDetector:
             if claim.check_worthiness > 0.9 and len(claim.text) < 20:
                 # Very short claims shouldn't have very high scores
                 claim.check_worthiness = min(claim.check_worthiness, 0.8)
+        return claims
+
+    def _entity_extraction(self, claims: List[Claim]) -> List[Claim]:
+        """Placeholder for potential future entity extraction enhancements.
+        
+        Currently, entity extraction is primarily handled by the LLM.
+        This method can be expanded to include rule-based validation or fallback mechanisms.
+        """
+        # Example: Could add logic here to ensure entities are valid or to extract
+        # additional entities if the LLM missed obvious ones based on patterns.
+        # For now, it performs no additional operations.
         return claims
 
     async def detect_claims(self, text: str, min_checkworthiness: float = 0.5) -> List[Claim]:
@@ -341,7 +326,6 @@ class ClaimDetector:
 
             # Validate and enhance results
             claims = self._validate_checkworthiness_scores(claims)
-            claims = self._entity_extraction(claims)
 
             # Filter by minimum check-worthiness
             filtered_claims = [claim for claim in claims if claim.check_worthiness >= min_checkworthiness]
