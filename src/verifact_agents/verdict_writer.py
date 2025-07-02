@@ -1,9 +1,8 @@
 import os
 from typing import Literal
 
-from pydantic import BaseModel, Field
-
 from agents import Agent
+from pydantic import BaseModel, Field
 
 
 class Verdict(BaseModel):
@@ -16,6 +15,7 @@ class Verdict(BaseModel):
     confidence: float = Field(description="Confidence in the verdict (0-1)", ge=0.0, le=1.0)
     explanation: str = Field(description="Detailed explanation of the verdict with reasoning")
     sources: list[str] = Field(description="List of sources used to reach the verdict", min_items=1)
+
 
 PROMPT = """
 You are a verdict writing agent. Your job is to analyze evidence and determine
