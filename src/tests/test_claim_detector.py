@@ -80,7 +80,7 @@ class TestClaimDetector:
     async def test_process_claims_basic(self, mock_runner_run, single_claim):
         """Test the complete claim processing pipeline with a simple claim, using mocked agent."""
         setup_mock_agent_response(mock_runner_run, [single_claim])
-        
+
         claims = await process_claims(VALID_LONG_ENOUGH_TEXT)
 
         mock_runner_run.assert_called_once()
@@ -92,7 +92,7 @@ class TestClaimDetector:
     async def test_process_claims_limit_enforcement(self, mock_runner_run, multiple_claims):
         """Test that MAX_CLAIMS_PER_REQUEST is enforced."""
         setup_mock_agent_response(mock_runner_run, multiple_claims)
-        
+
         claims = await process_claims(VALID_LONG_ENOUGH_TEXT)
 
         mock_runner_run.assert_called_once()
@@ -106,7 +106,7 @@ class TestClaimDetector:
         setup_mock_agent_response(mock_runner_run, [])
 
         claims = await process_claims(opinion_text)
-        
+
         mock_runner_run.assert_called_once()
         assert len(claims) == 0
 
@@ -119,7 +119,7 @@ class TestClaimDetector:
         setup_mock_agent_response(mock_runner_run, sorted_mock_claims)
 
         claims = await process_claims(VALID_LONG_ENOUGH_TEXT, min_checkworthiness=0.85)
-        
+
         assert len(claims) == 1  # Only "Company X reported..." (0.9)
         assert claims[0].check_worthiness >= 0.85
 
@@ -148,6 +148,7 @@ class TestClaimDetector:
         ("Um, the Earth, uh, is round", "the Earth, , is round"),
         ("Earth vs. Moon etc.", "Earth versus Moon etcetera"),
     ])
+
     def test_preprocessing_cases(self, input_text, expected_contains):
         """Test various preprocessing cases."""
         cleaned = claim_detector._preprocess_text(input_text)
@@ -158,11 +159,11 @@ class TestClaimDetector:
         # Test basic whitespace normalization
         result = claim_detector._normalize_whitespace("  multiple   spaces  ")
         assert result == "multiple spaces"
-        
+
         # Test with tabs and newlines
         result = claim_detector._normalize_whitespace("text\twith\nnewlines")
         assert result == "text with newlines"
-        
+
         # Test with mixed whitespace
         result = claim_detector._normalize_whitespace("  \t  \n  mixed  \t  \n  ")
         assert result == "mixed"
@@ -175,7 +176,7 @@ class TestClaimDetector:
             Claim(text=multiple_claims[0].text, check_worthiness=0.7),  # Duplicate with lower score
             multiple_claims[1]  # Different claim
         ]
-        
+
         deduplicated = claim_detector._deduplicate_claims(duplicate_claims)
         assert len(deduplicated) == 2
         assert {claim.text for claim in deduplicated} == {multiple_claims[0].text, multiple_claims[1].text}
@@ -183,7 +184,7 @@ class TestClaimDetector:
     def test_claim_detector_deduplication_sorting(self, multiple_claims):
         """Test that deduplicated claims are sorted by check_worthiness."""
         deduplicated = claim_detector._deduplicate_claims(multiple_claims)
-        
+
         # Check sorting by check_worthiness (descending)
         for i in range(len(deduplicated) - 1):
             assert deduplicated[i].check_worthiness >= deduplicated[i+1].check_worthiness
@@ -195,7 +196,7 @@ class TestClaimDetector:
             Claim(text="Unique1", check_worthiness=0.9),
             Claim(text="Duplicate", check_worthiness=0.8)
         ]
-        
+
         deduplicated = claim_detector._deduplicate_claims(claims_in)
         
         # Find the duplicate claim that was kept
@@ -256,15 +257,15 @@ class TestClaimDetector:
             ('data:text/html,Hello There', "data:text/html"),
             ('vbscript:anotherAttack()', "vbscript:"),
         ]
-        
+
         for dangerous_input, forbidden_trace in dangerous_patterns:
             full_text = f"SafePrefix {dangerous_input} SafeSuffix"
             claim = Claim(text=full_text, check_worthiness=0.5)
-            
+
             # Check that the specific forbidden trace is NOT in the sanitized text
             assert forbidden_trace.lower() not in claim.text.lower(), \
                 f"Forbidden trace '{forbidden_trace}' was found in sanitized text '{claim.text}' for input '{dangerous_input}'"
-            
+
             # Check that non-dangerous parts are preserved
             assert "SafePrefix" in claim.text
             assert "SafeSuffix" in claim.text
@@ -273,6 +274,7 @@ class TestClaimDetector:
         ("text", "A" * 151, "Text too long.*150"),  # Exceeds 150 character limit
         ("context", "A" * 201, "Text too long.*200"),  # Exceeds 200 character limit
     ])
+
     def test_claim_length_validation(self, field, value, expected_error):
         """Test that individual claim field length limits are enforced."""
         with pytest.raises(ValueError, match=expected_error):
@@ -299,7 +301,7 @@ class TestClaimDetector:
         factual_claims = await process_claims("The study found that 75% of participants showed improvement.")
         assert len(factual_claims) > 0
         assert all(isinstance(claim, Claim) for claim in factual_claims)
-        
+
         # Test opinion (should return fewer or no claims)
         opinion_claims = await process_claims("I think this is a good idea.")
         # Either empty or lower scores than factual claims

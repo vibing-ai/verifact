@@ -20,7 +20,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-    
 class ManagerConfig(BaseModel):
     """Configuration options for the factcheck pipeline."""
 
@@ -33,9 +32,11 @@ class ManagerConfig(BaseModel):
     raise_exceptions: bool = False
     include_debug_info: bool = False
 
-
 class VerifactManager:
+    """Orchestrates the full fact-checking pipeline."""
+
     def __init__(self, config: ManagerConfig = None):
+        """Initialize VeriFact manager with optional configuration."""
         self.config = config or ManagerConfig()
 
     async def run(self, query: str, progress_callback=None, progress_msg=None) -> None:
@@ -137,7 +138,7 @@ class VerifactManager:
         logger.info(f"Evidence gathered for claim: {claim.text[:50]}")
 
         return result.final_output_as(list[Evidence])
-        
+
     async def _gather_evidence(self, claims: list[Claim]) -> list[tuple[Claim, list[Evidence] | None]]:
         tasks = [self._gather_evidence_for_claim(claim) for claim in claims]
         results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -176,7 +177,7 @@ class VerifactManager:
             if not evidence:
                 logger.warning(f"Skipping claim - no evidence found")
                 continue
-            
+
             logger.info(f"Evidence: {evidence} | {type(evidence)}")
             logger.info("Generating verdict for claim with %d evidence pieces", len(evidence))
             verdict = await self._generate_verdict_for_claim(claim, evidence)
@@ -185,7 +186,7 @@ class VerifactManager:
             logger.info("Generated verdict: %s", verdict.verdict)
 
         return verdicts
-    
+
 # testing
 if __name__ == "__main__":
     # load env

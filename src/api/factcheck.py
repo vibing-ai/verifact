@@ -12,8 +12,20 @@ router = APIRouter(prefix="/api/v1")
 
 @router.post("/factcheck", response_model=FactCheckResponse)
 async def factcheck(request: FactCheckRequest):
+    """Perform fact-checking analysis on input text.
+
+    Args:
+        request (FactCheckRequest): Contains text to analyze and optional configuration.
+
+    Returns:
+        List[Verdict]: List of fact-check verdicts with evidence and explanations.
+
+    Raises:
+        ValueError: If input text is invalid.
+        Exception: If pipeline processing fails.
+    """
     start_time = time.time()
-    
+
     # TODO: Implement actual fact-checking logic here
     # This is a placeholder response
     response = FactCheckResponse(
@@ -38,5 +50,5 @@ async def factcheck(request: FactCheckRequest):
             "model_version": "1.0.4"
         }
     )
-    
+
     return response 

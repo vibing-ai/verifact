@@ -99,27 +99,27 @@ Focus on claims that are specific, verifiable, and matter to public discourse.
 
 def _validate_text_input(text: str, min_length: int = MIN_TEXT_LENGTH, max_length: int = MAX_TEXT_LENGTH) -> str:
     """Centralized text input validation.
-    
+
     Args:
         text: Input text to validate
         min_length: Minimum allowed length (default: MIN_TEXT_LENGTH)
         max_length: Maximum allowed length (default: MAX_TEXT_LENGTH)
-    
+
     Returns:
         Validated text string
-        
+
     Raises:
         ValueError: If text is invalid
     """
     if not text or not isinstance(text, str):
         raise ValueError("Input text must be a non-empty string")
-    
+
     if len(text) < min_length:
         raise ValueError(f"Text too short (minimum {min_length} characters)")
-    
+
     if len(text) > max_length:
         raise ValueError(f"Text too long (maximum {max_length} characters)")
-    
+
     return text.strip()
 
 class Claim(BaseModel):
@@ -136,7 +136,7 @@ class Claim(BaseModel):
         """Validate and sanitize claim text."""
         # Use centralized validation
         v = _validate_text_input(v, min_length=1, max_length=MAX_CLAIM_TEXT_LENGTH)
-        
+
         # Sanitize the text
         sanitized = cls._sanitize_text(v)
         if sanitized != v:
@@ -203,7 +203,7 @@ class ClaimDetector:
         """Text preprocessing."""
         # Use centralized validation
         text = _validate_text_input(text)
-        
+
         # Basic cleaning
         text = self._normalize_whitespace(text)
 
@@ -224,10 +224,10 @@ class ClaimDetector:
 
     def _deduplicate_claims(self, claims: List[Claim]) -> List[Claim]:
         """Remove duplicate or very similar claims.
-        
+
         Args:
             claims: List of claims to deduplicate
-            
+
         Returns:
             List of deduplicated claims, sorted by check-worthiness (highest first)
         """
@@ -243,7 +243,7 @@ class ClaimDetector:
 
         for claim in sorted_claims:
             normalized_text = claim.text.lower().strip()
-            
+
             # Skip empty normalized text
             if not normalized_text:
                 continue

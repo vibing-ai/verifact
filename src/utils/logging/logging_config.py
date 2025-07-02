@@ -2,6 +2,7 @@ import logging
 import os
 
 def setup_logging():
+    """Configure logging for the application."""
     log_level = os.getenv("LOG_LEVEL", "INFO").upper()
     log_format = os.getenv("LOG_FORMAT", "json").lower()
     log_file = os.getenv("LOG_FILE")

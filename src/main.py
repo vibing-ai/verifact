@@ -15,10 +15,12 @@ app = FastAPI(
 
 @app.get("/")
 def read_root():
+    """Return welcome message."""
     return {"message": "Welcome to VeriFact Fast API!"}
 
 @app.get("/health")
 def health_check():
+    """Return health check status."""
     return {"status": "ok"}
 
 app.include_router(factcheck_router)
