@@ -118,10 +118,10 @@ def _validate_text_input(
         raise ValueError("Input text must be a non-empty string")
 
     if len(text) < min_length:
-        raise ValueError(f"Text too short (minimum {min_length} characters)")
+        raise ValueError("Text too short (minimum %d characters)", min_length)
 
     if len(text) > max_length:
-        raise ValueError(f"Text too long (maximum {max_length} characters)")
+        raise ValueError("Text too long (maximum %d characters)" % max_length)
 
     return text.strip()
 
@@ -137,6 +137,7 @@ class Claim(BaseModel):
     entities: list[str] = Field(default_factory=list)
 
     @field_validator("text")
+    @classmethod
     def validate_claim_text(cls, v):
         """Validate and sanitize claim text."""
         # Use centralized validation
@@ -150,6 +151,7 @@ class Claim(BaseModel):
         return sanitized
 
     @field_validator("context")
+    @classmethod
     def validate_context(cls, v):
         """Validate and sanitize context."""
         if v:  # Only validate if context is provided
@@ -216,7 +218,7 @@ class ClaimDetector:
         # Normalize quotes and dashes
         text = re.sub(r'["""]', '"', text)
         text = re.sub(r"[''']", "'", text)
-        text = re.sub(r"[—–−]", " ", text)
+        text = re.sub(r"[—-]", " ", text)
 
         # Remove common noise patterns
         text = re.sub(r"\b(um|uh|er|ah)\b", "", text, flags=re.IGNORECASE)
@@ -259,7 +261,7 @@ class ClaimDetector:
                 unique_claims.append(claim)
                 seen_texts.add(normalized_text)
 
-        logger.info(f"Deduplicated claims: {len(claims)} -> {len(unique_claims)}")
+        logger.info("Deduplicated claims: %d -> %d", len(claims), len(unique_claims))
         return unique_claims
 
     async def detect_claims(self, text: str, min_checkworthiness: float = 0.5) -> list[Claim]:
@@ -267,7 +269,7 @@ class ClaimDetector:
         try:
             # Preprocess text
             cleaned_text = self._preprocess_text(text)
-            logger.info(f"Processing text of length {len(cleaned_text)}")
+            logger.info("Processing text of length %d", len(cleaned_text))
 
             # Handle very short texts
             if len(cleaned_text) < MIN_TEXT_LENGTH:
@@ -280,7 +282,7 @@ class ClaimDetector:
 
             # Limit number of claims returned
             if len(claims) > MAX_CLAIMS_PER_REQUEST:
-                logger.warning(f"Too many claims detected, limiting to {MAX_CLAIMS_PER_REQUEST}")
+                logger.warning("Too many claims detected, limiting to %d", MAX_CLAIMS_PER_REQUEST)
                 claims = claims[:MAX_CLAIMS_PER_REQUEST]
 
             # Filter by minimum check-worthiness
@@ -291,11 +293,11 @@ class ClaimDetector:
             # Deduplicate claims
             final_claims = self._deduplicate_claims(filtered_claims)
 
-            logger.info(f"Extracted {len(final_claims)} claims from text")
+            logger.info("Extracted %d claims from text", len(final_claims))
             return final_claims
 
         except Exception as e:
-            logger.error(f"Error processing text: {str(e)}", exc_info=True)
+            logger.exception("Error processing text: %s", str(e), exc_info=True)
             raise
 
 
