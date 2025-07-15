@@ -24,13 +24,16 @@ class ManagerConfig(BaseModel):
     """Configuration options for the factcheck pipeline."""
 
     min_checkworthiness: float = Field(0.5, ge=0.0, le=1.0)
-    max_claims: int | None = None
-    evidence_per_claim: int = Field(5, ge=1)
+    max_claims: int = Field(5, ge=1, le=20, description="Maximum number of claims to process")
+    max_evidence_per_claim: int = Field(3, ge=1, le=10, description="Maximum evidence items per claim")
+    max_verdicts_per_claim: int = Field(1, ge=1, le=5, description="Maximum verdicts per claim")
     timeout_seconds: float = 120.0
     enable_fallbacks: bool = True
     retry_attempts: int = 2
     raise_exceptions: bool = False
     include_debug_info: bool = False
+    similarity_threshold: float = Field(0.85, ge=0.0, le=1.0, description="Threshold for similar claim detection")
+    embedding_model: str = Field("text-embedding-3-small", description="OpenAI embedding model to use")
 
 class VerifactManager:
     def __init__(self, config: ManagerConfig = None):
@@ -72,7 +75,10 @@ class VerifactManager:
                 # Step 1.5: Check for similar claims in database
                 processed_claims = []
                 for claim in claims:
-                    similar_claims = await self.db.find_similar_claims(claim.text, similarity_threshold=0.85)
+                    similar_claims = await self.db.find_similar_claims(
+                        claim.text, 
+                        similarity_threshold=self.config.similarity_threshold
+                    )
                     
                     if similar_claims:
                         # Use existing verdict if similar claim found

@@ -2,7 +2,8 @@ import os
 from typing import List, Optional, Dict, Any, Tuple
 from uuid import UUID
 import logging
-from .db_schema import schema_manager
+import hashlib
+from .db_schema import get_schema_manager, EMBEDDING_DIMENSION
 from datetime import datetime
 from supabase import create_client, Client
 from supabase.lib.client_options import ClientOptions
@@ -69,24 +70,24 @@ class SimilarClaimResult(BaseModel):
     similarity_score: float
 
 class DatabaseManager:
-    def __init__(self):
+    def __init__(self, embedding_model: str = "text-embedding-3-small"):
         self.supabase_url = os.getenv("SUPABASE_URL")
         self.supabase_key = os.getenv("SUPABASE_KEY")
         self.openai_api_key = os.getenv("OPENAI_API_KEY")
+        self.embedding_model = embedding_model
         
         
         if not self.supabase_url or not self.supabase_key:
             raise ValueError("SUPABASE_URL and SUPABASE_KEY must be set")
         
         # Initialize Supabase client
-        options = ClientOptions(
-            schema="public",
-            headers={"X-Client-Info": "verifact/1.0.0"}
-        )
-        self.supabase: Client = create_client(
-            self.supabase_url, 
+        self.supabase = create_client(
+            self.supabase_url,
             self.supabase_key,
-            options=options
+            options=ClientOptions(
+                schema="public",
+                headers={"X-Client-Info": "verifact"}
+            )
         )
         
         # Initialize OpenAI client for embeddings
@@ -102,25 +103,29 @@ class DatabaseManager:
         """Ensure database schema is properly set up."""
         if not self._schema_verified:
             try:
-                success = await schema_manager.verify_schema_exists()
-                if not success:
-                    raise RuntimeError("Database schema verification failed")
-                self._schema_verified = True
+                await get_schema_manager().verify_schema_exists()
             except Exception as e:
                 logger.error(f"Schema verification failed: {e}")
                 raise
     
     async def generate_embedding(self, text: str) -> Optional[List[float]]:
         """Generate embedding for text using OpenAI."""
-        if not self.openai_api_key:
+        if not self.openai_client:
+            logger.warning("OpenAI client not available, cannot generate embedding")
             return None
         
         try:
             response = self.openai_client.embeddings.create(
-                model="text-embedding-3-small",
+                model=self.embedding_model,
                 input=text
             )
-            return response.data[0].embedding
+            embedding = response.data[0].embedding
+
+            # Validate embedding dimension
+            if len(embedding) != EMBEDDING_DIMENSION:
+                raise ValueError(f"Expected embedding dimension {EMBEDDING_DIMENSION}, got {len(embedding)}")
+            return embedding
+        
         except Exception as e:
             logger.error(f"Error generating embedding: {e}")
             return None
@@ -218,7 +223,7 @@ class DatabaseManager:
                 return []
             
             # Check cache first
-            cache_key = f"similar_{hash(claim_text)}_{similarity_threshold}_{limit}"
+            cache_key = f"similar_{hashlib.md5(claim_text.encode()).hexdigest()}_{similarity_threshold}_{limit}"
             if hasattr(self, '_cache') and cache_key in self._cache:
                 return self._cache[cache_key]
             
@@ -235,11 +240,6 @@ class DatabaseManager:
             similar_claims = []
             
             for result in response.data:
-                # Fix embedding if it's a string
-                if isinstance(result['claim'].get('embedding'), str):
-                    embedding_str = result['claim']['embedding']
-                    result['claim']['embedding'] = [float(x.strip()) for x in embedding_str.strip('[]').split(',')]
-                
                 claim = DBClaim(**result['claim'])
                 verdict = DBVerdict(**result['verdict']) if result.get('verdict') else None
                 similarity_score = result.get('similarity', 0.0)
