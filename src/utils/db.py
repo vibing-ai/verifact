@@ -2,11 +2,12 @@ import os
 from typing import List, Optional, Dict, Any, Tuple
 from uuid import UUID
 import logging
+from .db_schema import schema_manager
 from datetime import datetime
 from supabase import create_client, Client
 from supabase.lib.client_options import ClientOptions
 from openai import OpenAI
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 # Import your existing models
 from src.verifact_agents.claim_detector import Claim as AgentClaim
@@ -29,6 +30,18 @@ class DBClaim(BaseModel):
     entities: Optional[Dict[str, Any]] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+
+    @field_validator('embedding', mode='before')
+    @classmethod
+    def parse_embedding(cls, v):
+        """Convert string embedding to list if needed."""
+        if v is None:
+            return None
+        if isinstance(v, str):
+            # Remove brackets and split by comma
+            v = v.strip('[]').split(',')
+            return [float(x.strip()) for x in v]
+        return v
 
 class DBEvidence(BaseModel):
     id: Optional[UUID] = None
@@ -61,6 +74,7 @@ class DatabaseManager:
         self.supabase_key = os.getenv("SUPABASE_KEY")
         self.openai_api_key = os.getenv("OPENAI_API_KEY")
         
+        
         if not self.supabase_url or not self.supabase_key:
             raise ValueError("SUPABASE_URL and SUPABASE_KEY must be set")
         
@@ -81,6 +95,20 @@ class DatabaseManager:
         else:
             logger.warning("OPENAI_API_KEY not set. Vector search will be disabled.")
             self.openai_client = None
+
+        self._schema_verified = False
+    
+    async def ensure_schema_verified(self):
+        """Ensure database schema is properly set up."""
+        if not self._schema_verified:
+            try:
+                success = await schema_manager.verify_schema_exists()
+                if not success:
+                    raise RuntimeError("Database schema verification failed")
+                self._schema_verified = True
+            except Exception as e:
+                logger.error(f"Schema verification failed: {e}")
+                raise
     
     async def generate_embedding(self, text: str) -> Optional[List[float]]:
         """Generate embedding for text using OpenAI."""
@@ -99,6 +127,7 @@ class DatabaseManager:
     
     async def store_claim(self, claim: AgentClaim) -> Optional[UUID]:
         """Store a claim with its embedding."""
+        await self.ensure_schema_verified()
         try:
             # Generate embedding
             embedding = await self.generate_embedding(claim.text)
@@ -131,6 +160,7 @@ class DatabaseManager:
     
     async def store_evidence(self, claim_id: UUID, evidence_list: List[AgentEvidence]) -> List[UUID]:
         """Store evidence for a claim."""
+        await self.ensure_schema_verified()
         evidence_ids = []
         
         try:
@@ -156,6 +186,7 @@ class DatabaseManager:
     
     async def store_verdict(self, claim_id: UUID, verdict: AgentVerdict) -> Optional[UUID]:
         """Store a verdict for a claim."""
+        await self.ensure_schema_verified()
         try:
             verdict_data = {
                 "claim_id": str(claim_id),
@@ -176,7 +207,8 @@ class DatabaseManager:
             return None
     
     async def find_similar_claims(self, claim_text: str, similarity_threshold: float = 0.8, limit: int = 5) -> List[SimilarClaimResult]:
-        """Find similar claims with their verdicts using vector similarity search."""
+        """Find similar claims with their verdicts using vector similarity search (optimized with caching)."""
+        await self.ensure_schema_verified()
         try:
             # Generate embedding for the query
             query_embedding = await self.generate_embedding(claim_text)
@@ -184,6 +216,11 @@ class DatabaseManager:
             if not query_embedding:
                 logger.warning("Could not generate embedding for similarity search")
                 return []
+            
+            # Check cache first
+            cache_key = f"similar_{hash(claim_text)}_{similarity_threshold}_{limit}"
+            if hasattr(self, '_cache') and cache_key in self._cache:
+                return self._cache[cache_key]
             
             # Perform vector similarity search
             response = self.supabase.rpc(
@@ -198,6 +235,11 @@ class DatabaseManager:
             similar_claims = []
             
             for result in response.data:
+                # Fix embedding if it's a string
+                if isinstance(result['claim'].get('embedding'), str):
+                    embedding_str = result['claim']['embedding']
+                    result['claim']['embedding'] = [float(x.strip()) for x in embedding_str.strip('[]').split(',')]
+                
                 claim = DBClaim(**result['claim'])
                 verdict = DBVerdict(**result['verdict']) if result.get('verdict') else None
                 similarity_score = result.get('similarity', 0.0)
@@ -207,6 +249,11 @@ class DatabaseManager:
                     verdict=verdict,
                     similarity_score=similarity_score
                 ))
+            
+            # Cache results
+            if not hasattr(self, '_cache'):
+                self._cache = {}
+            self._cache[cache_key] = similar_claims
             
             return similar_claims
             
@@ -259,27 +306,3 @@ class DatabaseManager:
 
 # Global database manager instance
 db_manager = DatabaseManager()
-
-# Convenience functions for backward compatibility
-async def insert_claim(content: str) -> Optional[UUID]:
-    """Legacy function for inserting claims."""
-    claim = AgentClaim(text=content)
-    return await db_manager.store_claim(claim)
-
-async def get_all_claims():
-    """Legacy function for getting all claims."""
-    try:
-        response = db_manager.supabase.table("claims").select("*").execute()
-        return response.data
-    except Exception as e:
-        logger.error(f"Error getting claims: {e}")
-        return []
-
-async def delete_all_claims():
-    """Legacy function for deleting all claims."""
-    try:
-        response = db_manager.supabase.table("claims").delete().gt("id", "00000000-0000-0000-0000-000000000000").execute()
-        return response.data
-    except Exception as e:
-        logger.error(f"Error deleting claims: {e}")
-        return []

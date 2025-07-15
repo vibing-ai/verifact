@@ -10,7 +10,6 @@ and provides both synchronous and asynchronous operation modes.
 """
 
 import asyncio
-import chainlit as cl
 from pydantic import BaseModel, Field
 from agents import Runner, gen_trace_id, trace
 from src.verifact_agents.claim_detector import claim_detector_agent, Claim
