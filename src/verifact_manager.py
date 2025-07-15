@@ -116,7 +116,7 @@ class VerifactManager:
                     processed_claims.append((claim, None, None))
                 
                 # Filter out claims that were found in database
-                new_claims = [claim for claim, evidence, verdict in processed_claims if evidence is None]
+                new_claims = [claim for claim, evidence, _verdict in processed_claims if evidence is None]
                 
                 if not new_claims:
                     logger.info("All claims found in database")
@@ -135,7 +135,7 @@ class VerifactManager:
 
             # Step 2: Gather evidence for new claims only
             try:
-                for idx, (claim, evidence, verdict) in enumerate(processed_claims):
+                for idx, (claim, evidence, _verdict) in enumerate(processed_claims):
                     if evidence is None:  # Only process claims not found in database
                         if progress_callback and progress_msg:
                             await progress_callback(progress_msg, f"Gathering evidence for claim: '{claim.text[:60]}'...")
