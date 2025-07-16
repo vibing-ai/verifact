@@ -55,3 +55,6 @@ async def handle_message(message: cl.Message):
 @cl.on_chat_start
 async def on_chat_start():
     await cl.Message(content="👋 Welcome to VeriFact! The system is up and running. Type your claim or question to get started.").send()
+
+if __name__ == "__main__":
+    cl.run()  # Let Chainlit handle it

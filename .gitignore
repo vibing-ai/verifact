@@ -181,7 +181,10 @@ pyrightconfig.json
 
 # Cursor
 .cursorrules
+.cursor
+mcp.jason
 
 #chainlit
 .chainlit/
 
+src/utils/test_real_data.py

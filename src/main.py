@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 
 from api.factcheck import router as factcheck_router
-from utils.logging.logging_config import setup_logging
+from utils.logging_utils.logging_config import setup_logging
 
 load_dotenv()
 setup_logging()
