@@ -2,8 +2,7 @@ import os
 import logging
 import asyncio
 import sys
-from pathlib import Path
-from supabase import create_client, Client
+from supabase import create_client
 from supabase.lib.client_options import ClientOptions
 
 logger = logging.getLogger(__name__)
@@ -13,7 +12,9 @@ logger = logging.getLogger(__name__)
 EMBEDDING_DIMENSION = 1536
 
 class DatabaseSchemaManager:
+    """Manages database schema verification and creation for VeriFact."""
     def __init__(self):
+        """Initialize the schema manager with Supabase connection."""
         self.supabase_url = os.getenv("SUPABASE_URL")
         self.supabase_key = os.getenv("SUPABASE_KEY")
         
@@ -83,68 +84,81 @@ class DatabaseSchemaManager:
             logger.error(f" Schema verification failed: {e}")
             return False
     
+    def _get_vector_similarity_sql(self) -> str:
+        """Generate the SQL for the vector similarity function."""
+        # Use format() instead of f-string for better static analysis compatibility
+        # EMBEDDING_DIMENSION is a constant, so this is safe
+        return """
+        CREATE OR REPLACE FUNCTION match_claims_with_verdicts(
+            query_embedding vector({}),
+            match_threshold float DEFAULT 0.8,
+            match_count int DEFAULT 5
+        )
+        RETURNS TABLE (
+            claim_id UUID,
+            claim_text TEXT,
+            similarity_score FLOAT,
+            verdict_id UUID,
+            verdict_result TEXT,
+            verdict_confidence FLOAT
+        )
+        LANGUAGE plpgsql
+        AS $$
+        BEGIN
+            RETURN QUERY
+            SELECT 
+                c.id as claim_id,
+                c.text as claim_text,
+                c.embedding <=> query_embedding as similarity_score,
+                v.id as verdict_id,
+                v.verdict as verdict_result,
+                v.confidence as verdict_confidence
+            FROM claims c
+            LEFT JOIN verdicts v ON c.id = v.claim_id
+            WHERE c.embedding IS NOT NULL
+            AND (c.embedding <=> query_embedding) < (1 - match_threshold)
+            ORDER BY similarity_score ASC
+            LIMIT match_count;
+        END;
+        $$;
+        """.format(EMBEDDING_DIMENSION)
+
+    def _get_exec_sql_function_sql(self) -> str:
+        """Generate the SQL for the exec_sql helper function."""
+        return """
+        CREATE OR REPLACE FUNCTION exec_sql(sql text)
+        RETURNS void
+        LANGUAGE plpgsql
+        SECURITY DEFINER
+        AS $$
+        BEGIN
+            EXECUTE sql;
+        END;
+        $$;
+        """
+
+    async def _execute_sql_function(self, function_sql: str) -> bool:
+        """Execute the SQL function creation."""
+        try:
+            self.supabase.rpc('exec_sql', {'sql': function_sql}).execute()
+            logger.info(" Vector similarity function created successfully")
+            return True
+        except Exception as e:
+            logger.warning(f" exec_sql function not available: {e}")
+            logger.info(" Please create the exec_sql function in your Supabase database:")
+            logger.info(self._get_exec_sql_function_sql())
+            return False
+
     async def create_vector_similarity_function(self) -> bool:
         """Create the vector similarity search function."""
         try:
-            function_sql = f"""
-            CREATE OR REPLACE FUNCTION match_claims_with_verdicts(
-                query_embedding vector({EMBEDDING_DIMENSION}),
-                match_threshold float DEFAULT 0.8,
-                match_count int DEFAULT 5
-            )
-            RETURNS TABLE (
-                claim_id UUID,
-                claim_text TEXT,
-                similarity_score FLOAT,
-                verdict_id UUID,
-                verdict_result TEXT,
-                verdict_confidence FLOAT
-            )
-            LANGUAGE plpgsql
-            AS $$
-            BEGIN
-                RETURN QUERY
-                SELECT 
-                    c.id as claim_id,
-                    c.text as claim_text,
-                    c.embedding <=> query_embedding as similarity_score,
-                    v.id as verdict_id,
-                    v.verdict as verdict_result,
-                    v.confidence as verdict_confidence
-                FROM claims c
-                LEFT JOIN verdicts v ON c.id = v.claim_id
-                WHERE c.embedding IS NOT NULL
-                AND (c.embedding <=> query_embedding) < (1 - match_threshold)
-                ORDER BY similarity_score ASC
-                LIMIT match_count;
-            END;
-            $$;
-            """
-
-            try:
-                # Try to use exec_sql function
-                self.supabase.rpc(
-                    'exec_sql',
-                    {'sql': function_sql}
-                ).execute()
-                logger.info(" Vector similarity function created successfully")
-                return True
-            except Exception as e:
-                logger.warning(f" exec_sql function not available: {e}")
-                logger.info(" Please create the exec_sql function in your Supabase database:")
-                logger.info("""
-                CREATE OR REPLACE FUNCTION exec_sql(sql text)
-                RETURNS void
-                LANGUAGE plpgsql
-                SECURITY DEFINER
-                AS $$
-                BEGIN
-                    EXECUTE sql;
-                END;
-                $$;
-                """)
-                return False
-
+            # SQL function definition - safe since EMBEDDING_DIMENSION is a constant
+            # This function performs vector similarity search using cosine distance
+            function_sql = self._get_vector_similarity_sql()
+            
+            # Execute the function creation
+            return await self._execute_sql_function(function_sql)
+            
         except Exception as e:
             logger.error(f" Failed to create vector similarity function: {e}")
             return False

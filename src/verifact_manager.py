@@ -15,7 +15,7 @@ from agents import Runner, gen_trace_id, trace
 from src.verifact_agents.claim_detector import claim_detector_agent, Claim
 from src.verifact_agents.evidence_hunter import evidence_hunter_agent, Evidence
 from src.verifact_agents.verdict_writer import verdict_writer_agent, Verdict
-from src.utils.db import db_manager, SimilarClaimResult
+from src.utils.db import db_manager
 import logging
 
 logger = logging.getLogger(__name__)
@@ -36,6 +36,7 @@ class ManagerConfig(BaseModel):
     embedding_model: str = Field("text-embedding-3-small", description="OpenAI embedding model to use")
 
 class VerifactManager:
+    """Manages the full factchecking pipeline with database integration."""
     def __init__(self, config: ManagerConfig = None):
         self.config = config or ManagerConfig()
         self.db = db_manager
@@ -286,6 +287,7 @@ if __name__ == "__main__":
     
     # Test the manager
     async def test_manager():
+        """Test the VerifactManager."""
         manager = VerifactManager()
         query = "The sky is blue and the grass is green"
         verdicts = await manager.run(query)

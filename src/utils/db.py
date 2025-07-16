@@ -5,7 +5,7 @@ import logging
 import hashlib
 from .db_schema import get_schema_manager, EMBEDDING_DIMENSION
 from datetime import datetime
-from supabase import create_client, Client
+from supabase import create_client
 from supabase.lib.client_options import ClientOptions
 from openai import OpenAI
 from pydantic import BaseModel, field_validator
@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 # Database Models
 class DBClaim(BaseModel):
+    """Database model for storing claims."""
     id: Optional[UUID] = None
     text: str
     embedding: Optional[List[float]] = None
@@ -45,6 +46,7 @@ class DBClaim(BaseModel):
         return v
 
 class DBEvidence(BaseModel):
+    """Database model for storing evidence items."""
     id: Optional[UUID] = None
     claim_id: UUID
     content: str
@@ -55,6 +57,7 @@ class DBEvidence(BaseModel):
     created_at: Optional[datetime] = None
 
 class DBVerdict(BaseModel):
+    """Database model for storing fact-checking verdicts."""
     id: Optional[UUID] = None
     claim_id: UUID
     verdict: str
@@ -64,13 +67,15 @@ class DBVerdict(BaseModel):
     created_at: Optional[datetime] = None
 
 class SimilarClaimResult(BaseModel):
-    """Result of similarity search with claim and verdict info"""
+    """Result of similarity search with claim and verdict info."""
     claim: DBClaim
     verdict: Optional[DBVerdict]
     similarity_score: float
 
 class DatabaseManager:
+    """Manages database operations for VeriFact."""
     def __init__(self, embedding_model: str = "text-embedding-3-small"):
+        """Initialize the database manager with Supabase connection and OpenAI client."""
         self.supabase_url = os.getenv("SUPABASE_URL")
         self.supabase_key = os.getenv("SUPABASE_KEY")
         self.openai_api_key = os.getenv("OPENAI_API_KEY")
@@ -98,6 +103,7 @@ class DatabaseManager:
             self.openai_client = None
 
         self._schema_verified = False
+        self._cache = {}
     
     async def ensure_schema_verified(self):
         """Ensure database schema is properly set up."""
@@ -223,8 +229,8 @@ class DatabaseManager:
                 return []
             
             # Check cache first
-            cache_key = f"similar_{hashlib.md5(claim_text.encode()).hexdigest()}_{similarity_threshold}_{limit}"
-            if hasattr(self, '_cache') and cache_key in self._cache:
+            cache_key = f"similar_{hashlib.md5(claim_text.encode(), usedforsecurity=False).hexdigest()}_{similarity_threshold}_{limit}"
+            if cache_key in self._cache:
                 return self._cache[cache_key]
             
             # Perform vector similarity search
@@ -251,8 +257,6 @@ class DatabaseManager:
                 ))
             
             # Cache results
-            if not hasattr(self, '_cache'):
-                self._cache = {}
             self._cache[cache_key] = similar_claims
             
             return similar_claims
