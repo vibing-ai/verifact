@@ -7,7 +7,7 @@ router = APIRouter(prefix="/api/v1")
 
 
 @router.post("/factcheck", response_model=FactCheckResponse)
-async def factcheck(request: FactCheckRequest):
+async def factcheck(request: FactCheckRequest): # noqa: ARG001
     start_time = time.time()
 
     # Extract the text to be fact-checked from the request
@@ -40,4 +40,3 @@ async def factcheck(request: FactCheckRequest):
             },
         },
     )
-

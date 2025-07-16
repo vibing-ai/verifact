@@ -31,6 +31,10 @@ HIGH_CHECKWORTHINESS_THRESHOLD = 0.85
 TEST_CHECKWORTHINESS_SCORE = 0.8
 TEST_CONFIDENCE_SCORE = 0.9
 
+# Add these constants at the top with the other constants
+EXPECTED_DEDUPLICATED_COUNT = 2
+HIGHER_SCORE_VALUE = 0.8
+
 
 def setup_mock_agent_response(mock_runner_run, claims_to_return):
     """Helper to setup mock agent response."""
@@ -189,7 +193,7 @@ class TestClaimDetector:
         ]
 
         deduplicated = claim_detector._deduplicate_claims(duplicate_claims)
-        assert len(deduplicated) == 2
+        assert len(deduplicated) == EXPECTED_DEDUPLICATED_COUNT
         assert {claim.text for claim in deduplicated} == {
             multiple_claims[0].text,
             multiple_claims[1].text,
@@ -216,7 +220,7 @@ class TestClaimDetector:
         # Find the duplicate claim that was kept
         duplicate_claims = [c for c in deduplicated if c.text == "Duplicate"]
         assert len(duplicate_claims) == 1
-        assert duplicate_claims[0].check_worthiness == 0.8  # Higher score kept
+        assert duplicate_claims[0].check_worthiness == HIGHER_SCORE_VALUE  # Higher score kept
 
     @pytest.mark.parametrize("invalid_input", ["", None, "Hi"])
     @pytest.mark.asyncio
@@ -286,10 +290,10 @@ class TestClaimDetector:
             assert "SafeSuffix" in claim.text
 
     @pytest.mark.parametrize(
-        "field,value,expected_error",
+        ("field", "value", "expected_error"),
         [
-            ("text", "A" * 151, "Text too long.*150"),  # Exceeds 150 character limit
-            ("context", "A" * 201, "Text too long.*200"),  # Exceeds 200 character limit
+            ("text", "A" * 151, "Text too long.*150"),
+            ("context", "A" * 201, "Text too long.*200"),
         ],
     )
     def test_claim_length_validation(self, field, value, expected_error):
