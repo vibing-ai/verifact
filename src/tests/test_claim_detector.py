@@ -20,10 +20,8 @@ load_dotenv()
 # Get API key from environment variable
 API_KEY = os.getenv("OPENAI_API_KEY")
 
-# Check if API key is set
-if not API_KEY:
-    error_msg = "OPENAI_API_KEY not set"
-    raise ValueError(error_msg)
+# Check if API key is set - only for integration tests
+SKIP_INTEGRATION_TESTS = bool(not API_KEY)
 
 # Test constants
 VALID_LONG_ENOUGH_TEXT = "This is a valid text for processing." * 2  # ensure it's > MIN_TEXT_LENGTH
@@ -322,6 +320,7 @@ class TestClaimDetector:
         assert valid_claim.context == "This is a valid context"
 
     @pytest.mark.asyncio
+    @pytest.mark.skipif(SKIP_INTEGRATION_TESTS, reason="OPENAI_API_KEY not set")
     async def test_real_agent_integration(self):
         """Integration test with real agent."""
         # Test factual claim
