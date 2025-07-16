@@ -1,6 +1,14 @@
 import logging
 import os
 
+# Try to import json_log_formatter, but don't fail if it's not available
+try:
+    import json_log_formatter  # type: ignore[import-untyped]
+
+    JSON_FORMATTER_AVAILABLE = True
+except ImportError:
+    JSON_FORMATTER_AVAILABLE = False
+
 
 def setup_logging():
     """Configure logging for the application."""
@@ -9,11 +17,9 @@ def setup_logging():
     log_file = os.getenv("LOG_FILE")
 
     if log_format == "json":
-        try:
-            import json_log_formatter
-
+        if JSON_FORMATTER_AVAILABLE:
             formatter = json_log_formatter.JSONFormatter()
-        except ImportError:
+        else:
             formatter = logging.Formatter(
                 '{"time": "%(asctime)s", "level": "%(levelname)s", "name": "%(name)s", "message": "%(message)s"}'
             )

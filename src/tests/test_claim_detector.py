@@ -144,7 +144,9 @@ class TestClaimDetector:
         sorted_mock_claims = sorted(multiple_claims, key=lambda c: c.check_worthiness, reverse=True)
         setup_mock_agent_response(mock_runner_run, sorted_mock_claims)
 
-        claims = await process_claims(VALID_LONG_ENOUGH_TEXT, min_checkworthiness=HIGH_CHECKWORTHINESS_THRESHOLD)
+        claims = await process_claims(
+            VALID_LONG_ENOUGH_TEXT, min_checkworthiness=HIGH_CHECKWORTHINESS_THRESHOLD
+        )
 
         assert len(claims) == 1  # Only "Company X reported..." (0.9)
         assert claims[0].check_worthiness >= HIGH_CHECKWORTHINESS_THRESHOLD
@@ -227,7 +229,7 @@ class TestClaimDetector:
     async def test_invalid_inputs(self, invalid_input):
         """Test various invalid inputs."""
         if len(str(invalid_input or "")) < MIN_TEXT_LENGTH:
-            with pytest.raises(ValueError):
+            with pytest.raises(ValueError, match="Text too short"):
                 await process_claims(invalid_input)
 
     @pytest.mark.asyncio
@@ -298,11 +300,18 @@ class TestClaimDetector:
     )
     def test_claim_length_validation(self, field, value, expected_error):
         """Test that individual claim field length limits are enforced."""
+        # Determine which claim to create based on the field
+        if field == "text":
+
+            def claim_to_create():
+                return Claim(text=value, check_worthiness=0.8)
+        else:
+
+            def claim_to_create():
+                return Claim(text="Valid claim", context=value, check_worthiness=0.8)
+
         with pytest.raises(ValueError, match=expected_error):
-            if field == "text":
-                Claim(text=value, check_worthiness=0.8)
-            else:
-                Claim(text="Valid claim", context=value, check_worthiness=0.8)
+            claim_to_create()
 
     def test_valid_claim_lengths(self):
         """Test that valid claim lengths are accepted."""

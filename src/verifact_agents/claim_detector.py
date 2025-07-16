@@ -115,13 +115,16 @@ def _validate_text_input(
         ValueError: If text is invalid
     """
     if not text or not isinstance(text, str):
-        raise ValueError("Input text must be a non-empty string")
+        error_msg = "Input text must be a non-empty string"
+        raise ValueError(error_msg)
 
     if len(text) < min_length:
-        raise ValueError("Text too short (minimum %d characters)", min_length)
+        error_msg = f"Text too short (minimum {min_length} characters)"
+        raise ValueError(error_msg)
 
     if len(text) > max_length:
-        raise ValueError("Text too long (maximum %d characters)" % max_length)
+        error_msg = f"Text too long (maximum {max_length} characters)"
+        raise ValueError(error_msg)
 
     return text.strip()
 
@@ -294,11 +297,12 @@ class ClaimDetector:
             final_claims = self._deduplicate_claims(filtered_claims)
 
             logger.info("Extracted %d claims from text", len(final_claims))
-            return final_claims
 
-        except Exception as e:
-            logger.exception("Error processing text: %s", str(e), exc_info=True)
+        except Exception:
+            logger.exception("Error processing text")
             raise
+        else:
+            return final_claims
 
 
 # Create the agent instance as a constant (like the original)

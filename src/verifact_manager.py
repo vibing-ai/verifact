@@ -76,9 +76,9 @@ class VerifactManager:
                         progress_msg, f"Detected {len(claims)} claim(s). Gathering evidence..."
                     )
             except Exception as e:
-                logger.exception("Error in claim detection: %s", str(e), exc_info=True)
+                logger.exception("Error in claim detection")
                 if progress_callback and progress_msg:
-                    await progress_callback(progress_msg, f"Error in claim detection: {str(e)}")
+                    await progress_callback(progress_msg, f"Error in claim detection: {e!s}")
                 raise
 
             # Step 2: Gather evidence for each claim (with parallelism)
@@ -100,9 +100,9 @@ class VerifactManager:
                         progress_msg, "Evidence gathering complete. Generating verdicts..."
                     )
             except Exception as e:
-                logger.exception("Error in evidence gathering: %s", str(e), exc_info=True)
+                logger.exception("Error in evidence gathering")
                 if progress_callback and progress_msg:
-                    await progress_callback(progress_msg, f"Error in evidence gathering: {str(e)}")
+                    await progress_callback(progress_msg, f"Error in evidence gathering: {e!s}")
                 raise
 
             # Step 3: Generate verdicts for each claim
@@ -126,9 +126,9 @@ class VerifactManager:
                 if progress_callback and progress_msg:
                     await progress_callback(progress_msg, "Factchecking pipeline completed.")
             except Exception as e:
-                logger.exception("Error in verdict generation: %s", str(e), exc_info=True)
+                logger.exception("Error in verdict generation")
                 if progress_callback and progress_msg:
-                    await progress_callback(progress_msg, f"Error in verdict generation: {str(e)}")
+                    await progress_callback(progress_msg, f"Error in verdict generation: {e!s}")
                 raise
 
             logger.info("Factchecking pipeline completed. Generated %d verdicts.", len(verdicts))
@@ -222,4 +222,3 @@ if __name__ == "__main__":
     manager = VerifactManager()
     query = "The sky is blue and the grass is green"
     verdicts = asyncio.run(manager.run(query))
-

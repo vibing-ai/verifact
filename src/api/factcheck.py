@@ -1,13 +1,14 @@
+import time
+
 from fastapi import APIRouter
 
-import time
-from models.factcheck import FactCheckRequest, FactCheckResponse, Claim, Source, FactCheckOptions
+from models.factcheck import Claim, FactCheckOptions, FactCheckRequest, FactCheckResponse, Source
 
 router = APIRouter(prefix="/api/v1")
 
 
 @router.post("/factcheck", response_model=FactCheckResponse)
-async def factcheck(request: FactCheckRequest): # noqa: ARG001
+async def factcheck(request: FactCheckRequest):
     start_time = time.time()
 
     # Extract the text to be fact-checked from the request

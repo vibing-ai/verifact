@@ -84,10 +84,8 @@ exclude = [
     "__pycache__",
     "build",
     "dist",
+    "*.ipynb",
 ]
-
-[tool.ruff.isort]
-known-first-party = ["verifact"]
 
 [tool.mypy]
 python_version = "3.10"
