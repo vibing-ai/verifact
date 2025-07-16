@@ -185,3 +185,6 @@ pyrightconfig.json
 #chainlit
 .chainlit/
 
+#test_real_data
+test_real_data
+
