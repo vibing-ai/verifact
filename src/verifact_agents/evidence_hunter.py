@@ -3,6 +3,7 @@ import os
 from agents import Agent, WebSearchTool
 from pydantic import BaseModel
 
+
 class Evidence(BaseModel):
     """Evidence related to a claim."""
 

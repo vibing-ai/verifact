@@ -76,10 +76,6 @@ python_classes = "Test*"
 [tool.ruff]
 target-version = "py310"
 line-length = 100
-select = ["E", "F", "B", "I"]
-ignore = []
-fixable = ["ALL"]
-unfixable = []
 exclude = [
     ".git",
     ".ruff_cache",
@@ -88,13 +84,8 @@ exclude = [
     "__pycache__",
     "build",
     "dist",
+    "*.ipynb",
 ]
-
-[tool.ruff.isort]
-known-first-party = ["verifact"]
-
-[tool.isort]
-line_length = 100
 
 [tool.mypy]
 python_version = "3.10"
@@ -113,23 +104,16 @@ disallow_incomplete_defs = false
 
 [tool.ruff.lint]
 select = [
-    "E",    # pycodestyle errors
-    "F",    # pyflakes
-    "B",    # bugbear
-    "I",    # isort 
-    "C4",   # comprehensions
-    "D",    # pydocstyle
-    "UP",   # pyupgrade
-    "W",    # pycodestyle warnings
-]
-ignore = [
-    "E203",  # Whitespace before ':' (not PEP 8 compliant)
-    "E501",  # Line too long (handled by formatter)
-    "D100",  # Missing docstring in public module
-    "D104",  # Missing docstring in public package
+    "E", "W", "F", "I", "N", "UP", "B", "A", "C4", "DTZ", "T10", "EM", "EXE", 
+    "FA", "ISC", "ICN", "G", "INP", "PIE", "T20", "PYI", "PT", "Q", "RSE", 
+    "RET", "SLF", "SLOT", "SIM", "TID", "TCH", "ARG", "PTH", "ERA", "PD", 
+    "PGH", "PL", "TRY", "FLY", "PERF", "FURB", "LOG", "RUF"
 ]
 
-# Allow autofix for all enabled rules (when `--fix`) is provided
+ignore = [
+    "E501", "B008", "C901", "PLR0913", "PLR0912", "PLR0915", "PLR0911", "ARG001", "INP001", "SLF001"
+]
+
 fixable = ["ALL"]
 unfixable = []
 
