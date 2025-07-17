@@ -227,8 +227,12 @@ class TestClaimDetector:
     async def test_invalid_inputs(self, invalid_input):
         """Test various invalid inputs."""
         if len(str(invalid_input or "")) < MIN_TEXT_LENGTH:
-            with pytest.raises(ValueError, match="Text too short"):
-                await process_claims(invalid_input)
+            if invalid_input in ["", None]:
+                with pytest.raises(ValueError, match="Input text must be a non-empty string"):
+                    await process_claims(invalid_input)
+            else:
+                with pytest.raises(ValueError, match="Text too short"):
+                    await process_claims(invalid_input)
 
     @pytest.mark.asyncio
     @patch("verifact_agents.claim_detector.Runner.run")
