@@ -14,6 +14,7 @@ from agents import WebSearchTool, function_tool
 # Create a logger for this module
 logger = logging.getLogger(__name__)
 
+
 def _parse_serper_results(
     data: dict[str, Any], search_type: str, num_results: int
 ) -> list[dict[str, Any]]:
@@ -34,6 +35,7 @@ def _parse_serper_results(
         }
         for result in search_results
     ]
+
 
 @function_tool
 async def serper_search(
@@ -70,38 +72,39 @@ async def serper_search(
 
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(
-                f"{api_url}{endpoint}", headers=headers, json=payload
-            )
+            response = await client.post(f"{api_url}{endpoint}", headers=headers, json=payload)
             response.raise_for_status()
             data = response.json()
     except httpx.HTTPStatusError as e:
-        logger.error(f"Serper API error: {e.response.status_code} - {e.response.text}")
+        logger.exception("Serper API error: %s - %s", e.response.status_code, e.response.text)
         return [{"error": f"API returned status code {e.response.status_code}"}]
     except Exception as e:
-        logger.error(f"Error in serper_search: {str(e)}")
-        return [{"error": f"Error performing search: {str(e)}"}]
+        logger.exception("Error in serper_search")
+        return [{"error": f"Error performing search: {e!s}"}]
 
     return _parse_serper_results(data, search_type, num_results)
+
 
 def get_websearch_tool(user_location: dict[str, Any] | None = None) -> WebSearchTool:
     """
     Get OpenAI's WebSearchTool instance with optional location configuration.
-    
+
     Args:
         user_location: Optional location configuration for search results.
                       Should contain 'country', 'city', 'region', and/or 'timezone'.
-    
+
     Returns:
         Configured WebSearchTool instance for use in Agent configurations.
     """
     try:
         return WebSearchTool()
     except ImportError:
-        logger.error("WebSearchTool not available. Make sure you're using OpenAI Agents SDK.")
-        raise ImportError("WebSearchTool not available.")
+        logger.exception("WebSearchTool not available. Make sure you're using OpenAI Agents SDK.")
+        error_msg = "WebSearchTool not available."
+        raise ImportError(error_msg) from None
 
-def get_search_tools(tool_names: list[str] = None) -> list[Any]:
+
+def get_search_tools(tool_names: list[str] | None = None) -> list[Any]:
     """
     Get multiple configured search tool instances.
 
@@ -115,21 +118,21 @@ def get_search_tools(tool_names: list[str] = None) -> list[Any]:
     if tool_names is None:
         use_serper = os.getenv("USE_SERPER", "false").lower() == "true"
         tool_names = ["serper"] if use_serper else ["openai_web"]
-    
+
     tools = []
     for tool_name in tool_names:
-        tool_name = tool_name.lower()
-        if tool_name == "serper":
+        current_tool_name = tool_name.lower()
+        if current_tool_name == "serper":
             logger.info("Using Serper search tool")
             tools.append(serper_search)
-        elif tool_name == "openai_web":
+        elif current_tool_name == "openai_web":
             logger.info("Using OpenAI WebSearchTool")
             tools.append(get_websearch_tool())
         else:
-            logger.warning(f"Unknown search tool '{tool_name}', skipping")
-    
+            logger.warning("Unknown search tool '%s', skipping", tool_name)
+
     if not tools:
         logger.warning("No valid search tools found, defaulting to OpenAI WebSearchTool")
         tools.append(get_websearch_tool())
-    
+
     return tools

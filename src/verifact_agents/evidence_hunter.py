@@ -22,7 +22,8 @@ class Evidence(BaseModel):
     relevance: float = 1.0
     stance: str = "supporting"  # supporting, contradicting, neutral
     credibility: float = 1.0
-    timestamp: str = Field(default_factory=lambda: datetime.now().isoformat())
+    timestamp: str = Field(default_factory=lambda: datetime.now(datetime.timezone.utc).isoformat())
+
 
 def deduplicate_evidence(evidence_list: list[Evidence]) -> list[Evidence]:
     """Deduplicate evidence list by source and content.
@@ -40,6 +41,7 @@ def deduplicate_evidence(evidence_list: list[Evidence]) -> list[Evidence]:
             unique_evidence.append(ev)
     return unique_evidence
 
+
 def get_trust_sources(path: str):
     """Get the trust sources from the file, skipping empty and comment lines.
 
@@ -51,26 +53,25 @@ def get_trust_sources(path: str):
     """
     p = Path(path)
     if not p.exists():
-        logger.warning("Trust sources file not found: %s – returning empty list.", p)
+        logger.warning("Trust sources file not found: %s - returning empty list.", p)
         return []
 
     try:
         lines = p.read_text(encoding="utf-8").splitlines()
-        return [
-            line.strip()
-            for line in lines
-            if line.strip() and not line.strip().startswith("#")
-        ]
-    except OSError as e:
-        logger.error("Error reading trust sources file %s: %s – returning empty list.", p, e)
+        return [line.strip() for line in lines if line.strip() and not line.strip().startswith("#")]
+    except OSError:
+        logger.exception("Error reading trust sources file %s - returning empty list", p)
         return []
-    
+
+
 class EvidenceHunter:
     """Evidence hunter agent that searches for evidence to support or refute claims."""
 
-    def __init__(self, trust_sources_path: str = "data/trust_sources.txt", search_tools: list[str] = None):
+    def __init__(
+        self, trust_sources_path: str = "data/trust_sources.txt", search_tools: list[str] | None = None
+    ):
         """Initialize the evidence hunter.
-        
+
         Args:
             trust_sources_path (str): Path to the trusted sources file.
             search_tools (list[str]): List of search tools to use.
@@ -78,7 +79,7 @@ class EvidenceHunter:
         self.trust_sources = get_trust_sources(trust_sources_path)
         self.use_serper = os.getenv("USE_SERPER", "false").lower() == "true"
 
-        PROMPT = self.get_prompt(self.trust_sources)
+        prompt = self.get_prompt(self.trust_sources)
 
         tools = get_search_tools(search_tools)
         if not tools:
@@ -87,7 +88,7 @@ class EvidenceHunter:
 
         self.evidence_hunter_agent = Agent(
             name="EvidenceHunter",
-            instructions=PROMPT,
+            instructions=prompt,
             output_type=list[Evidence],
             tools=tools,
             model=os.getenv("EVIDENCE_HUNTER_MODEL"),
@@ -95,7 +96,7 @@ class EvidenceHunter:
 
     def get_claim_requirements(self, trust_sources: list[str]):
         """Get the requirements for processing each claim.
-        
+
         Args:
             trust_sources (list[str]): The list of trusted sources.
 
@@ -118,8 +119,7 @@ class EvidenceHunter:
                     - Extract specific passages that directly address the claim
                     - Process ALL results from a SINGLE search
             """
-        else:
-            return f"""
+        return f"""
                 For each claim:
                 1. Formulate effective search queries that will find relevant information
                     - Extract key entities and concepts
@@ -136,16 +136,16 @@ class EvidenceHunter:
 
     def get_tool_requirements(self):
         """Get the requirements for using different search tools and formatting their results.
-        
+
         Returns:
             str: The requirements for tool usage and result formatting.
         """
 
         if self.use_serper:
             return self._get_serper_tool_requirements()
-        
+
         return self._get_diversity_tool_requirements()
-    
+
     def _get_diversity_tool_requirements(self):
         return """
             - Search tool usage requirements (Diversity Mode):
@@ -195,7 +195,7 @@ class EvidenceHunter:
                 }
                 ]
 
-            - IMPORTANT: 
+            - IMPORTANT:
                 - Make only ONE search call
                 - Return only the most relevant results
                 - Prefer quality over quantity
@@ -203,7 +203,7 @@ class EvidenceHunter:
 
     def get_evidence_requirements(self):
         """Get the requirements for evidence collection and diversity.
-        
+
         Returns:
             str: The requirements for evidence collection.
         """
@@ -229,7 +229,7 @@ class EvidenceHunter:
 
     def get_output_requirements(self):
         """Get the requirements for evidence output format.
-        
+
         Returns:
             str: The requirements for evidence output format.
         """
@@ -242,7 +242,7 @@ class EvidenceHunter:
                 - If the evidence is not relevant, set the relevance to 0.0
                 - If the evidence is strongly contradicting, set the relevance close to 1.0
                 - If the evidence is strongly supporting, set the relevance close to 1.0
-            - stance: 
+            - stance:
                 - "supporting" if the evidence directly supports the claim,
                 - "contradicting" if the evidence directly refutes the claim,
                 - "neutral" if the evidence is related but does not clearly support or contradict the claim.
@@ -253,7 +253,7 @@ class EvidenceHunter:
                     - If the evidence is related but does not clearly support or contradict the claim, classify as "neutral".
                     - If there's important information mismatch like numbers, dates, names, etc., classify as "contradicting".
 
-            - credibility: 
+            - credibility:
                 - A score from 0.0 to 1.0 indicating the credibility of the source
                 - If the source is in the list of trusted sources, set the credibility close to 1.0
                 - If the timestamp of the evidence is older than 10 years, set the credibility close to 0.0
@@ -265,7 +265,7 @@ class EvidenceHunter:
 
     def get_prompt(self, trust_sources: list[str]):
         """Get the prompt for the evidence hunter.
-        
+
         Args:
             trust_sources (list[str]): The list of trusted sources.
         """
@@ -274,7 +274,7 @@ class EvidenceHunter:
         evidence_reqs = self.get_evidence_requirements()
         output_reqs = self.get_output_requirements()
 
-        PROMPT = f"""
+        return f"""
             You are an evidence gathering agent tasked with finding and evaluating evidence related to factual claims.
 
             {claim_reqs}
@@ -285,30 +285,28 @@ class EvidenceHunter:
 
             {output_reqs}
 
-            After you receive search results from any tool, IMMEDIATELY process all results and output a list of Evidence objects. 
+            After you receive search results from any tool, IMMEDIATELY process all results and output a list of Evidence objects.
             DO NOT call the search tool again unless the results are completely empty or obviously irrelevant.
             DO NOT reflect, summarize, or ask for more information.
             ALWAYS output a list of Evidence objects in the required format, one for each relevant search result.
             If you receive multiple search results, process ALL of them in one step and output the full Evidence list at once.
             Do not split the output or call the tool again unless you received no results.
         """
-        return PROMPT
 
     def query_formulation(self, claim: Claim):
         """Formulate a query for a single claim.
-        
+
         Args:
             claim (Claim): The claim to formulate a query for.
-            
+
         Returns:
             str: The formulated query.
         """
         context = getattr(claim, "context", None)
         claim_context = str(context) if context != 0.0 else "No additional context provided"
-        
+
         if self.use_serper:
-            
-            query = f"""Claim to investigate: "{claim.text}" 
+            query = f"""Claim to investigate: "{claim.text}"
             Context of the claim: {claim_context}
 
             Instructions:
@@ -330,6 +328,5 @@ class EvidenceHunter:
             - Include various types of reliable sources
             - Balance between different viewpoints
             """
-        
-        return query
 
+        return query

@@ -12,7 +12,6 @@ and provides both synchronous and asynchronous operation modes.
 import asyncio
 import logging
 
-# import chainlit as cl
 from agents import Runner, gen_trace_id, trace
 from pydantic import BaseModel, Field
 
@@ -156,20 +155,19 @@ class VerifactManager:
 
         try:
             result = await Runner.run(
-                self.evidence_hunter.evidence_hunter_agent, 
-                query,
-                max_turns=10 
+                self.evidence_hunter.evidence_hunter_agent, query, max_turns=10
             )
-            logger.info(f"Evidence gathered for claim: {result}")
-        except Exception as e:
-            logger.error(f"Error running evidence_hunter_agent: {e}", exc_info=True)
+            logger.info("Evidence gathered for claim: %s", result)
+        except Exception:
+            logger.exception("Error running evidence_hunter_agent")
             result = None
 
         evidences = result.final_output_as(list[Evidence])
-        unique_evidences = deduplicate_evidence(evidences)
-        return unique_evidences
-        
-    async def _gather_evidence(self, claims: list[Claim]) -> list[tuple[Claim, list[Evidence] | None]]:
+        return deduplicate_evidence(evidences)
+
+    async def _gather_evidence(
+        self, claims: list[Claim]
+    ) -> list[tuple[Claim, list[Evidence] | None]]:
         tasks = [self._gather_evidence_for_claim(claim) for claim in claims]
         results = await asyncio.gather(*tasks, return_exceptions=True)
         claim_evidence_pairs = []
