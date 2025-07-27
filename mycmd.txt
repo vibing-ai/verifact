@@ -1,0 +1,9 @@
+git add src/utils/search/search_tools.py src/verifact_agents/evidence_hunter.py src/verifact_manager.py
+git add src\verifact_manager.py
+git commit -m "feat: Modification on search tools and tests for evidence hunter"
+
+git add src/tests/test_evidence_hunter.py
+
+git checkout main
+git merge feature/issue-2-web-search
+git push origin feature/issue-2-web-search

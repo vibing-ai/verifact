@@ -13,6 +13,7 @@ from verifact_agents.claim_detector import Claim
 
 logger = logging.getLogger(__name__)
 
+
 class Evidence(BaseModel):
     """Evidence related to a claim."""
 
