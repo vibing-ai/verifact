@@ -15,9 +15,13 @@ import logging
 from agents import Runner, gen_trace_id, trace
 from pydantic import BaseModel, Field
 
-from src.verifact_agents.claim_detector import Claim, claim_detector_agent
-from src.verifact_agents.evidence_hunter import Evidence, evidence_hunter_agent
-from src.verifact_agents.verdict_writer import Verdict, verdict_writer_agent
+from verifact_agents.claim_detector import Claim, claim_detector_agent
+from verifact_agents.evidence_hunter import (
+    Evidence,
+    EvidenceHunter,
+    deduplicate_evidence,
+)
+from verifact_agents.verdict_writer import Verdict, verdict_writer_agent
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +45,7 @@ class VerifactManager:
     def __init__(self, config: ManagerConfig = None):
         """Initialize VeriFact manager with optional configuration."""
         self.config = config or ManagerConfig()
+        self.evidence_hunter = EvidenceHunter()
 
     async def run(self, query: str, progress_callback=None, progress_msg=None) -> None:
         """Process text through the full factchecking pipeline.
@@ -146,15 +151,19 @@ class VerifactManager:
     async def _gather_evidence_for_claim(self, claim: Claim) -> list[Evidence]:
         logger.info("Gathering evidence for claim %s...", claim.text[:50])
 
-        query = f"""
-        Claim to investigate: {claim.text}
-        Context of the claim: {claim.context if hasattr(claim, "context") and claim.context else "No additional context provided"}
-        """
+        query = self.evidence_hunter.query_formulation(claim)
 
-        result = await Runner.run(evidence_hunter_agent, query)
-        logger.info("Evidence gathered for claim: %s", claim.text[:50])
+        try:
+            result = await Runner.run(
+                self.evidence_hunter.evidence_hunter_agent, query, max_turns=10
+            )
+            logger.info("Evidence gathered for claim: %s", result)
+        except Exception:
+            logger.exception("Error running evidence_hunter_agent")
+            result = None
 
-        return result.final_output_as(list[Evidence])
+        evidences = result.final_output_as(list[Evidence])
+        return deduplicate_evidence(evidences)
 
     async def _gather_evidence(
         self, claims: list[Claim]
@@ -220,5 +229,5 @@ if __name__ == "__main__":
 
     setup_logging()
     manager = VerifactManager()
-    query = "The sky is blue and the grass is green"
+    query = "Finding Dory was penned by someone who works primarily at Pixar."
     verdicts = asyncio.run(manager.run(query))
